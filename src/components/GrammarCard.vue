@@ -92,7 +92,7 @@ function handleClose() {
   setTimeout(() => {
     show.value = false;
     emits("close");
-  }, 10);
+  }, 0);
 }
 
 const handleClickOutside = (event: MouseEvent) => {
