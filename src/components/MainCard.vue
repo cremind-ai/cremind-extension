@@ -75,16 +75,15 @@ import { ElButton } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
-import { useConversationStore } from "../store/conversation";
 import { LoadImg } from ".";
-import { CONTENT_SCRIPT_PORT_NAME } from "../constants/common";
-import {
-  CommunicationMessageTopicEnum,
-  CommunicationMessageType,
-  CommunicationMessageTypeEnum,
-} from "../types";
 import { IPCClient } from "../lib/ipc_client";
 import { EventEmitter } from "../utils/event_emitter";
+import {
+  PromptTemplate,
+  PromptTemplateException,
+} from "../lib/prompt_template";
+import { CWException } from "../types/exception";
+import { Chain } from "../lib/chain";
 
 const props = defineProps({
   selectedText: {
@@ -110,8 +109,6 @@ const props = defineProps({
 });
 
 const emits = defineEmits(["close"]);
-
-const conversationStore = useConversationStore();
 
 const show = ref(props.show);
 const visible = ref(false);
@@ -161,20 +158,22 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-const startConversation = (prompt: string) => {
-  const data = ipcClient.request(
-    CommunicationMessageTopicEnum.CONVERSATION,
-    true,
-    {
-      message: prompt,
-    },
-    10000
-  ) as EventEmitter;
-  data.on("data", (data) => {
-    console.log(data.message);
+const startConversation = async (prompt: string) => {
+  const promptTemplate = new PromptTemplate(
+    "Correct this below to standard English grammar:\n@{sentence_input}"
+  );
+
+  const chain = new Chain(promptTemplate, {
+    sentence_input:
+      "I miss him very much, he can't supprt me, because él murió",
   });
-  data.on("error", (error) => {
-    console.log(error);
+
+  const result = (await chain.execute(true)) as EventEmitter;
+  result.on("data", (data: string) => {
+    console.log(data);
+  });
+  result.on("complete", (data: string) => {
+    console.log(data);
   });
 };
 
@@ -189,8 +188,6 @@ onMounted(async () => {
   optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
   popoverRef.value = document.querySelector(".el-popover") as HTMLDivElement;
   document.addEventListener("mousedown", handleClickOutside);
-
-  ipcClient = IPCClient.getInstance().initConnection();
 });
 
 onUnmounted(() => {

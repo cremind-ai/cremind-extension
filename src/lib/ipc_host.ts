@@ -4,12 +4,13 @@ import {
   CommunicationMessageType,
   CommunicationMessageTypeEnum,
 } from "../types";
+import { CONTENT_SCRIPT_PORT_NAME } from "../constants/common";
 
 export class IPCHostException extends CWException {}
 
 export class IPCHost {
   private static instance: IPCHost;
-  private NAME = "IPC";
+  private NAME = CONTENT_SCRIPT_PORT_NAME;
   private registeredCallbacks: {
     [key in CommunicationMessageTopicEnum]: (
       data: CommunicationMessageType,
@@ -59,7 +60,6 @@ export class IPCHost {
       topic: request.topic,
       requestId: request.requestId,
     };
-    console.log(fullResponse);
     port.postMessage(fullResponse);
   }
 
