@@ -1,3 +1,3 @@
-import GrammarCard from "./GrammarCard.vue";
+import MainCard from "./MainCard.vue";
 import LoadImg from "./LoadImg.vue";
-export { GrammarCard, LoadImg };
+export { MainCard, LoadImg };

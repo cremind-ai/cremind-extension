@@ -7,9 +7,9 @@ import App from "./App.vue";
 window.onload = async () => {
   const el = document.querySelector("body");
   if (el) {
-    el.insertAdjacentHTML("afterend", '<div id="app"></div>');
+    el.insertAdjacentHTML("afterend", '<div id="cword-app-extension"></div>');
     const app = createApp(App).use(createPinia());
     app.use(ElementPlus);
-    app.mount("#app");
+    app.mount("#cword-app-extension");
   }
 };
