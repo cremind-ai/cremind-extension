@@ -85,6 +85,7 @@ export class IPCClient {
         });
       } else {
         const emitter = new EventEmitter();
+        resolve(emitter);
         let timeoutObj: NodeJS.Timeout;
 
         const resetTimeout = () => {
@@ -121,7 +122,6 @@ export class IPCClient {
 
         this.ipcEmitter.on(requestId, messageHandler);
         resetTimeout();
-        resolve(emitter);
       }
     });
   }
@@ -212,6 +212,7 @@ export class IPCClient {
           emitter.emit("error", error);
           return resolve(emitter);
         }
+        resolve(emitter);
 
         const requestId = uuid();
         const data: CommunicationMessageType = {
@@ -234,8 +235,6 @@ export class IPCClient {
         resData.on("error", (data: CommunicationMessageType) => {
           emitter.emit("error", data);
         });
-
-        resolve(emitter);
       }
     });
   }

@@ -48,6 +48,31 @@ ipcHost.register(
             }
           });
         });
+    } else if (data && data.type === CommunicationMessageTypeEnum.MESSAGE) {
+      let aiProvider: AIProvider;
+      aiProvider = AIProviderFactory.createChatGPT();
+      console.log("isProcessing " + aiProvider.isProcessing);
+      if (aiProvider.isProcessing) {
+        await aiProvider.closeStream();
+      }
+
+      aiProvider
+        .conversation(data.payload.message!, false)
+        .then(async (callback) => {
+          callback((data: AIResponseType) => {
+            if (data && data.type === AIResponseTypeEnum.MESSAGE) {
+            } else if (data && data.type === AIResponseTypeEnum.COMPLETE) {
+              sendResponse(CommunicationMessageTypeEnum.COMPLETE, {
+                message: data.message,
+              });
+            } else if (data && data.type === AIResponseTypeEnum.ERROR) {
+              sendResponse(CommunicationMessageTypeEnum.ERROR, {
+                code: data.code,
+                message: data.message,
+              });
+            }
+          });
+        });
     }
   }
 );

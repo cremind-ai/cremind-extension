@@ -203,12 +203,6 @@ export class ChatGPT extends AIProvider {
               try {
                 data = JSON.parse(message);
               } catch (err) {
-                callback({
-                  type: AIResponseTypeEnum.ERROR,
-                  message: "Invalid JSON",
-                  code: status.CHATGPT_RESPONSE_PAYLOAD_INVALID,
-                });
-                this.isProcessing = false;
                 return null;
               }
               const text: string = data.message?.content?.parts?.[0];

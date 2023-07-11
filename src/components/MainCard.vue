@@ -116,7 +116,6 @@ const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
 const width = ref(300);
-let ipcClient: IPCClient;
 
 watch(
   () => props.show,
@@ -159,21 +158,42 @@ const handleClickOutside = (event: MouseEvent) => {
 };
 
 const startConversation = async (prompt: string) => {
-  const promptTemplate = new PromptTemplate(
+  const correctPromptTemplate = new PromptTemplate(
     "Correct this below to standard English grammar:\n@{sentence_input}"
   );
 
-  const chain = new Chain(promptTemplate, {
-    sentence_input:
-      "I miss him very much, he can't supprt me, because él murió",
-  });
+  const explainPromptTemplate = new PromptTemplate(
+    "Explain the mistakes, why correct them in detail\nSENTENCE: @{sentence_input}\nCORRECTED: @{sentence_corrected}\nEXPLAIN (in Vietnamese):"
+  );
 
-  const result = (await chain.execute(true)) as EventEmitter;
+  prompt = "I miss him very much, he can't supprt me, because él murió";
+  const chainCorrect = new Chain(
+    correctPromptTemplate,
+    {
+      sentence_input: prompt,
+    },
+    "sentence_corrected",
+    null
+  );
+
+  const chainExplain = new Chain(
+    explainPromptTemplate,
+    {
+      sentence_input: prompt,
+    },
+    null,
+    chainCorrect
+  );
+
+  const result = await chainExplain.execute(true);
   result.on("data", (data: string) => {
     console.log(data);
   });
   result.on("complete", (data: string) => {
     console.log(data);
+  });
+  result.on("error", (error: CWException) => {
+    console.log(error);
   });
 };
 
