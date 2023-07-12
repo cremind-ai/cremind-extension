@@ -26,7 +26,10 @@ export class PromptTemplate {
     return missingVariables.length === 0;
   }
 
-  public render(variables: { [key: string]: string }): string {
+  public render(variables: { [key: string]: string } | null): string {
+    if (!variables) {
+      return this.input;
+    }
     let output = this.input;
     if (!this.validateVariables(variables)) {
       throw new PromptTemplateException(

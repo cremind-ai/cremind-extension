@@ -157,45 +157,7 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-const startConversation = async (prompt: string) => {
-  const correctPromptTemplate = new PromptTemplate(
-    "Correct this below to standard English grammar:\n@{sentence_input}"
-  );
-
-  const explainPromptTemplate = new PromptTemplate(
-    "Explain the mistakes, why correct them in detail\nSENTENCE: @{sentence_input}\nCORRECTED: @{sentence_corrected}\nEXPLAIN (in Vietnamese):"
-  );
-
-  prompt = "I miss him very much, he can't supprt me, because él murió";
-  const chainCorrect = new Chain(
-    correctPromptTemplate,
-    {
-      sentence_input: prompt,
-    },
-    "sentence_corrected",
-    null
-  );
-
-  const chainExplain = new Chain(
-    explainPromptTemplate,
-    {
-      sentence_input: prompt,
-    },
-    null,
-    chainCorrect
-  );
-
-  const result = await chainExplain.execute(true);
-  result.on("data", (data: string) => {
-    console.log(data);
-  });
-  result.on("complete", (data: string) => {
-    console.log(data);
-  });
-  result.on("error", (error: CWException) => {
-    console.log(error);
-  });
-};
+const startConversation = async (prompt: string) => {};
 
 /* Example
   chrome.runtime.sendMessage("Hi I'm here", (response) => {
