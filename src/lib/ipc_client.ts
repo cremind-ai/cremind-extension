@@ -1,5 +1,5 @@
 import { CWException } from "../types/exception";
-import { status } from "../constants/status";
+import { Status } from "../constants/status";
 import { EventEmitter } from "../utils/event_emitter";
 import { uuid } from "../utils";
 import {
@@ -66,19 +66,19 @@ export class IPCClient {
           this.ipcEmitter.emit(requestId, {
             topic: topic,
             type: CommunicationMessageTypeEnum.ERROR,
-            code: status.IPC_RESPONSE_TIMEOUT,
+            code: Status.IPC_RESPONSE_TIMEOUT,
             message: "IPC response timeout",
             requestId: requestId,
           });
           reject(
             new IPCClientException(
-              status.IPC_RESPONSE_TIMEOUT,
+              Status.IPC_RESPONSE_TIMEOUT,
               "IPC response timeout"
             )
           );
         }, timeout);
         this.ipcEmitter.once(requestId, (data: CommunicationMessageType) => {
-          if (data && data.code !== status.IPC_RESPONSE_TIMEOUT) {
+          if (data && data.code !== Status.IPC_RESPONSE_TIMEOUT) {
             resolve(data);
             clearTimeout(timeoutObj);
           }
@@ -94,7 +94,7 @@ export class IPCClient {
             this.ipcEmitter.emit(requestId, {
               topic: topic,
               type: CommunicationMessageTypeEnum.ERROR,
-              code: status.IPC_RESPONSE_TIMEOUT,
+              code: Status.IPC_RESPONSE_TIMEOUT,
               message: "IPC response timeout",
               requestId: requestId,
             });
@@ -176,7 +176,7 @@ export class IPCClient {
         if (!this.port) {
           reject(
             new IPCClientException(
-              status.IPC_CONNECTION_NOT_INITIALIZED,
+              Status.IPC_CONNECTION_NOT_INITIALIZED,
               "IPC connection not initialized"
             )
           );
@@ -206,7 +206,7 @@ export class IPCClient {
         const emitter = new EventEmitter();
         if (!this.port) {
           const error = new IPCClientException(
-            status.IPC_CONNECTION_NOT_INITIALIZED,
+            Status.IPC_CONNECTION_NOT_INITIALIZED,
             "IPC connection not initialized"
           );
           emitter.emit("error", error);

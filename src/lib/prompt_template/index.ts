@@ -1,5 +1,5 @@
 import { CWException } from "../../types/exception";
-import { status } from "../../constants/status";
+import { Status } from "../../constants/status";
 
 export class PromptTemplateException extends CWException {}
 
@@ -33,7 +33,7 @@ export class PromptTemplate {
     let output = this.input;
     if (!this.validateVariables(variables)) {
       throw new PromptTemplateException(
-        status.PROMPT_TEMPLATE_MISSING_VARIABLES,
+        Status.PROMPT_TEMPLATE_MISSING_VARIABLES,
         "Prompt missing variables"
       );
     }

@@ -3,7 +3,7 @@ import { createParser } from "eventsource-parser";
 import { AIResponseType, AIResponseTypeEnum } from "../../types/provider";
 import { AIProvider } from "./base";
 import { AIProviderException } from "./index";
-import { status } from "../../constants/status";
+import { Status } from "../../constants/status";
 import { uuid } from "../../utils";
 
 export class ChatGPT extends AIProvider {
@@ -38,14 +38,14 @@ export class ChatGPT extends AIProvider {
     const resp = await fetch("https://chat.openai.com/api/auth/session");
     if (resp.status === 403) {
       throw new AIProviderException(
-        status.CHATGPT_CLOUDFLARE,
+        Status.CHATGPT_CLOUDFLARE,
         "Cloudflare error. Please try again later."
       );
     }
     const data = await resp.json().catch(() => ({}));
     if (!data.accessToken) {
       throw new AIProviderException(
-        status.CHATGPT_UNAUTHORIZED,
+        Status.CHATGPT_UNAUTHORIZED,
         "Unauthorized error. Please try again later."
       );
     }
@@ -123,7 +123,7 @@ export class ChatGPT extends AIProvider {
     return new Promise<(callback: (data: AIResponseType) => void) => void>(
       (resolve, reject) => {
         if (this.isProcessing) {
-          reject(new AIProviderException(status.CHATGPT_BUSY, "Busy"));
+          reject(new AIProviderException(Status.CHATGPT_BUSY, "Busy"));
           return;
         }
         this.isProcessing = true;
@@ -172,7 +172,7 @@ export class ChatGPT extends AIProvider {
             callback({
               type: AIResponseTypeEnum.ERROR,
               message: "ChatGPT response error",
-              code: status.CHATGPT_RESPONSE_ERROR,
+              code: Status.CHATGPT_RESPONSE_ERROR,
             });
             this.isProcessing = false;
             return null;
@@ -227,7 +227,7 @@ export class ChatGPT extends AIProvider {
             callback({
               type: AIResponseTypeEnum.ERROR,
               message: "Stream is null",
-              code: status.CHATGPT_STREAM_ERROR,
+              code: Status.CHATGPT_STREAM_ERROR,
             });
             this.isProcessing = false;
             return null;
@@ -249,7 +249,7 @@ export class ChatGPT extends AIProvider {
               callback({
                 type: AIResponseTypeEnum.ERROR,
                 message: "Stream error",
-                code: status.CHATGPT_STREAM_ERROR,
+                code: Status.CHATGPT_STREAM_ERROR,
               });
             }
           };

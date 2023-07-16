@@ -4,7 +4,6 @@ import {
   CommunicationMessageTypeEnum,
 } from "../types";
 import { defineStore } from "pinia";
-import { status } from "../constants/status";
 
 export const useConversationStore = defineStore({
   id: "conversation",

@@ -1,4 +1,4 @@
-export const status = {
+export const Status = {
   // Common status
   ERROR: 0,
   SUCCESS: 1,

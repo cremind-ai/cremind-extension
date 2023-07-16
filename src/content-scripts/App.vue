@@ -4,39 +4,66 @@
     :top="top"
     :left="left"
     :show="showMainCard"
-    :isContentEditable="isContentEditable"
+    :selectedMode="selectedMode"
     @close="handleMainCardClose"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { Ref, ref } from "vue";
 import { MainCard } from "../components";
+import { SystemVariableParser } from "../lib/system_variable_parser";
+import { selectedModeEnum } from "../types";
 
 const selectedText = ref("");
 const top = ref("");
 const left = ref("");
+const topMousedown = ref("");
+const leftMousedown = ref("");
 const showMainCard = ref(false);
-const isContentEditable = ref(false);
+const selectedMode: Ref<selectedModeEnum> = ref(
+  selectedModeEnum.EDITABLE_NO_CONTENT
+);
 
-document.addEventListener("mouseup", function (event: MouseEvent) {
-  const selection = window.getSelection()?.toString().trim();
-  if (selection && !showMainCard.value) {
-    selectedText.value = selection;
-    top.value = `${event.clientY}px`;
-    left.value = `${event.clientX}px`;
-
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (!showMainCard.value) {
     if (
       document.activeElement &&
       ((document.activeElement as HTMLElement).isContentEditable ||
         document.activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
         document.activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
-      isContentEditable.value = true;
-      console.log("Content editable");
+      selectedMode.value = selectedModeEnum.EDITABLE_NO_CONTENT;
+      selectedText.value = "";
+      top.value = topMousedown.value;
+      left.value = leftMousedown.value;
+      showMainCard.value = true;
+    }
+  }
+});
+
+document.addEventListener("mousedown", function (event: MouseEvent) {
+  topMousedown.value = `${event.clientY}px`;
+  leftMousedown.value = `${event.clientX}px`;
+});
+
+document.addEventListener("mouseup", function (event: MouseEvent) {
+  const selection = window.getSelection()?.toString().trim();
+  const element = document.activeElement as HTMLElement;
+  if (selection && !showMainCard.value) {
+    selectedText.value = selection;
+    SystemVariableParser.getInstance().setSelectedText(selection);
+    top.value = `${event.clientY}px`;
+    left.value = `${event.clientX}px`;
+    if (
+      element &&
+      (element.isContentEditable ||
+        element.nodeName.toUpperCase() === "TEXTAREA" ||
+        element.nodeName.toUpperCase() === "INPUT")
+    ) {
+      selectedMode.value = selectedModeEnum.EDITABLE;
     } else {
-      isContentEditable.value = false;
-      console.log("Not content editable");
+      selectedMode.value = selectedModeEnum.READONLY;
     }
 
     showMainCard.value = true;
@@ -45,6 +72,12 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
 
 function handleMainCardClose() {
   showMainCard.value = false;
+  if (window.getSelection) {
+    var selectedText = window.getSelection()!.toString();
+    if (selectedText !== "") {
+      window.getSelection()!.empty();
+    }
+  }
 }
 </script>
 

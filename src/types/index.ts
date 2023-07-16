@@ -17,3 +17,9 @@ export type CommunicationMessageType = {
   message?: string;
   code?: number;
 };
+
+export enum selectedModeEnum {
+  READONLY = "READONLY",
+  EDITABLE = "EDITABLE",
+  EDITABLE_NO_CONTENT = "EDITABLE_NO_CONTENT",
+}

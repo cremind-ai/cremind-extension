@@ -7,13 +7,30 @@ import {
 import { IPCHost } from "./lib/ipc_host";
 import { AIProvider } from "./background/providers/base";
 import { AIProviderFactory } from "./background/providers";
-import { status } from "./constants/status";
 /* Example
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   sendResponse("hello from background");
   return;
 });
 */
+
+chrome.runtime.onInstalled.addListener(function () {
+  chrome.contextMenus.create({
+    id: "menu",
+    title: "cWord",
+    contexts: ["all"],
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(function (info, tab) {
+  if (info.menuItemId === "menu") {
+    chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
+      tabs.forEach(function (tab) {
+        chrome.tabs.sendMessage(tab!.id!, {});
+      });
+    });
+  }
+});
 
 const ipcHost = IPCHost.getInstance().initConnection();
 ipcHost.register(

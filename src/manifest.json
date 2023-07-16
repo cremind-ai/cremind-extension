@@ -33,5 +33,5 @@
       "matches": ["*://*/*"]
     }
   ],
-  "permissions": ["identity", "storage", "tabs"]
+  "permissions": ["identity", "storage", "tabs", "contextMenus"]
 }

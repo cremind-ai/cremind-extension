@@ -3,16 +3,33 @@ import { IPCClient } from "../../lib/ipc_client";
 import { EventEmitter } from "../../utils/event_emitter";
 import { PromptTemplate } from "../prompt_template";
 import { CommunicationMessageTopicEnum } from "../../types";
-import { status } from "../../constants/status";
 
 export class ChainException extends CWException {}
+
+/*
+  Example:
+  const variableSchemes: ChainVariableSchema = {
+    sentence_input: {
+      options: ["Hello", "Hi"],
+      description: "Input sentence",
+      storage: true,
+    },
+  };
+*/
+export type ChainVariableSchema = {
+  [key: string]: {
+    options?: Array<string | number>;
+    description: string;
+    storage: boolean;
+  };
+};
+
 export class Chain {
   private promptTemplate: PromptTemplate;
   private variables: { [key: string]: string } | null = null;
   private ipcClient: IPCClient;
   private previousChain: Chain | null;
   private streamOutput: boolean = true;
-  private delay: number = 5000;
 
   public variableOutput: string | null = null;
   public output: string = "";
@@ -72,6 +89,9 @@ export class Chain {
           prompt = this.promptTemplate.render(this.variables);
         }
 
+        console.log("=====================");
+        console.log(prompt);
+        console.log("=====================");
         const data = await this.ipcClient.request(
           CommunicationMessageTopicEnum.CONVERSATION,
           true,
