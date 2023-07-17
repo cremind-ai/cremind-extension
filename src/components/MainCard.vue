@@ -1,7 +1,7 @@
 <template>
   <ElPopover
     style="word-break: normal"
-    placement="bottom"
+    placement="auto"
     :visible="visible"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
@@ -23,7 +23,9 @@
               <ElButton
                 type="success"
                 plain
-                @click="handleFeatureClick(index, selectedModeEnum.EDITABLE)"
+                @click="
+                  handleFeatureClick(feature, index, selectedModeEnum.EDITABLE)
+                "
               >
                 <Icon
                   :icon="feature.EDITABLE?.Icon.content || ''"
@@ -47,7 +49,9 @@
               <ElButton
                 type="success"
                 plain
-                @click="handleFeatureClick(index, selectedModeEnum.READONLY)"
+                @click="
+                  handleFeatureClick(feature, index, selectedModeEnum.READONLY)
+                "
               >
                 <Icon
                   :icon="feature.READONLY?.Icon.content || ''"
@@ -78,6 +82,7 @@
                 plain
                 @click="
                   handleFeatureClick(
+                    feature,
                     index,
                     selectedModeEnum.EDITABLE_NO_CONTENT
                   )
@@ -105,52 +110,17 @@
         </div>
       </div>
     </template>
-    <ElDrawer
-      v-model="drawer"
-      title="Initialize your prompt"
-      direction="ltr"
-      :before-close="handleCloseDrawer"
-    >
-      <ElForm :model="formDataVariableSchema" label-position="top">
-        <ElFormItem
-          v-for="(schema, key) in currentFeature.variableSchema"
-          :key="key"
-          :label="schema.description"
-        >
-          <template v-if="schema.options">
-            <ElSelect
-              v-model="formDataVariableSchema[key]"
-              placeholder="Select"
-            >
-              <ElOption
-                v-for="option in schema.options"
-                :key="option"
-                :label="option"
-                :value="option"
-              ></ElOption>
-            </ElSelect>
-          </template>
-          <template v-else>
-            <ElInput
-              v-model="formDataVariableSchema[key]"
-              placeholder="Enter text"
-            ></ElInput>
-          </template>
-        </ElFormItem>
-        <br />
-        <ElFormItem>
-          <ElButton @click="handleStartConversation">Run</ElButton>
-        </ElFormItem>
-      </ElForm>
-    </ElDrawer>
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <div
-        style="margin-top: 25px; padding: 20px"
-        ref="contentRef"
-        v-html="markedRender(outputContent)"
-      ></div>
+      <div style="padding: 20px">
+        <div v-if="selectedMode !== selectedModeEnum.EDITABLE_NO_CONTENT">
+          <div style="margin-top: 25px">
+            {{ selectedText }}
+          </div>
+          <ElDivider></ElDivider>
+        </div>
+        <div ref="contentRef" v-html="markedRender(outputContent)"></div>
+      </div>
     </ElScrollbar>
-
     <ElButton
       class="card-close-icon"
       type="danger"
@@ -161,6 +131,41 @@
       circle
     ></ElButton>
   </ElPopover>
+  <ElDrawer
+    v-model="drawer"
+    title="Initialize your prompt"
+    direction="ltr"
+    :before-close="handleCloseDrawer"
+  >
+    <ElForm :model="formDataVariableSchema" label-position="top">
+      <ElFormItem
+        v-for="(schema, key) in currentFeature.variableSchema"
+        :key="key"
+        :label="schema.description"
+      >
+        <template v-if="schema.options">
+          <ElSelect v-model="formDataVariableSchema[key]" placeholder="Select">
+            <ElOption
+              v-for="option in schema.options"
+              :key="option"
+              :label="option"
+              :value="option"
+            ></ElOption>
+          </ElSelect>
+        </template>
+        <template v-else>
+          <ElInput
+            v-model="formDataVariableSchema[key]"
+            placeholder="Enter text"
+          ></ElInput>
+        </template>
+      </ElFormItem>
+      <br />
+      <ElFormItem>
+        <ElButton @click="handleStartConversation">Run</ElButton>
+      </ElFormItem>
+    </ElForm>
+  </ElDrawer>
 </template>
 
 <script setup lang="ts">
@@ -176,6 +181,7 @@ import { ElSelect } from "element-plus";
 import { ElOption } from "element-plus";
 import { ElForm } from "element-plus";
 import { ElFormItem } from "element-plus";
+import { ElDivider } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
 import { marked } from "marked";
@@ -184,9 +190,9 @@ import { featureList } from "../lib/features/template";
 import { selectedModeEnum } from "../types";
 import { FeatureType } from "../lib/features";
 import { ChainBuilder } from "../lib/chain/chain_builder";
-import { ChainVariableSchema } from "../lib/chain";
 import { CWException } from "../types/exception";
 import { ChromeStorage } from "../hooks/chrome_storage";
+import { FeatureSchema } from "../lib/features";
 
 const props = defineProps({
   selectedText: {
@@ -227,8 +233,6 @@ const width = ref(0);
 const selectedMode: Ref<selectedModeEnum> = ref(
   props.selectedMode as selectedModeEnum
 );
-const clickedFeatureIndex = ref(-1);
-const clickedFeatureType = ref("");
 const outputContent = ref("");
 const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
 const contentMaxHeight = ref(500);
@@ -471,25 +475,15 @@ async function handleFeature(
   }
 }
 
-function handleFeatureClick(index: number, type: selectedModeEnum) {
+function handleFeatureClick(
+  featureSchema: FeatureSchema,
+  index: number,
+  type: selectedModeEnum
+) {
+  const id: string = featureSchema.id;
+  console.log("handleFeatureClick", index, type, id);
   outputContent.value = "";
-  const filteredIndex = featureList.findIndex((feature) => {
-    return (
-      (type === selectedModeEnum.EDITABLE_NO_CONTENT &&
-        feature.EDITABLE_NO_CONTENT !== undefined) ||
-      (type === selectedModeEnum.EDITABLE && feature.EDITABLE !== undefined) ||
-      (type === selectedModeEnum.READONLY && feature.READONLY !== undefined)
-    );
-  });
-
-  if (filteredIndex !== -1) {
-    clickedFeatureIndex.value = filteredIndex;
-    clickedFeatureType.value = type;
-    console.log("handleFeatureClick", filteredIndex, type);
-    const feature: FeatureType = featureList[filteredIndex][type]!;
-    const id = featureList[filteredIndex].id;
-    handleFeature(id, feature, type);
-  }
+  handleFeature(id, featureSchema[type]!, type);
 }
 
 function close() {
@@ -589,7 +583,7 @@ onUnmounted(() => {
 
 <style scoped>
 .option-bar {
-  position: fixed;
+  position: absolute;
   z-index: 99999;
 }
 

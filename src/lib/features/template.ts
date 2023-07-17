@@ -19,7 +19,7 @@ export const featureList: FeatureSchema[] = [
         {
           name: "ChainTranslate",
           promptTemplate:
-            "Translate to @{target_language}:\nSENTENCE:&{SELECTED_TEXT}\nTRANSLATED:",
+            "Translate to @{target_language}, please translate most naturally, do not translate literally.\nSENTENCE:\n&{SELECTED_TEXT}\nTRANSLATED:",
           variableOutput: null,
         },
       ],
@@ -41,7 +41,7 @@ export const featureList: FeatureSchema[] = [
         {
           name: "ChainTranslate",
           promptTemplate:
-            "Translate to @{target_language}:\nSENTENCE:&{SELECTED_TEXT}\nTRANSLATED:",
+            "Translate to @{target_language}, please translate most naturally, do not translate literally.\nSENTENCE:\n&{SELECTED_TEXT}\nTRANSLATED:",
           variableOutput: null,
         },
       ],
@@ -66,14 +66,13 @@ export const featureList: FeatureSchema[] = [
         {
           name: "chainCorrect",
           promptTemplate:
-            "Correct to standard @{target_language} grammar:\nSENTENCE:&{SELECTED_TEXT}\nCORRECTED:",
+            "Correct to standard @{target_language} grammar:\nSENTENCE:&{SELECTED_TEXT}\nCORRECTED:\n--->",
           variableOutput: null,
         },
       ],
       WriteResponse: true,
     },
   },
-
   {
     id: "d2d0c070-b580-4228-bc41-d6ffe87d17ee",
     READONLY: {
@@ -93,7 +92,7 @@ export const featureList: FeatureSchema[] = [
         {
           name: "ChainCorrect",
           promptTemplate:
-            "Explain the English grammar of the sentence below:\n&{SELECTED_TEXT}\nEXPLAIN (in @{your_native_language}):",
+            "Explain the English grammar of the sentence below:\n&{SELECTED_TEXT}\nEXPLAIN (only in @{your_native_language}):",
           variableOutput: null,
         },
       ],

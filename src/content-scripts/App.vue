@@ -27,11 +27,12 @@ const selectedMode: Ref<selectedModeEnum> = ref(
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (!showMainCard.value) {
+    const activeElement = document.activeElement as HTMLElement;
     if (
-      document.activeElement &&
-      ((document.activeElement as HTMLElement).isContentEditable ||
-        document.activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
-        document.activeElement.nodeName.toUpperCase() === "INPUT")
+      activeElement &&
+      ((activeElement as HTMLElement).isContentEditable ||
+        activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
+        activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
       selectedMode.value = selectedModeEnum.EDITABLE_NO_CONTENT;
       selectedText.value = "";
@@ -49,17 +50,17 @@ document.addEventListener("mousedown", function (event: MouseEvent) {
 
 document.addEventListener("mouseup", function (event: MouseEvent) {
   const selection = window.getSelection()?.toString().trim();
-  const element = document.activeElement as HTMLElement;
+  const activeElement = document.activeElement as HTMLElement;
   if (selection && !showMainCard.value) {
     selectedText.value = selection;
     SystemVariableParser.getInstance().setSelectedText(selection);
-    top.value = `${event.clientY}px`;
-    left.value = `${event.clientX}px`;
+    top.value = `${event.clientY + window.scrollY}px`;
+    left.value = `${event.clientX + window.scrollX}px`;
     if (
-      element &&
-      (element.isContentEditable ||
-        element.nodeName.toUpperCase() === "TEXTAREA" ||
-        element.nodeName.toUpperCase() === "INPUT")
+      activeElement &&
+      (activeElement.isContentEditable ||
+        activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
+        activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
       selectedMode.value = selectedModeEnum.EDITABLE;
     } else {
