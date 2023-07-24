@@ -1,11 +1,54 @@
 <template>
-  <div class="popupview">Hello World!</div>
+  <div class="popupview">
+    <ElInput
+      v-model="textarea"
+      :rows="10"
+      type=""
+      placeholder="Please import JSON"
+    />
+  </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ElInput } from "element-plus";
+import { ChromeStorage } from "../hooks/chrome_storage";
+
+import { onMounted, ref, watch } from "vue";
+const textarea = ref("");
+
+watch(
+  () => textarea.value,
+  (newValue) => {
+    try {
+      const jsonValue = JSON.parse(newValue);
+      ChromeStorage.getInstance().set(
+        "FEATURE_JSON",
+        JSON.stringify(jsonValue)
+      );
+    } catch (e) {
+      console.log("error", e);
+      return;
+    }
+  }
+);
+
+onMounted(async () => {
+  await ChromeStorage.getInstance()
+    .get("FEATURE_JSON")
+    .then((result) => {
+      if (result) {
+        textarea.value = result;
+      } else {
+        textarea.value = "No data";
+      }
+    });
+});
+</script>
 
 <style scoped>
 .popupview {
+  width: 100%;
+  height: 100%;
   padding: 5px;
   background-color: white;
   font-size: 16px;

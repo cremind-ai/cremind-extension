@@ -7,7 +7,7 @@ import {
   CommunicationMessageType,
   CommunicationMessageTypeEnum,
 } from "../types";
-import { CONTENT_SCRIPT_PORT_NAME } from "../constants/common";
+import { CONTENT_SCRIPT_PORT_NAME } from "../constants";
 
 export class IPCClientException extends CWException {}
 
@@ -116,7 +116,17 @@ export class IPCClient {
           } else if (data && data.type === CommunicationMessageTypeEnum.ERROR) {
             clearTimeout(timeoutObj);
             this.ipcEmitter.removeListener(requestId, messageHandler);
-            emitter.emit("error", data);
+            if (data.payload) {
+              emitter.emit(
+                "error",
+                new IPCClientException(data.payload.code, data.payload.message)
+              );
+            } else {
+              emitter.emit(
+                "error",
+                new IPCClientException(data.code!, data.message!)
+              );
+            }
           }
         };
 
@@ -199,7 +209,7 @@ export class IPCClient {
             requestId
           );
           resolve(resData.payload);
-        } catch (err) {
+        } catch (err: any) {
           reject(err);
         }
       } else {
@@ -232,7 +242,7 @@ export class IPCClient {
           emitter.emit("complete", data.payload);
         });
 
-        resData.on("error", (data: CommunicationMessageType) => {
+        resData.on("error", (data: CWException) => {
           emitter.emit("error", data);
         });
       }

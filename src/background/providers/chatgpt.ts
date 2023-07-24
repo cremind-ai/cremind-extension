@@ -14,6 +14,7 @@ export class ChatGPT extends AIProvider {
   public token: string | null = null;
   private reader: ReadableStreamDefaultReader | null = null; // Variable to store ReadableStreamDefaultReader
   private conversationId: string | null = null;
+  private messageId: string | null = null;
 
   private constructor() {
     super();
@@ -103,6 +104,35 @@ export class ChatGPT extends AIProvider {
     );
   }
 
+  private async genTitle(
+    conversationId: string,
+    messageId: string
+  ): Promise<string> {
+    const resp = await this.request(
+      this.token!,
+      "POST",
+      `backend-api/conversation/gen_title/${conversationId}`,
+      {
+        message_id: messageId,
+      }
+    ).then((r) => r.json());
+    console.log(resp);
+    return resp.title;
+  }
+
+  private getConversations(
+    token: string,
+    offset: number = 0,
+    limit: number = 10,
+    order: string = "updated"
+  ): Promise<{ items: { id: string; title: string }[] }> {
+    return this.request(
+      token,
+      "GET",
+      `backend-api/conversations?offset=${offset}&limit=${limit}&order=${order}`
+    ).then((r) => r.json());
+  }
+
   public async closeStream() {
     console.log("Closing stream");
     if (this.reader) {
@@ -116,12 +146,23 @@ export class ChatGPT extends AIProvider {
     this.isProcessing = false;
   }
 
+  public async deleteConversation(conversationId: string): Promise<void> {
+    this.token = await this.getChatGPTAccessToken();
+    this.setConversationProperty(this.token!, conversationId, {
+      is_visible: false,
+    });
+  }
+
   async conversation(
+    conversationId: string | null,
+    messageId: string | null,
     prompt: string,
-    isStream: boolean
+    isStream: boolean,
+    args: any
   ): Promise<(callback: (data: AIResponseType) => void) => void> {
     return new Promise<(callback: (data: AIResponseType) => void) => void>(
       (resolve, reject) => {
+        this.conversationId = conversationId ? conversationId : null;
         if (this.isProcessing) {
           reject(new AIProviderException(Status.CHATGPT_BUSY, "Busy"));
           return;
@@ -142,6 +183,7 @@ export class ChatGPT extends AIProvider {
             }
           }
           const modelName = await this.getModelName(this.token!);
+          const childId = uuid();
           const resp = await fetch(
             this.CHATGPT_URL + "/backend-api/conversation",
             {
@@ -151,11 +193,24 @@ export class ChatGPT extends AIProvider {
                 Authorization: `Bearer ${this.token}`,
               },
               body: JSON.stringify({
-                action: "next",
+                ...(args.regenerate && {
+                  action: "variant",
+                }),
+                ...(!args.regenerate && {
+                  action: "next",
+                }),
                 messages: [
                   {
-                    id: uuid(),
-                    role: "user",
+                    ...(args.regenerate &&
+                      args.childMessageId && {
+                        id: args.childMessageId,
+                      }),
+                    ...(!(args.regenerate && args.childMessageId) && {
+                      id: childId,
+                    }),
+                    author: {
+                      role: "user",
+                    },
                     content: {
                       content_type: "text",
                       parts: [prompt],
@@ -163,7 +218,20 @@ export class ChatGPT extends AIProvider {
                   },
                 ],
                 model: modelName,
-                parent_message_id: uuid(),
+                ...(conversationId && {
+                  conversation_id: conversationId,
+                }),
+                ...(messageId && {
+                  parent_message_id: messageId,
+                }),
+                ...(!messageId && {
+                  parent_message_id: uuid(),
+                }),
+                ...(args.regenerate && {
+                  variant_purpose: "comparison_implicit",
+                }),
+                history_and_training_disabled: false,
+                arkose_token: null,
               }),
             }
           );
@@ -171,30 +239,60 @@ export class ChatGPT extends AIProvider {
             const error = await resp.json().catch(() => ({}));
             callback({
               type: AIResponseTypeEnum.ERROR,
-              message: "ChatGPT response error",
+              message: error.detail,
               code: Status.CHATGPT_RESPONSE_ERROR,
             });
+            if (this.conversationId) {
+              this.setConversationProperty(this.token!, this.conversationId, {
+                is_visible: false,
+              });
+            }
             this.isProcessing = false;
             return null;
           }
           let prevText: string = "";
-          const parser = createParser((event) => {
+          const parser = createParser(async (event) => {
             if (event.type === "event") {
               const message = event.data;
               if (message === "[DONE]") {
                 callback({
                   type: AIResponseTypeEnum.COMPLETE,
                   message: prevText,
+                  payload: {
+                    ...(!args.deleteConversation && {
+                      conversationId: this.conversationId!,
+                      ...(args.regenerate &&
+                        args.childMessageId && {
+                          childMessageId: args.childMessageId,
+                        }),
+                      ...(!(args.regenerate && args.childMessageId) && {
+                        childMessageId: childId,
+                      }),
+                    }),
+                    ...(this.messageId && { messageId: this.messageId }),
+                  },
                 });
                 if (this.conversationId) {
-                  this.setConversationProperty(
-                    this.token!,
-                    this.conversationId!,
-                    {
-                      is_visible: false,
+                  if (args.deleteConversation) {
+                    this.setConversationProperty(
+                      this.token!,
+                      this.conversationId!,
+                      {
+                        is_visible: false,
+                      }
+                    );
+                  } else {
+                    // const items = await this.getConversations(this.token!);
+                    if (!conversationId) {
+                      const title = await this.genTitle(
+                        this.conversationId,
+                        this.messageId!
+                      );
+                      console.log(title);
                     }
-                  );
+                  }
                 }
+
                 this.isProcessing = false;
                 return null;
               }
@@ -216,6 +314,9 @@ export class ChatGPT extends AIProvider {
                 });
                 prevText = text;
               }
+              if (data.is_completion) {
+                this.messageId = data.message_id;
+              }
             }
           });
 
@@ -229,6 +330,11 @@ export class ChatGPT extends AIProvider {
               message: "Stream is null",
               code: Status.CHATGPT_STREAM_ERROR,
             });
+            if (this.conversationId) {
+              this.setConversationProperty(this.token!, this.conversationId, {
+                is_visible: false,
+              });
+            }
             this.isProcessing = false;
             return null;
           }
@@ -251,6 +357,11 @@ export class ChatGPT extends AIProvider {
                 message: "Stream error",
                 code: Status.CHATGPT_STREAM_ERROR,
               });
+              if (this.conversationId) {
+                this.setConversationProperty(this.token!, this.conversationId, {
+                  is_visible: false,
+                });
+              }
             }
           };
 

@@ -7,12 +7,7 @@
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
   >
     <template #reference>
-      <div
-        class="option-bar"
-        :style="{ top, left }"
-        v-show="show"
-        @click="visible = true"
-      >
+      <div class="option-bar" :style="{ top, left }" v-show="show">
         <LoadImg class="cword-icon" :filename="'check64.png'" />
         <div v-if="selectedMode === selectedModeEnum.EDITABLE">
           <ElButtonGroup>
@@ -38,6 +33,12 @@
                 ></div>
               </ElButton>
             </template>
+            <ElButton type="success" plain @click="handleMoreClick()">
+              <Icon
+                icon="material-symbols:more-vert"
+                :style="{ fontSize: '20px' }"
+              />
+            </ElButton>
           </ElButtonGroup>
         </div>
         <div v-else-if="selectedMode === selectedModeEnum.READONLY">
@@ -69,6 +70,12 @@
                 ></span>
               </ElButton>
             </template>
+            <ElButton type="success" plain @click="handleMoreClick()">
+              <Icon
+                icon="material-symbols:more-vert"
+                :style="{ fontSize: '20px' }"
+              />
+            </ElButton>
           </ElButtonGroup>
         </div>
         <div v-else-if="selectedMode === selectedModeEnum.EDITABLE_NO_CONTENT">
@@ -106,21 +113,33 @@
                 ></span>
               </ElButton>
             </template>
+            <ElButton type="success" plain @click="handleMoreClick()">
+              <Icon
+                icon="material-symbols:more-vert"
+                :style="{ fontSize: '20px' }"
+              />
+            </ElButton>
           </ElButtonGroup>
         </div>
       </div>
     </template>
-    <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <div style="padding: 20px">
-        <div v-if="selectedMode !== selectedModeEnum.EDITABLE_NO_CONTENT">
-          <div style="margin-top: 25px">
-            {{ selectedText }}
-          </div>
-          <ElDivider></ElDivider>
-        </div>
-        <div ref="contentRef" v-html="markedRender(outputContent)"></div>
-      </div>
-    </ElScrollbar>
+    <div style="display: flex; justify-content: flex-end; margin-right: 40px">
+      <ElButtonGroup>
+        <ElTooltip content="Regenerate response" placement="top">
+          <ElButton plain @click="handleRegenerate">
+            <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+          </ElButton>
+        </ElTooltip>
+        <ElTooltip content="Copy to clipboard" placement="top">
+          <ElButton plain @click="handleCopyToClipboard">
+            <Icon
+              icon="solar:copy-line-duotone"
+              :style="{ fontSize: '20px' }"
+            />
+          </ElButton>
+        </ElTooltip>
+      </ElButtonGroup>
+    </div>
     <ElButton
       class="card-close-icon"
       type="danger"
@@ -130,6 +149,16 @@
       size="small"
       circle
     ></ElButton>
+    <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
+      <div style="padding: 20px">
+        <div v-if="selectedMode !== selectedModeEnum.EDITABLE_NO_CONTENT">
+          <div v-html="markedRender(selectedText)"></div>
+          <ElDivider></ElDivider>
+        </div>
+        <div ref="contentRef" v-html="markedRender(outputContent)"></div>
+      </div>
+    </ElScrollbar>
+    <ChatAction @new-chat="newChat" />
   </ElPopover>
   <ElDrawer
     v-model="drawer"
@@ -143,8 +172,26 @@
         :key="key"
         :label="schema.description"
       >
-        <template v-if="schema.options">
-          <ElSelect v-model="formDataVariableSchema[key]" placeholder="Select">
+        <template v-if="schema.systemOptions">
+          <ElSelect
+            v-model="formDataVariableSchema[key]"
+            placeholder="Select"
+            filterable
+          >
+            <ElOption
+              v-for="option in SystemOptions[`${schema.systemOptions}`]"
+              :key="option"
+              :label="option"
+              :value="option"
+            ></ElOption>
+          </ElSelect>
+        </template>
+        <template v-else-if="schema.options">
+          <ElSelect
+            v-model="formDataVariableSchema[key]"
+            placeholder="Select"
+            filterable
+          >
             <ElOption
               v-for="option in schema.options"
               :key="option"
@@ -162,7 +209,7 @@
       </ElFormItem>
       <br />
       <ElFormItem>
-        <ElButton @click="handleStartConversation">Run</ElButton>
+        <ElButton @click="handleStartGenerateResponse">Run</ElButton>
       </ElFormItem>
     </ElForm>
   </ElDrawer>
@@ -182,17 +229,22 @@ import { ElOption } from "element-plus";
 import { ElForm } from "element-plus";
 import { ElFormItem } from "element-plus";
 import { ElDivider } from "element-plus";
+import { ElMessage } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
 import { marked } from "marked";
 import { LoadImg } from ".";
-import { featureList } from "../lib/features/template";
 import { selectedModeEnum } from "../types";
 import { FeatureType } from "../lib/features";
 import { ChainBuilder } from "../lib/chain/chain_builder";
 import { CWException } from "../types/exception";
 import { ChromeStorage } from "../hooks/chrome_storage";
 import { FeatureSchema } from "../lib/features";
+import { Status } from "../constants/status";
+import { SystemOptions } from "../constants/system_variables";
+import { useConversationStore } from "../store/conversation";
+import { useChatDialogStore } from "../store/chat_dialog";
+import { ChatAction } from "./Chat";
 
 const props = defineProps({
   selectedText: {
@@ -219,9 +271,12 @@ const props = defineProps({
   },
 });
 
-marked.use({ silent: true, breaks: true, pedantic: true });
+marked.use({ silent: true, breaks: true });
 
 const emits = defineEmits(["close"]);
+
+const conversation = useConversationStore();
+const chatDialog = useChatDialogStore();
 
 const show = ref(props.show);
 const visible = ref(false);
@@ -244,8 +299,10 @@ const currentFeatureId: Ref<string> = ref("");
 const currentFeatureMode: Ref<selectedModeEnum> = ref(
   selectedModeEnum.EDITABLE_NO_CONTENT
 );
+const featureList: Ref<FeatureSchema[]> = ref([]);
+
 const filteredFeatureList = computed(() => {
-  return featureList.filter((feature) => {
+  return featureList.value.filter((feature) => {
     const { READONLY, EDITABLE, EDITABLE_NO_CONTENT } = feature;
 
     switch (selectedMode.value) {
@@ -260,6 +317,7 @@ const filteredFeatureList = computed(() => {
     }
   });
 });
+
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 
@@ -333,7 +391,7 @@ watch(
 );
 
 function markedRender(text: string) {
-  return marked.parse(text);
+  return marked(text);
 }
 
 const scrollToBottom = () => {
@@ -379,7 +437,7 @@ const readOriginalActiveElementValue = (): string => {
   return "";
 };
 
-const startConversation = async (variables: { [key: string]: string }) => {
+const startGenerateResponse = async (variables: { [key: string]: string }) => {
   const chainBuilder = new ChainBuilder(currentFeature.value.Chains);
   console.log(variables);
   for (const key in variables) {
@@ -405,9 +463,9 @@ const startConversation = async (variables: { [key: string]: string }) => {
   }
 
   let responses = "";
+  outputContent.value = "";
   result.on("data", (data: string) => {
     outputContent.value += data;
-    console.log(data);
     if (
       (currentFeatureMode.value === selectedModeEnum.EDITABLE_NO_CONTENT ||
         currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
@@ -419,19 +477,32 @@ const startConversation = async (variables: { [key: string]: string }) => {
     }
     scrollToBottom();
   });
-  result.on("complete", (data: string) => {
+  result.on("complete", (data: any) => {
     console.log("=====>complete");
-    outputContent.value += "<br>";
-    console.log(data);
+    outputContent.value += "\n";
+    console.log(`${data.message}`);
   });
-  result.on("endOfChain", (data: string) => {
+  result.on("endOfChain", (data: any) => {
     console.log("=====>endOfChain");
     isStreaming.value = false;
-    console.log(data);
+    console.log(`${data.message}`);
   });
   result.on("error", (error: CWException) => {
     isStreaming.value = false;
     console.log(error);
+    if (error.code === Status.CHATGPT_UNAUTHORIZED) {
+      ElMessage.error(
+        "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
+      );
+    } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
+      ElMessage.error(
+        "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
+      );
+    } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
+      ElMessage.error(`ChatGPT: ${error.message}`);
+    } else {
+      ElMessage.error(error.message);
+    }
   });
 };
 
@@ -449,6 +520,7 @@ async function handleFeature(
   console.log(id);
   console.log(feature.variableSchema);
 
+  formDataVariableSchema.value = {};
   for (const key in feature.variableSchema) {
     if (!feature.variableSchema[key].storage) {
       checkShowDrawer = true;
@@ -469,7 +541,7 @@ async function handleFeature(
   drawer.value = checkShowDrawer;
 
   if (!checkShowDrawer) {
-    startConversation(variables);
+    startGenerateResponse(variables);
   } else {
     clickOutsideFocus.value = false;
   }
@@ -483,6 +555,7 @@ function handleFeatureClick(
   const id: string = featureSchema.id;
   console.log("handleFeatureClick", index, type, id);
   outputContent.value = "";
+  visible.value = true;
   handleFeature(id, featureSchema[type]!, type);
 }
 
@@ -554,10 +627,10 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-const handleStartConversation = () => {
+const handleStartGenerateResponse = () => {
   clickOutsideFocus.value = true;
   drawer.value = false;
-  startConversation(formDataVariableSchema.value);
+  startGenerateResponse(formDataVariableSchema.value);
 };
 
 const handleCloseDrawer = () => {
@@ -567,12 +640,50 @@ const handleCloseDrawer = () => {
   close();
 };
 
+const handleMoreClick = async () => {
+  await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
+};
+
+const newChat = (value: string) => {
+  let text = "";
+  text += props.selectedText + "\n";
+  text += "\\-\\-\\-\n";
+  text += outputContent.value + "\n";
+  text += "\\-\\-\\-\n";
+  text += value + "\n";
+  close();
+  chatDialog.setInitialPrompt(text);
+  chatDialog.setChatDialogVisible(true);
+};
+
+const handleRegenerate = () => {
+  clickOutsideFocus.value = true;
+  drawer.value = false;
+  console.log(formDataVariableSchema.value);
+  startGenerateResponse(formDataVariableSchema.value);
+};
+
+const handleCopyToClipboard = () => {
+  console.log("handleCopyToClipboard");
+  if (outputContent.value) {
+    navigator.clipboard.writeText(outputContent.value);
+  }
+};
+
 onMounted(async () => {
   console.log("onMounted");
   optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
   popoverRef.value = document.querySelector(".el-popover") as HTMLDivElement;
   document.addEventListener("mousedown", handleClickOutside);
-  // await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
+  await ChromeStorage.getInstance()
+    .get("FEATURE_JSON")
+    .then((result) => {
+      if (result) {
+        featureList.value = JSON.parse(result);
+      } else {
+        featureList.value = [];
+      }
+    });
 });
 
 onUnmounted(() => {

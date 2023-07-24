@@ -1,29 +1,31 @@
-import {
-  CommunicationMessageType,
-  CommunicationMessageTopicEnum,
-  CommunicationMessageTypeEnum,
-} from "../types";
 import { defineStore } from "pinia";
+import { ConversationMessageType } from "../types/conversation";
+
+interface ConversationState {
+  conversations: ConversationMessageType[];
+}
 
 export const useConversationStore = defineStore({
   id: "conversation",
-  state: () => ({}),
-  getters: {},
+  state: (): ConversationState => {
+    return {
+      conversations: [],
+    };
+  },
+  getters: {
+    getConversations(): ConversationMessageType[] {
+      return this.conversations;
+    },
+  },
   actions: {
-    async request(
-      prompt: string,
-      isStream: boolean,
-      sendMsgCallback: (data: CommunicationMessageType) => void
-    ): Promise<
-      (
-        callback: (data: CommunicationMessageType) => void
-      ) => (data: CommunicationMessageType) => void
-    > {
-      return new Promise<
-        (
-          callback: (data: CommunicationMessageType) => void
-        ) => (data: CommunicationMessageType) => void
-      >((resolve, reject) => {});
+    setConversations(list: ConversationMessageType[]): void {
+      this.conversations = list;
+    },
+    addingNewMessage(payload: ConversationMessageType) {
+      this.conversations!.push(payload);
+    },
+    updateLastMessage(payload: ConversationMessageType) {
+      this.conversations![this.conversations!.length - 1] = payload;
     },
   },
 });

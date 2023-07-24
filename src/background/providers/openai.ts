@@ -11,10 +11,14 @@ export class OpenAIAPI extends AIProvider {
   }
 
   public closeStream = () => {};
+  public deleteConversation(conversationId: string): void {}
 
   async conversation(
+    conversationId: string | null,
+    messageId: string | null,
     prompt: string,
-    isStream: boolean
+    isStream: boolean,
+    args: any
   ): Promise<(callback: (data: AIResponseType) => void) => void> {
     return new Promise<(callback: (data: AIResponseType) => void) => void>(
       (resolve, reject) => {

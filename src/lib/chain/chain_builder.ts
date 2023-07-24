@@ -3,6 +3,7 @@ import { PromptTemplate } from "../prompt_template";
 import { CWException } from "../../types/exception";
 import { SystemVariableParser } from "../system_variable_parser";
 import { EventEmitter } from "../../utils/event_emitter";
+import { LLM } from "../llm";
 
 export type ChainConfig = {
   name: string;
@@ -32,8 +33,10 @@ export class ChainBuilder {
         }
       });
 
+      const llm = new LLM();
       const chain = new Chain(
         config.name,
+        llm,
         promptTemplate,
         _variables,
         config.variableOutput,
@@ -51,7 +54,10 @@ export class ChainBuilder {
       const emitter = new EventEmitter();
       resolve(emitter);
       if (this.chains.length > 0) {
-        const result = await this.chains[this.chains.length - 1].execute();
+        const result = await this.chains[this.chains.length - 1].execute(true, {
+          conversationId: null,
+          deleteConversation: true,
+        });
 
         result.on("data", (data: string) => {
           emitter.emit("data", data);

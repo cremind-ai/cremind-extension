@@ -3,6 +3,7 @@ import { IPCClient } from "../../lib/ipc_client";
 import { EventEmitter } from "../../utils/event_emitter";
 import { PromptTemplate } from "../prompt_template";
 import { CommunicationMessageTopicEnum } from "../../types";
+import { LLM } from "../llm";
 
 export class ChainException extends CWException {}
 
@@ -19,6 +20,7 @@ export class ChainException extends CWException {}
 export type ChainVariableSchema = {
   [key: string]: {
     options?: Array<string | number>;
+    systemOptions?: string;
     description: string;
     storage: boolean;
   };
@@ -26,8 +28,8 @@ export type ChainVariableSchema = {
 
 export class Chain {
   private promptTemplate: PromptTemplate;
+  private llm: LLM;
   private variables: { [key: string]: string } | null = null;
-  private ipcClient: IPCClient;
   private previousChain: Chain | null;
   private streamOutput: boolean = true;
 
@@ -37,6 +39,7 @@ export class Chain {
 
   constructor(
     name: string | null = null,
+    llm: LLM,
     promptTemplate: PromptTemplate,
     variables: { [key: string]: string } | null = null,
     variableOutput: string | null = null,
@@ -44,7 +47,7 @@ export class Chain {
     streamOutput: boolean = true
   ) {
     this.name = name!;
-    this.ipcClient = IPCClient.getInstance();
+    this.llm = llm;
     this.promptTemplate = promptTemplate;
     this.variables = variables;
     this.variableOutput = variableOutput;
@@ -52,7 +55,7 @@ export class Chain {
     this.streamOutput = streamOutput;
   }
 
-  public async execute(): Promise<EventEmitter> {
+  public async execute(isStream: boolean, args: any): Promise<EventEmitter> {
     return new Promise(async (resolve, reject) => {
       const emitter = new EventEmitter();
       resolve(emitter);
@@ -60,15 +63,18 @@ export class Chain {
       try {
         let prompt;
         if (this.previousChain) {
-          const resultPreviousChain = await this.previousChain.execute();
-          const ChainPromise = new Promise<string>((resolve, reject) => {
+          const resultPreviousChain = await this.previousChain.execute(
+            isStream,
+            args
+          );
+          const ChainPromise = new Promise<any>((resolve, reject) => {
             resultPreviousChain.on("data", (data: string) => {
               emitter.emit("data", data);
             });
-            resultPreviousChain.on("endOfChain", (data: string) => {
+            resultPreviousChain.on("endOfChain", (data: any) => {
               resolve(data);
             });
-            resultPreviousChain.on("complete", (data: string) => {
+            resultPreviousChain.on("complete", (data: any) => {
               emitter.emit("complete", data);
             });
             resultPreviousChain.on("error", (error: CWException) => {
@@ -82,7 +88,7 @@ export class Chain {
           if (!this.variables) {
             this.variables = {};
           }
-          this.variables[this.previousChain.variableOutput!] = data;
+          this.variables[this.previousChain.variableOutput!] = data.message;
 
           prompt = this.promptTemplate.render(this.variables);
         } else {
@@ -92,14 +98,8 @@ export class Chain {
         console.log("=====================");
         console.log(prompt);
         console.log("=====================");
-        const data = await this.ipcClient.request(
-          CommunicationMessageTopicEnum.CONVERSATION,
-          true,
-          {
-            message: prompt,
-          },
-          20000
-        );
+
+        const data = await this.llm.request(prompt, isStream, args);
         data.on("data", (data) => {
           if (this.streamOutput) {
             emitter.emit("data", data.message);
@@ -107,7 +107,7 @@ export class Chain {
         });
         data.on("complete", (data) => {
           this.output = data.message;
-          emitter.emit("endOfChain", data.message);
+          emitter.emit("endOfChain", data);
         });
         data.on("error", (err) => {
           emitter.emit("error", err);

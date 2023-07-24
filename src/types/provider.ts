@@ -8,4 +8,9 @@ export type AIResponseType = {
   type: AIResponseTypeEnum;
   message?: string;
   code?: number;
+  payload?: {
+    conversationId?: string;
+    messageId?: string;
+    childMessageId?: string;
+  };
 };

@@ -7,15 +7,18 @@
     :selectedMode="selectedMode"
     @close="handleMainCardClose"
   />
+  <ChatDialog />
 </template>
 
 <script setup lang="ts">
 import { Ref, ref } from "vue";
 import { MainCard } from "../components";
+import { ChatDialog } from "../components";
 import { SystemVariableParser } from "../lib/system_variable_parser";
 import { selectedModeEnum } from "../types";
 
 const selectedText = ref("");
+const mousedownSelectedText = ref(false);
 const top = ref("");
 const left = ref("");
 const topMousedown = ref("");
@@ -44,14 +47,20 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 });
 
 document.addEventListener("mousedown", function (event: MouseEvent) {
-  topMousedown.value = `${event.clientY}px`;
-  leftMousedown.value = `${event.clientX}px`;
+  const selection = window.getSelection()?.toString().trim();
+  if (selection) {
+    mousedownSelectedText.value = true;
+  } else {
+    mousedownSelectedText.value = false;
+  }
+  topMousedown.value = `${event.clientY + window.scrollY}px`;
+  leftMousedown.value = `${event.clientX + window.scrollX}px`;
 });
 
 document.addEventListener("mouseup", function (event: MouseEvent) {
   const selection = window.getSelection()?.toString().trim();
   const activeElement = document.activeElement as HTMLElement;
-  if (selection && !showMainCard.value) {
+  if (selection && !mousedownSelectedText.value && !showMainCard.value) {
     selectedText.value = selection;
     SystemVariableParser.getInstance().setSelectedText(selection);
     top.value = `${event.clientY + window.scrollY}px`;
@@ -73,12 +82,6 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
 
 function handleMainCardClose() {
   showMainCard.value = false;
-  if (window.getSelection) {
-    var selectedText = window.getSelection()!.toString();
-    if (selectedText !== "") {
-      window.getSelection()!.empty();
-    }
-  }
 }
 </script>
 

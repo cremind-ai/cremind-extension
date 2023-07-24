@@ -4,7 +4,7 @@ import {
   CommunicationMessageType,
   CommunicationMessageTypeEnum,
 } from "../types";
-import { CONTENT_SCRIPT_PORT_NAME } from "../constants/common";
+import { CONTENT_SCRIPT_PORT_NAME } from "../constants";
 
 export class IPCHostException extends CWException {}
 
