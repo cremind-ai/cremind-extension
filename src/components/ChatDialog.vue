@@ -208,6 +208,7 @@ const handleCloseDialog = () => {
 
 const newChat = (value: string) => {
   console.log("newChat", value);
+  chatRef.value?.scrollToBottom();
   sendMessage(value, false);
 };
 

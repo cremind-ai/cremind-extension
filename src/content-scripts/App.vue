@@ -47,6 +47,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 });
 
 document.addEventListener("mousedown", function (event: MouseEvent) {
+  console.log("mousedown");
   const selection = window.getSelection()?.toString().trim();
   if (selection) {
     mousedownSelectedText.value = true;
@@ -58,6 +59,7 @@ document.addEventListener("mousedown", function (event: MouseEvent) {
 });
 
 document.addEventListener("mouseup", function (event: MouseEvent) {
+  console.log("mouseup");
   const selection = window.getSelection()?.toString().trim();
   const activeElement = document.activeElement as HTMLElement;
   if (selection && !mousedownSelectedText.value && !showMainCard.value) {
@@ -75,7 +77,28 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
     } else {
       selectedMode.value = selectedModeEnum.READONLY;
     }
+    showMainCard.value = true;
+  }
+});
 
+document.addEventListener("keyup", function (event: KeyboardEvent) {
+  const selection = window.getSelection()?.toString().trim();
+  if (selection && !showMainCard.value) {
+    selectedText.value = selection;
+    SystemVariableParser.getInstance().setSelectedText(selection);
+    top.value = topMousedown.value;
+    left.value = leftMousedown.value;
+    const activeElement = document.activeElement as HTMLElement;
+    if (
+      activeElement &&
+      (activeElement.isContentEditable ||
+        activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
+        activeElement.nodeName.toUpperCase() === "INPUT")
+    ) {
+      selectedMode.value = selectedModeEnum.EDITABLE;
+    } else {
+      selectedMode.value = selectedModeEnum.READONLY;
+    }
     showMainCard.value = true;
   }
 });

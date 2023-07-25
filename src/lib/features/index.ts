@@ -10,6 +10,8 @@ type Icon = {
   type: IconType;
 };
 export type FeatureType = {
+  title: string;
+  description: string;
   Icon: Icon;
   variableSchema: ChainVariableSchema;
   Chains: ChainConfig[];

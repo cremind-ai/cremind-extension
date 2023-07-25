@@ -15,23 +15,29 @@
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElButton
-                type="success"
-                plain
-                @click="
-                  handleFeatureClick(feature, index, selectedModeEnum.EDITABLE)
-                "
-              >
-                <Icon
-                  :icon="feature.EDITABLE?.Icon.content || ''"
-                  :style="{ fontSize: feature.EDITABLE?.Icon.fontSize }"
-                  v-if="feature.EDITABLE?.Icon.type === 'icon'"
-                />
-                <div
-                  v-if="feature.EDITABLE?.Icon.type === 'svg'"
-                  v-html="feature.EDITABLE?.Icon.content"
-                ></div>
-              </ElButton>
+              <ElTooltip :content="feature.EDITABLE?.title" placement="top">
+                <ElButton
+                  type="success"
+                  plain
+                  @click="
+                    handleFeatureClick(
+                      feature,
+                      index,
+                      selectedModeEnum.EDITABLE
+                    )
+                  "
+                >
+                  <Icon
+                    :icon="feature.EDITABLE?.Icon.content || ''"
+                    :style="{ fontSize: feature.EDITABLE?.Icon.fontSize }"
+                    v-if="feature.EDITABLE?.Icon.type === 'icon'"
+                  />
+                  <div
+                    v-if="feature.EDITABLE?.Icon.type === 'svg'"
+                    v-html="feature.EDITABLE?.Icon.content"
+                  ></div>
+                </ElButton>
+              </ElTooltip>
             </template>
             <ElButton type="success" plain @click="handleMoreClick()">
               <Icon
@@ -47,28 +53,34 @@
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElButton
-                type="success"
-                plain
-                @click="
-                  handleFeatureClick(feature, index, selectedModeEnum.READONLY)
-                "
-              >
-                <Icon
-                  :icon="feature.READONLY?.Icon.content || ''"
-                  :style="{ fontSize: feature.READONLY?.Icon.fontSize }"
-                  v-if="feature.READONLY?.Icon.type === 'icon'"
-                />
-                <span
-                  v-if="feature.READONLY?.Icon.type === 'svg'"
-                  v-html="feature.READONLY?.Icon.content"
-                  :style="{
-                    fontSize: feature.READONLY?.Icon.fontSize,
-                    width: feature.READONLY?.Icon.width,
-                    height: feature.READONLY?.Icon.height,
-                  }"
-                ></span>
-              </ElButton>
+              <ElTooltip :content="feature.READONLY?.title" placement="top">
+                <ElButton
+                  type="success"
+                  plain
+                  @click="
+                    handleFeatureClick(
+                      feature,
+                      index,
+                      selectedModeEnum.READONLY
+                    )
+                  "
+                >
+                  <Icon
+                    :icon="feature.READONLY?.Icon.content || ''"
+                    :style="{ fontSize: feature.READONLY?.Icon.fontSize }"
+                    v-if="feature.READONLY?.Icon.type === 'icon'"
+                  />
+                  <span
+                    v-if="feature.READONLY?.Icon.type === 'svg'"
+                    v-html="feature.READONLY?.Icon.content"
+                    :style="{
+                      fontSize: feature.READONLY?.Icon.fontSize,
+                      width: feature.READONLY?.Icon.width,
+                      height: feature.READONLY?.Icon.height,
+                    }"
+                  ></span>
+                </ElButton>
+              </ElTooltip>
             </template>
             <ElButton type="success" plain @click="handleMoreClick()">
               <Icon
@@ -84,34 +96,39 @@
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElButton
-                type="success"
-                plain
-                @click="
-                  handleFeatureClick(
-                    feature,
-                    index,
-                    selectedModeEnum.EDITABLE_NO_CONTENT
-                  )
-                "
+              <ElTooltip
+                :content="feature.EDITABLE_NO_CONTENT?.title"
+                placement="top"
               >
-                <Icon
-                  :icon="feature.EDITABLE_NO_CONTENT?.Icon.content || ''"
-                  :style="{
-                    fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
-                  }"
-                  v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'icon'"
-                />
-                <span
-                  v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'svg'"
-                  v-html="feature.EDITABLE_NO_CONTENT?.Icon.content"
-                  :style="{
-                    fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
-                    width: feature.EDITABLE_NO_CONTENT?.Icon.width,
-                    height: feature.EDITABLE_NO_CONTENT?.Icon.height,
-                  }"
-                ></span>
-              </ElButton>
+                <ElButton
+                  type="success"
+                  plain
+                  @click="
+                    handleFeatureClick(
+                      feature,
+                      index,
+                      selectedModeEnum.EDITABLE_NO_CONTENT
+                    )
+                  "
+                >
+                  <Icon
+                    :icon="feature.EDITABLE_NO_CONTENT?.Icon.content || ''"
+                    :style="{
+                      fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
+                    }"
+                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'icon'"
+                  />
+                  <span
+                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'svg'"
+                    v-html="feature.EDITABLE_NO_CONTENT?.Icon.content"
+                    :style="{
+                      fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
+                      width: feature.EDITABLE_NO_CONTENT?.Icon.width,
+                      height: feature.EDITABLE_NO_CONTENT?.Icon.height,
+                    }"
+                  ></span>
+                </ElButton>
+              </ElTooltip>
             </template>
             <ElButton type="success" plain @click="handleMoreClick()">
               <Icon
@@ -152,7 +169,9 @@
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
       <div style="padding: 20px">
         <div v-if="selectedMode !== selectedModeEnum.EDITABLE_NO_CONTENT">
-          <div v-html="markedRender(selectedText)"></div>
+          <pre style="white-space: pre-wrap; word-wrap: break-word">{{
+            selectedText
+          }}</pre>
           <ElDivider></ElDivider>
         </div>
         <div ref="contentRef" v-html="markedRender(outputContent)"></div>
@@ -230,6 +249,7 @@ import { ElForm } from "element-plus";
 import { ElFormItem } from "element-plus";
 import { ElDivider } from "element-plus";
 import { ElMessage } from "element-plus";
+import { ElTooltip } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
 import { Marked } from "marked";
