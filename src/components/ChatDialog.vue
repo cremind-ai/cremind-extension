@@ -31,15 +31,25 @@
                 />
               </ElButton>
             </ElTooltip>
+            <ElTooltip content="Stop generating" placement="top">
+              <ElButton plain @click="handleStopGenerating">
+                <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
+              </ElButton>
+            </ElTooltip>
           </ElButtonGroup>
         </div>
       </div>
     </template>
-    <Chat :chats="chats" @new-chat="newChat" ref="chatRef" />
+    <Chat
+      ref="chatRef"
+      :chats="chats"
+      @new-chat="newChat"
+      v-model:blockSend="isStreaming"
+    />
   </ElDialog>
   <div class="button-chatting">
     <Icon
-      icon="fluent:chat-20-regular"
+      icon="fluent:chat-12-filled"
       :style="{ fontSize: '50px' }"
       @click="onStartChatBox"
     />
@@ -47,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { ElButton } from "element-plus";
 import { ElTooltip } from "element-plus";
@@ -73,6 +83,7 @@ let messageId: string | null = null;
 let childMessageId: string | null = null;
 let saveConversation = false;
 let currentPrompt: string | null = null;
+const isStreaming = ref(false);
 const llm = new LLM();
 
 watch(
@@ -87,6 +98,7 @@ watch(
 );
 
 const sendMessage = async (prompt: string, regenerate: boolean) => {
+  isStreaming.value = true;
   currentPrompt = prompt;
   if (!regenerate) {
     conversation.addingNewMessage({
@@ -136,6 +148,7 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
 
   result.on("endOfChain", (data: any) => {
     console.log("endOfChain");
+    isStreaming.value = false;
     console.log(data);
     conversationId = data.conversationId;
     messageId = data.messageId;
@@ -148,6 +161,7 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
 
   result.on("error", (err: CWException) => {
     console.log("error");
+    isStreaming.value = false;
     console.log(err);
   });
 
@@ -180,6 +194,11 @@ const onStartChatBox = async () => {
 
 const handleSaveConversation = () => {
   saveConversation = true;
+};
+
+const handleStopGenerating = () => {
+  isStreaming.value = false;
+  llm.stopGenerating();
 };
 
 const handleCloseDialog = () => {

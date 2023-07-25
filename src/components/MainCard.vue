@@ -232,7 +232,9 @@ import { ElDivider } from "element-plus";
 import { ElMessage } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
-import { marked } from "marked";
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
+import hljs from "highlight.js";
 import { LoadImg } from ".";
 import { selectedModeEnum } from "../types";
 import { FeatureType } from "../lib/features";
@@ -271,6 +273,15 @@ const props = defineProps({
   },
 });
 
+const marked = new Marked(
+  markedHighlight({
+    langPrefix: "hljs language-",
+    highlight(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : "plaintext";
+      return hljs.highlight(code, { language }).value;
+    },
+  })
+);
 marked.use({ silent: true, breaks: true });
 
 const emits = defineEmits(["close"]);
@@ -390,9 +401,9 @@ watch(
   }
 );
 
-function markedRender(text: string) {
-  return marked(text);
-}
+const markedRender = (text: string) => {
+  return marked.parse(text);
+};
 
 const scrollToBottom = () => {
   scrollContentRef.value!.setScrollTop(contentRef.value!.clientHeight);

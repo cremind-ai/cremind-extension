@@ -23,6 +23,17 @@ export class LLM {
     );
   }
 
+  public stopGenerating() {
+    this.ipcClient.request(
+      CommunicationMessageTopicEnum.CONVERSATION,
+      false,
+      {
+        mode: LLMMODE.STOP_GENERATING,
+      },
+      10000
+    );
+  }
+
   public request(
     prompt: string,
     isStream: boolean,

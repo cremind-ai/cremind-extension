@@ -154,6 +154,15 @@ ipcHost.register(
       sendResponse(CommunicationMessageTypeEnum.COMPLETE, {
         status: "success",
       });
+    } else if (
+      data &&
+      data.type === CommunicationMessageTypeEnum.MESSAGE &&
+      data.payload.mode === LLMMODE.STOP_GENERATING
+    ) {
+      aiProvider.closeStream();
+      sendResponse(CommunicationMessageTypeEnum.COMPLETE, {
+        status: "success",
+      });
     }
   }
 );

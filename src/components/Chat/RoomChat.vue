@@ -1,12 +1,10 @@
 <template>
-  <main class="w-full py-5 pb-20">
-    <BallonChat
-      v-for="(chat, index) in props.chats"
-      :key="index"
-      :is-left="chat.role === ConversationRoleEnum.ASSISTANT"
-      :message="chat.text"
-    />
-  </main>
+  <BallonChat
+    v-for="(chat, index) in props.chats"
+    :key="index"
+    :is-left="chat.role === ConversationRoleEnum.ASSISTANT"
+    :message="chat.text"
+  />
 </template>
 
 <script setup lang="ts">
@@ -20,15 +18,4 @@ const props = defineProps({
   },
 });
 </script>
-<style scoped>
-.w-full {
-  width: 100%;
-}
-.py-5 {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
-}
-.pb-20 {
-  padding-bottom: 5rem;
-}
-</style>
+<style scoped></style>
