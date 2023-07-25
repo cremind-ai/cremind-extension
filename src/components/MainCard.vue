@@ -167,14 +167,14 @@
       circle
     ></ElButton>
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <div style="padding: 20px">
+      <div ref="contentRef" style="padding: 20px">
         <div v-if="selectedMode !== selectedModeEnum.EDITABLE_NO_CONTENT">
           <pre style="white-space: pre-wrap; word-wrap: break-word">{{
             selectedText
           }}</pre>
           <ElDivider></ElDivider>
         </div>
-        <div ref="contentRef" v-html="markedRender(outputContent)"></div>
+        <div v-html="markedRender(outputContent)"></div>
       </div>
     </ElScrollbar>
     <ChatAction @new-chat="newChat" />
