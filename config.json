@@ -1,28 +1,94 @@
 [
   {
-    "id": "e1b5a11b-d0c5-4c73-862b-e3dc9a2a7652",
+    "id": "89a0b644-361c-451b-b1a7-73418a132d1c",
     "READONLY": {
+      "title": "Summary",
+      "description": "",
       "Icon": {
-        "content": "system-uicons:translate",
+        "content": "system-uicons:document",
         "fontSize": "20px",
         "type": "icon"
       },
       "variableSchema": {
-        "target_language": {
-          "options": ["Vietnamese", "English", "Japanese", "Korean", "Chinese"],
-          "description": "Target language",
+        "language": {
+          "systemOptions": "Language",
+          "description": "The language that you want to summarize",
           "storage": true
         }
       },
       "Chains": [
         {
-          "name": "ChainTranslate",
-          "promptTemplate": "Translate to @{target_language}, please translate most naturally, do not translate literally.\nSENTENCE:\n&{SELECTED_TEXT}\nTRANSLATED:",
+          "name": "ChainSummary",
+          "promptTemplate": "Summarize below content:\n```\n&{SELECTED_TEXT}\n```\nSUMMARIZE (in @{language}):\n\n",
+          "variableOutput": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "4e93d17b-5646-4d65-afc1-d26dbcfd979e",
+    "READONLY": {
+      "title": "Dictionary",
+      "description": "",
+      "Icon": {
+        "content": "arcticons:dictionary",
+        "fontSize": "20px",
+        "type": "icon"
+      },
+      "variableSchema": {
+        "from_language": {
+          "systemOptions": "Language",
+          "description": "From language",
+          "storage": true
+        },
+        "to_language": {
+          "systemOptions": "Language",
+          "description": "To language",
+          "storage": true
+        }
+      },
+      "Chains": [
+        {
+          "name": "ChainDictionary",
+          "promptTemplate": "You are an @{from_language}-to-@{to_language} dictionary. I use @{to_language} as my mother tongue. Please explain this English vocabulary to me, what kind of word this is and the cases it can be used in @{from_language}: \"&{SELECTED_TEXT}\"\nEXPLAIN (in @{to_language}):\n\n",
           "variableOutput": null
         }
       ]
     },
     "EDITABLE": {
+      "title": "Dictionary",
+      "description": "",
+      "Icon": {
+        "content": "arcticons:dictionary",
+        "fontSize": "20px",
+        "type": "icon"
+      },
+      "variableSchema": {
+        "from_language": {
+          "systemOptions": "Language",
+          "description": "From language",
+          "storage": true
+        },
+        "to_language": {
+          "systemOptions": "Language",
+          "description": "To language",
+          "storage": true
+        }
+      },
+      "Chains": [
+        {
+          "name": "ChainDictionary",
+          "promptTemplate": "You are an @{from_language}-to-@{to_language} dictionary. I use @{to_language} as my mother tongue. Please explain this English vocabulary to me, what kind of word this is and the cases it can be used in @{from_language}: \"&{SELECTED_TEXT}\"\nEXPLAIN (in @{to_language}):\n\n",
+          "variableOutput": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "e1b5a11b-d0c5-4c73-862b-e3dc9a2a7652",
+    "READONLY": {
+      "title": "Translate",
+      "description": "",
       "Icon": {
         "content": "system-uicons:translate",
         "fontSize": "20px",
@@ -30,7 +96,7 @@
       },
       "variableSchema": {
         "target_language": {
-          "options": ["Vietnamese", "English", "Japanese", "Korean", "Chinese"],
+          "systemOptions": "Language",
           "description": "Target language",
           "storage": true
         }
@@ -38,7 +104,30 @@
       "Chains": [
         {
           "name": "ChainTranslate",
-          "promptTemplate": "Translate to @{target_language}, please translate most naturally, do not translate literally.\nSENTENCE:\n&{SELECTED_TEXT}\nTRANSLATED:",
+          "promptTemplate": "Translate to @{target_language}, please translate most naturally, do not translate literally.\nSENTENCE:\n```\n&{SELECTED_TEXT}\n```\nTRANSLATED:",
+          "variableOutput": null
+        }
+      ]
+    },
+    "EDITABLE": {
+      "title": "Translate",
+      "description": "",
+      "Icon": {
+        "content": "system-uicons:translate",
+        "fontSize": "20px",
+        "type": "icon"
+      },
+      "variableSchema": {
+        "target_language": {
+          "systemOptions": "Language",
+          "description": "Target language",
+          "storage": true
+        }
+      },
+      "Chains": [
+        {
+          "name": "ChainTranslate",
+          "promptTemplate": "Translate to @{target_language}, please translate most naturally, do not translate literally.\nSENTENCE:\n```\n&{SELECTED_TEXT}\n```\nTRANSLATED:",
           "variableOutput": null
         }
       ]
@@ -47,6 +136,8 @@
   {
     "id": "bd80fcb2-a871-45f6-b14c-fa59866d592d",
     "EDITABLE": {
+      "title": "Correction",
+      "description": "",
       "Icon": {
         "content": "icon-park-outline:correct",
         "fontSize": "20px",
@@ -54,7 +145,7 @@
       },
       "variableSchema": {
         "target_language": {
-          "options": ["English", "Japanese", "Korean", "Chinese"],
+          "systemOptions": "Language",
           "description": "Target language",
           "storage": true
         }
@@ -62,7 +153,7 @@
       "Chains": [
         {
           "name": "chainCorrect",
-          "promptTemplate": "Correct to standard @{target_language} grammar:\nSENTENCE:&{SELECTED_TEXT}\nCORRECTED:\n--->",
+          "promptTemplate": "Correct the following sentence to standard @{target_language} grammar:\nSENTENCE: ```\n&{SELECTED_TEXT}\n```\nCORRECTED:",
           "variableOutput": null
         }
       ],
@@ -72,14 +163,21 @@
   {
     "id": "d2d0c070-b580-4228-bc41-d6ffe87d17ee",
     "READONLY": {
+      "title": "Explaination",
+      "description": "",
       "Icon": {
         "content": "fluent:text-grammar-checkmark-24-regular",
         "fontSize": "20px",
         "type": "icon"
       },
       "variableSchema": {
+        "target_language": {
+          "systemOptions": "Language",
+          "description": "Target language",
+          "storage": true
+        },
         "your_native_language": {
-          "options": ["English", "Vietnamese"],
+          "systemOptions": "Language",
           "description": "Your native language",
           "storage": true
         }
@@ -87,27 +185,35 @@
       "Chains": [
         {
           "name": "ChainCorrect",
-          "promptTemplate": "Explain the English grammar of the sentence below:\n&{SELECTED_TEXT}\nEXPLAIN (only in @{your_native_language}):",
+          "promptTemplate": "Explain the @{target_language} grammar of the sentence below:\n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (only in @{your_native_language}):",
           "variableOutput": null
         }
       ]
     },
     "EDITABLE": {
+      "title": "Correct & Explain",
+      "description": "",
       "Icon": {
         "content": "fluent:text-grammar-checkmark-24-regular",
         "fontSize": "20px",
         "type": "icon"
       },
-      "variableSchema": {},
+      "variableSchema": {
+        "target_language": {
+          "systemOptions": "Language",
+          "description": "Target language",
+          "storage": true
+        }
+      },
       "Chains": [
         {
           "name": "ChainCorrect",
-          "promptTemplate": "Correct this below to standard &{LANGUAGE} grammar:\n&{SELECTED_TEXT}",
+          "promptTemplate": "Correct this below to standard @{target_language} grammar:\n```\n&{SELECTED_TEXT}\n```\nCORRECTED:\n",
           "variableOutput": "sentence_corrected"
         },
         {
           "name": "ChainExplain",
-          "promptTemplate": "Explain the grammar mistakes, why correct them in detail\nSENTENCE:&{SELECTED_TEXT}\nCORRECTED:@{sentence_corrected}\nEXPLAIN (in Vietnamese):",
+          "promptTemplate": "Explain the grammar mistakes, why correct them in detail\nSENTENCE:\n```\n&{SELECTED_TEXT}\n```\nCORRECTED:\n```\n@{sentence_corrected}\n```\nEXPLAIN (in Vietnamese):",
           "variableOutput": null
         }
       ],
@@ -117,9 +223,11 @@
   {
     "id": "7cbe5f85-03f6-41a7-b68f-818f6afa2a74",
     "EDITABLE_NO_CONTENT": {
+      "title": "Email writing",
+      "description": "",
       "Icon": {
         "content": "iconamoon:email-thin",
-        "fontSize": "20px",
+        "fontSize": "16px",
         "type": "icon"
       },
       "variableSchema": {
@@ -132,7 +240,7 @@
           "storage": true
         },
         "target_language": {
-          "options": ["English", "Vietnamese", "Japanese", "Korean", "Chinese"],
+          "systemOptions": "Language",
           "description": "Target language",
           "storage": true
         }
@@ -145,6 +253,55 @@
         }
       ],
       "WriteResponse": true
+    }
+  },
+  {
+    "id": "e8459864-2608-4623-8079-725d6a3d6925",
+    "READONLY": {
+      "title": "Explain code",
+      "description": "",
+      "Icon": {
+        "content": "streamline:programming-browser-code-2-code-browser-tags-angle-programming-bracket",
+        "fontSize": "16px",
+        "type": "icon"
+      },
+      "variableSchema": {
+        "language": {
+          "systemOptions": "Language",
+          "description": "Language",
+          "storage": true
+        }
+      },
+      "Chains": [
+        {
+          "name": "ChainDictionary",
+          "promptTemplate": "I'm @{language}, I use @{language} as my mother tongue. Please explain below content:\n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (in @{language}):\n\n",
+          "variableOutput": null
+        }
+      ]
+    },
+    "EDITABLE": {
+      "title": "Explain code",
+      "description": "",
+      "Icon": {
+        "content": "streamline:programming-browser-code-2-code-browser-tags-angle-programming-bracket",
+        "fontSize": "16px",
+        "type": "icon"
+      },
+      "variableSchema": {
+        "language": {
+          "systemOptions": "Language",
+          "description": "Language",
+          "storage": true
+        }
+      },
+      "Chains": [
+        {
+          "name": "ChainDictionary",
+          "promptTemplate": "I'm @{language}, I use @{language} as my mother tongue. Please explain below content:\n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (in @{language}):\n\n",
+          "variableOutput": null
+        }
+      ]
     }
   }
 ]

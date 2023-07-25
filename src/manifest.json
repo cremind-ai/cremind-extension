@@ -1,7 +1,7 @@
 {
-  "name": "cWord grammar correction",
+  "name": "cWord GPT extension",
   "version": "0.0.1",
-  "description": "cWord grammar correction",
+  "description": "cWord GPT extension",
   "manifest_version": 3,
   "action": {
     "default_icon": {
