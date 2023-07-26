@@ -1,8 +1,8 @@
 import { CWException } from "../types/exception";
 import {
-  CommunicationMessageTopicEnum,
-  CommunicationMessageType,
-  CommunicationMessageTypeEnum,
+  IPCTopicEnum,
+  IPCMessageType,
+  ConversationMessageTypeEnum,
 } from "../types";
 import { CONTENT_SCRIPT_PORT_NAME } from "../constants";
 
@@ -12,12 +12,13 @@ export class IPCHost {
   private static instance: IPCHost;
   private NAME = CONTENT_SCRIPT_PORT_NAME;
   private registeredCallbacks: {
-    [key in CommunicationMessageTopicEnum]: (
-      data: CommunicationMessageType,
-      sendResponse: (type: CommunicationMessageTypeEnum, response?: any) => void
+    [key in IPCTopicEnum]: (
+      data: IPCMessageType,
+      sendResponse: (type: ConversationMessageTypeEnum, response?: any) => void
     ) => void;
   } = {
-    [CommunicationMessageTopicEnum.CONVERSATION]: () => {},
+    [IPCTopicEnum.CONVERSATION]: () => {},
+    [IPCTopicEnum.COMMUNICATION]: () => {},
   };
 
   private constructor() {}
@@ -32,12 +33,12 @@ export class IPCHost {
   public initConnection(): IPCHost {
     chrome.runtime.onConnect.addListener((port) => {
       if (port.name === this.NAME) {
-        port.onMessage.addListener(async (data: CommunicationMessageType) => {
+        port.onMessage.addListener(async (data: IPCMessageType) => {
           const { topic } = data;
           if (this.registeredCallbacks[topic]) {
             this.registeredCallbacks[topic](
               data,
-              (type: CommunicationMessageTypeEnum, response?: any) => {
+              (type: ConversationMessageTypeEnum, response?: any) => {
                 this.sendResponse(port, data, type, response);
               }
             );
@@ -50,11 +51,11 @@ export class IPCHost {
 
   private sendResponse(
     port: chrome.runtime.Port,
-    request: CommunicationMessageType,
-    type: CommunicationMessageTypeEnum,
+    request: IPCMessageType,
+    type: ConversationMessageTypeEnum,
     response?: any
   ) {
-    const fullResponse: CommunicationMessageType = {
+    const fullResponse: IPCMessageType = {
       payload: response,
       type: type,
       topic: request.topic,
@@ -64,10 +65,10 @@ export class IPCHost {
   }
 
   public register(
-    topic: CommunicationMessageTopicEnum,
+    topic: IPCTopicEnum,
     callback: (
-      data: CommunicationMessageType,
-      sendResponse: (type: CommunicationMessageTypeEnum, response?: any) => void
+      data: IPCMessageType,
+      sendResponse: (type: ConversationMessageTypeEnum, response?: any) => void
     ) => void
   ) {
     this.registeredCallbacks[topic] = callback;

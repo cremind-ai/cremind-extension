@@ -1,7 +1,7 @@
 import { CWException } from "../../types/exception";
 import { IPCClient } from "../../lib/ipc_client";
 import { EventEmitter } from "../../utils/event_emitter";
-import { CommunicationMessageTopicEnum, LLMMODE } from "../../types";
+import { IPCTopicEnum, LLMMODE } from "../../types";
 
 export class LLMException extends CWException {}
 
@@ -11,9 +11,9 @@ export class LLM {
     this.ipcClient = IPCClient.getInstance();
   }
 
-  public deleteConversation(args: any) {
+  public async deleteConversation(args: any) {
     this.ipcClient.request(
-      CommunicationMessageTopicEnum.CONVERSATION,
+      IPCTopicEnum.CONVERSATION,
       false,
       {
         ...args,
@@ -23,15 +23,16 @@ export class LLM {
     );
   }
 
-  public stopGenerating() {
-    this.ipcClient.request(
-      CommunicationMessageTopicEnum.CONVERSATION,
+  public async stopGenerating(): Promise<any> {
+    const resData = await this.ipcClient.request(
+      IPCTopicEnum.CONVERSATION,
       false,
       {
         mode: LLMMODE.STOP_GENERATING,
       },
       10000
     );
+    return resData;
   }
 
   public request(
@@ -45,7 +46,7 @@ export class LLM {
 
       try {
         const data = await this.ipcClient.request(
-          CommunicationMessageTopicEnum.CONVERSATION,
+          IPCTopicEnum.CONVERSATION,
           isStream,
           {
             ...args,

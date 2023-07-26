@@ -59,15 +59,15 @@ export class ChainBuilder {
           deleteConversation: true,
         });
 
-        result.on("data", (data: string) => {
+        result.on("data", (data: any) => {
           emitter.emit("data", data);
         });
 
-        result.on("complete", (data: string) => {
+        result.on("complete", (data: any) => {
           emitter.emit("complete", data);
         });
 
-        result.on("endOfChain", (data: string) => {
+        result.on("endOfChain", (data: any) => {
           emitter.emit("endOfChain", data);
         });
 

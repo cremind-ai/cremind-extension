@@ -2,8 +2,9 @@ import { CWException } from "../../types/exception";
 import { IPCClient } from "../../lib/ipc_client";
 import { EventEmitter } from "../../utils/event_emitter";
 import { PromptTemplate } from "../prompt_template";
-import { CommunicationMessageTopicEnum } from "../../types";
+import { IPCTopicEnum } from "../../types";
 import { LLM } from "../llm";
+import { consoleLog, LogLevelEnum } from "../../utils";
 
 export class ChainException extends CWException {}
 
@@ -68,7 +69,7 @@ export class Chain {
             args
           );
           const ChainPromise = new Promise<any>((resolve, reject) => {
-            resultPreviousChain.on("data", (data: string) => {
+            resultPreviousChain.on("data", (data: any) => {
               emitter.emit("data", data);
             });
             resultPreviousChain.on("endOfChain", (data: any) => {
@@ -95,9 +96,9 @@ export class Chain {
           prompt = this.promptTemplate.render(this.variables);
         }
 
-        console.log("=====================");
-        console.log(prompt);
-        console.log("=====================");
+        consoleLog(LogLevelEnum.DEBUG, "=====================");
+        consoleLog(LogLevelEnum.DEBUG, prompt);
+        consoleLog(LogLevelEnum.DEBUG, "=====================");
 
         const data = await this.llm.request(prompt, isStream, args);
         data.on("data", (data) => {

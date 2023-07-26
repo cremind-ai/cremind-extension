@@ -11,10 +11,12 @@ import commonjs from "@rollup/plugin-commonjs";
 import replace from "@rollup/plugin-replace";
 import postcss from "rollup-plugin-postcss";
 import alias from "rollup-plugin-alias";
+import { terser } from "rollup-plugin-terser";
 import _dotenv from "dotenv/config";
 import path from "path";
 
 export default {
+  external: ["crypto"],
   input: "src/manifest.json",
   output: {
     dir: "dist",
@@ -51,14 +53,28 @@ export default {
       __VUE_OPTIONS_API__: true,
       __VUE_PROD_DEVTOOLS__: false,
       "process.env.NODE_ENV": JSON.stringify("production"),
-      "process.env.VUE_APP_APIKEY": JSON.stringify(process.env.VUE_APP_APIKEY),
+      "process.env.VUE_APP_LOG_LEVEL": JSON.stringify(
+        process.env.VUE_APP_LOG_LEVEL
+      ),
+      "process.env.VUE_APP_CRYPTO_SECRET_KEY": JSON.stringify(
+        process.env.VUE_APP_CRYPTO_SECRET_KEY
+      ),
+      "process.env.VUE_APP_CRYPTO_CONFIG_JSON": JSON.stringify(
+        process.env.VUE_APP_CRYPTO_CONFIG_JSON
+      ),
       preventAssignment: true,
     }),
     typescript(),
     postcss(),
     json(),
-    resolve(),
+    resolve({
+      customResolveOptions: {
+        moduleDirectories: "node_modules",
+      },
+      preferBuiltins: true,
+    }),
     commonjs(),
     emptyDir(),
+    terser(),
   ],
 };

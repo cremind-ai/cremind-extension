@@ -5,6 +5,7 @@ import { AIProvider } from "./base";
 import { AIProviderException } from "./index";
 import { Status } from "../../constants/status";
 import { uuid } from "../../utils";
+import { consoleLog, LogLevelEnum } from "../../utils";
 
 export class ChatGPT extends AIProvider {
   private static instance: ChatGPT;
@@ -13,7 +14,6 @@ export class ChatGPT extends AIProvider {
   private cache: ExpiryMap<string> = new ExpiryMap(10 * 1000);
   public token: string | null = null;
   private reader: ReadableStreamDefaultReader | null = null; // Variable to store ReadableStreamDefaultReader
-  private conversationId: string | null = null;
   private messageId: string | null = null;
 
   private constructor() {
@@ -116,7 +116,7 @@ export class ChatGPT extends AIProvider {
         message_id: messageId,
       }
     ).then((r) => r.json());
-    console.log(resp);
+    consoleLog(LogLevelEnum.DEBUG, resp);
     return resp.title;
   }
 
@@ -134,7 +134,7 @@ export class ChatGPT extends AIProvider {
   }
 
   public async closeStream() {
-    console.log("Closing stream");
+    consoleLog(LogLevelEnum.DEBUG, "Closing stream");
     if (this.reader) {
       await this.reader.cancel();
     }
@@ -239,7 +239,7 @@ export class ChatGPT extends AIProvider {
             const error = await resp.json().catch(() => ({}));
             callback({
               type: AIResponseTypeEnum.ERROR,
-              message: error.detail,
+              message: error.detail.message,
               code: Status.CHATGPT_RESPONSE_ERROR,
             });
             if (this.conversationId) {
@@ -288,7 +288,7 @@ export class ChatGPT extends AIProvider {
                         this.conversationId,
                         this.messageId!
                       );
-                      console.log(title);
+                      consoleLog(LogLevelEnum.DEBUG, title);
                     }
                   }
                 }

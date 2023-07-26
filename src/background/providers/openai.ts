@@ -1,5 +1,6 @@
 import { AIResponseType, AIResponseTypeEnum } from "../../types/provider";
 import { AIProvider } from "./base";
+import { consoleLog, LogLevelEnum } from "../../utils";
 
 export class OpenAIAPI extends AIProvider {
   public isProcessing: boolean = false;
@@ -23,7 +24,7 @@ export class OpenAIAPI extends AIProvider {
     return new Promise<(callback: (data: AIResponseType) => void) => void>(
       (resolve, reject) => {
         resolve(async (callback: (data: AIResponseType) => void) => {
-          console.log(prompt);
+          consoleLog(LogLevelEnum.DEBUG, prompt);
 
           callback({
             type: AIResponseTypeEnum.MESSAGE,

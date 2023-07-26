@@ -1,18 +1,25 @@
-export enum CommunicationMessageTypeEnum {
+export enum ConversationMessageTypeEnum {
   STREAM = "stream",
   MESSAGE = "message",
   COMPLETE = "complete",
   ERROR = "error",
 }
 
-export enum CommunicationMessageTopicEnum {
-  CONVERSATION = "conversation",
+export enum CommunicationMessageTypeEnum {
+  GET_FEATURES = "get_features",
+  MESSAGE = "message",
+  ERROR = "error",
 }
 
-export type CommunicationMessageType = {
-  topic: CommunicationMessageTopicEnum;
-  type: CommunicationMessageTypeEnum;
-  requestId: string;
+export enum IPCTopicEnum {
+  CONVERSATION = "conversation",
+  COMMUNICATION = "communication",
+}
+
+export type IPCMessageType = {
+  topic: IPCTopicEnum;
+  type: ConversationMessageTypeEnum | CommunicationMessageTypeEnum;
+  requestId?: string;
   payload?: any;
   message?: string;
   code?: number;

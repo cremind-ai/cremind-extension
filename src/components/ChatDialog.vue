@@ -63,6 +63,7 @@ import { ElButton } from "element-plus";
 import { ElTooltip } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { ElDialog } from "element-plus";
+import { ElMessageBox } from "element-plus";
 import { ConversationRoleEnum } from "../constants";
 import { Chat } from "./Chat";
 import { useConversationStore } from "../store/conversation";
@@ -71,6 +72,7 @@ import { PromptTemplate } from "../lib/prompt_template";
 import { Chain } from "../lib/chain";
 import { CWException } from "../types/exception";
 import { LLM } from "../lib/llm";
+import { consoleLog, LogLevelEnum } from "../utils";
 
 const conversation = useConversationStore();
 const chatDialog = useChatDialogStore();
@@ -133,7 +135,7 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
 
   let response = "";
   result.on("data", (data: string) => {
-    console.log(data);
+    consoleLog(LogLevelEnum.DEBUG, data);
     response += data;
     conversation.updateLastMessage({
       role: ConversationRoleEnum.ASSISTANT,
@@ -143,13 +145,13 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
   });
 
   result.on("complete", (data: any) => {
-    console.log("complete");
+    consoleLog(LogLevelEnum.DEBUG, "complete");
   });
 
   result.on("endOfChain", (data: any) => {
-    console.log("endOfChain");
+    consoleLog(LogLevelEnum.DEBUG, "endOfChain");
     isStreaming.value = false;
-    console.log(data);
+    consoleLog(LogLevelEnum.DEBUG, data);
     conversationId = data.conversationId;
     messageId = data.messageId;
     childMessageId = data.childMessageId;
@@ -160,9 +162,9 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
   });
 
   result.on("error", (err: CWException) => {
-    console.log("error");
+    consoleLog(LogLevelEnum.DEBUG, "error");
     isStreaming.value = false;
-    console.log(err);
+    consoleLog(LogLevelEnum.DEBUG, err);
   });
 
   chatDialog.setInitialPrompt(null);
@@ -179,7 +181,7 @@ const deleteConversation = () => {
     saveConversation = false;
     return;
   }
-  console.log("onDeleteConversation", conversationId);
+  consoleLog(LogLevelEnum.DEBUG, "onDeleteConversation", conversationId);
   llm.deleteConversation({
     conversationId: conversationId!,
   });
@@ -196,18 +198,39 @@ const handleSaveConversation = () => {
   saveConversation = true;
 };
 
-const handleStopGenerating = () => {
+const handleStopGenerating = async () => {
   isStreaming.value = false;
-  llm.stopGenerating();
+  const resData = await llm.stopGenerating();
+  conversationId = resData.conversationId;
 };
 
 const handleCloseDialog = () => {
-  deleteConversation();
-  chatDialog.setChatDialogVisible(false);
+  if (isStreaming.value) {
+    ElMessageBox.confirm(
+      "The result is being streamed, do you want to exit?",
+      "Warning",
+      {
+        confirmButtonText: "OK",
+        cancelButtonText: "Cancel",
+        type: "warning",
+      }
+    )
+      .then(async () => {
+        chatDialogVisible.value = true;
+        isStreaming.value = false;
+        const resData = await llm.stopGenerating();
+        conversationId = resData.conversationId;
+      })
+      .catch(() => {});
+  } else {
+    isStreaming.value = false;
+    deleteConversation();
+    chatDialog.setChatDialogVisible(false);
+  }
 };
 
 const newChat = (value: string) => {
-  console.log("newChat", value);
+  consoleLog(LogLevelEnum.DEBUG, "newChat", value);
   chatRef.value?.scrollToBottom();
   sendMessage(value, false);
 };

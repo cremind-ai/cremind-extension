@@ -3,11 +3,12 @@ import { Status } from "../constants/status";
 import { EventEmitter } from "../utils/event_emitter";
 import { uuid } from "../utils";
 import {
-  CommunicationMessageTopicEnum,
-  CommunicationMessageType,
-  CommunicationMessageTypeEnum,
+  IPCTopicEnum,
+  IPCMessageType,
+  ConversationMessageTypeEnum,
 } from "../types";
 import { CONTENT_SCRIPT_PORT_NAME } from "../constants";
+import { consoleLog, LogLevelEnum } from "../utils";
 
 export class IPCClientException extends CWException {}
 
@@ -30,8 +31,8 @@ export class IPCClient {
 
   private connect() {
     this.port = chrome.runtime.connect({ name: this.NAME });
-    this.port.onMessage.addListener((data: CommunicationMessageType) => {
-      this.ipcEmitter.emit(data.requestId, data);
+    this.port.onMessage.addListener((data: IPCMessageType) => {
+      this.ipcEmitter.emit(data.requestId!, data);
     });
   }
 
@@ -56,7 +57,7 @@ export class IPCClient {
 
   public async response(
     isStream: boolean,
-    topic: CommunicationMessageTopicEnum,
+    topic: IPCTopicEnum,
     timeout: number,
     requestId: string
   ): Promise<any | EventEmitter> {
@@ -65,7 +66,7 @@ export class IPCClient {
         const timeoutObj = setTimeout(() => {
           this.ipcEmitter.emit(requestId, {
             topic: topic,
-            type: CommunicationMessageTypeEnum.ERROR,
+            type: ConversationMessageTypeEnum.ERROR,
             code: Status.IPC_RESPONSE_TIMEOUT,
             message: "IPC response timeout",
             requestId: requestId,
@@ -77,7 +78,7 @@ export class IPCClient {
             )
           );
         }, timeout);
-        this.ipcEmitter.once(requestId, (data: CommunicationMessageType) => {
+        this.ipcEmitter.once(requestId, (data: IPCMessageType) => {
           if (data && data.code !== Status.IPC_RESPONSE_TIMEOUT) {
             resolve(data);
             clearTimeout(timeoutObj);
@@ -93,7 +94,7 @@ export class IPCClient {
           timeoutObj = setTimeout(() => {
             this.ipcEmitter.emit(requestId, {
               topic: topic,
-              type: CommunicationMessageTypeEnum.ERROR,
+              type: ConversationMessageTypeEnum.ERROR,
               code: Status.IPC_RESPONSE_TIMEOUT,
               message: "IPC response timeout",
               requestId: requestId,
@@ -102,18 +103,18 @@ export class IPCClient {
           }, timeout);
         };
 
-        const messageHandler = (data: CommunicationMessageType) => {
-          if (data && data.type === CommunicationMessageTypeEnum.STREAM) {
+        const messageHandler = (data: IPCMessageType) => {
+          if (data && data.type === ConversationMessageTypeEnum.STREAM) {
             resetTimeout();
             emitter.emit("data", data);
           } else if (
             data &&
-            data.type === CommunicationMessageTypeEnum.COMPLETE
+            data.type === ConversationMessageTypeEnum.COMPLETE
           ) {
             clearTimeout(timeoutObj);
             this.ipcEmitter.removeListener(requestId, messageHandler);
             emitter.emit("complete", data);
-          } else if (data && data.type === CommunicationMessageTypeEnum.ERROR) {
+          } else if (data && data.type === ConversationMessageTypeEnum.ERROR) {
             clearTimeout(timeoutObj);
             this.ipcEmitter.removeListener(requestId, messageHandler);
             if (data.payload) {
@@ -137,7 +138,7 @@ export class IPCClient {
   }
 
   /*
-    * @param topic: CommunicationMessageTopicEnum
+    * @param topic: IPCTopicEnum
     * @param isStream: boolean
     * @param payload: any
     * @param timeout: number
@@ -147,20 +148,20 @@ export class IPCClient {
     * Example:
       try {
         const data = await ipcClient.request(
-          CommunicationMessageTopicEnum.CONVERSATION,
+          IPCTopicEnum.CONVERSATION,
           false,
           {
             message: "who are you?",
           },
           10000
         );
-        console.log(data);
+        consoleLog(LogLevelEnum.DEBUG, data);
       } catch (error) {
-        console.log(error);
+        consoleLog(LogLevelEnum.DEBUG, error);
       }
 
       const data = await ipcClient.request(
-        CommunicationMessageTopicEnum.CONVERSATION,
+        IPCTopicEnum.CONVERSATION,
         true,
         {
           message: "who are you?",
@@ -168,15 +169,15 @@ export class IPCClient {
         10000
       );
       data.on("data", (data) => {
-        console.log(data.message);
+        consoleLog(LogLevelEnum.DEBUG, data.message);
       });
       data.on("error", (error) => {
-        console.log(error);
+        consoleLog(LogLevelEnum.DEBUG, error);
       });
   */
 
   public request(
-    topic: CommunicationMessageTopicEnum,
+    topic: IPCTopicEnum,
     isStream: boolean,
     payload: any = {},
     timeout: number = this.timeout
@@ -193,9 +194,9 @@ export class IPCClient {
         }
 
         const requestId = uuid();
-        const data: CommunicationMessageType = {
+        const data: IPCMessageType = {
           topic: topic,
-          type: CommunicationMessageTypeEnum.MESSAGE,
+          type: ConversationMessageTypeEnum.MESSAGE,
           requestId: requestId,
           payload: payload,
         };
@@ -225,20 +226,20 @@ export class IPCClient {
         resolve(emitter);
 
         const requestId = uuid();
-        const data: CommunicationMessageType = {
+        const data: IPCMessageType = {
           topic: topic,
-          type: CommunicationMessageTypeEnum.STREAM,
+          type: ConversationMessageTypeEnum.STREAM,
           requestId: requestId,
           payload: payload,
         };
         this.sendMessage(data);
         const resData = await this.response(true, topic, timeout, requestId);
 
-        resData.on("data", (data: CommunicationMessageType) => {
+        resData.on("data", (data: IPCMessageType) => {
           emitter.emit("data", data.payload);
         });
 
-        resData.on("complete", (data: CommunicationMessageType) => {
+        resData.on("complete", (data: IPCMessageType) => {
           emitter.emit("complete", data.payload);
         });
 

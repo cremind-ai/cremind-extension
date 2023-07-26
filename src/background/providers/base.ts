@@ -11,6 +11,7 @@ import type { AIResponseType } from "../../types/provider";
 
 export abstract class AIProvider {
   isProcessing: boolean = false;
+  conversationId: string | null = null;
   abstract closeStream(): void;
   abstract deleteConversation(conversationId: string): void;
   abstract conversation(

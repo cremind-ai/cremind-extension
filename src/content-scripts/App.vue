@@ -16,6 +16,7 @@ import { MainCard } from "../components";
 import { ChatDialog } from "../components";
 import { SystemVariableParser } from "../lib/system_variable_parser";
 import { selectedModeEnum } from "../types";
+import { consoleLog, LogLevelEnum } from "../utils";
 
 const selectedText = ref("");
 const mousedownSelectedText = ref(false);
@@ -47,7 +48,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 });
 
 document.addEventListener("mousedown", function (event: MouseEvent) {
-  console.log("mousedown");
+  consoleLog(LogLevelEnum.DEBUG, "mousedown");
   const selection = window.getSelection()?.toString().trim();
   if (selection) {
     mousedownSelectedText.value = true;
@@ -59,7 +60,7 @@ document.addEventListener("mousedown", function (event: MouseEvent) {
 });
 
 document.addEventListener("mouseup", function (event: MouseEvent) {
-  console.log("mouseup");
+  consoleLog(LogLevelEnum.DEBUG, "mouseup");
   const selection = window.getSelection()?.toString().trim();
   const activeElement = document.activeElement as HTMLElement;
   if (selection && !mousedownSelectedText.value && !showMainCard.value) {

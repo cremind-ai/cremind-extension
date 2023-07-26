@@ -1,20 +1,32 @@
 import { AIResponseType, AIResponseTypeEnum } from "./types/provider";
 import {
-  CommunicationMessageType,
-  CommunicationMessageTopicEnum,
-  CommunicationMessageTypeEnum,
+  IPCMessageType,
+  IPCTopicEnum,
+  ConversationMessageTypeEnum,
 } from "./types";
 import { IPCHost } from "./lib/ipc_host";
 import { AIProvider } from "./background/providers/base";
 import { AIProviderFactory } from "./background/providers";
 import { AIMode } from "./constants";
 import { LLMMODE } from "./types";
-/* Example
+import { consoleLog, LogLevelEnum } from "./utils";
+import CryptoES from "crypto-es";
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  sendResponse("hello from background");
+  try {
+    const bytes = CryptoES.AES.decrypt(
+      process.env.VUE_APP_CRYPTO_CONFIG_JSON!,
+      process.env.VUE_APP_CRYPTO_SECRET_KEY!
+    );
+    var originalText = bytes.toString(CryptoES.enc.Utf8);
+
+    sendResponse({ decrypted: JSON.parse(originalText) });
+  } catch (err) {
+    sendResponse({ decrypted: null });
+  }
+
   return;
 });
-*/
 
 let aiProvider: AIProvider;
 const aiMode: AIMode = AIMode.CHAT_GPT;
@@ -44,13 +56,13 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
 
 const ipcHost = IPCHost.getInstance().initConnection();
 ipcHost.register(
-  CommunicationMessageTopicEnum.CONVERSATION,
-  async (data: CommunicationMessageType, sendResponse) => {
-    console.log(data);
-    console.log("isProcessing " + aiProvider.isProcessing);
+  IPCTopicEnum.CONVERSATION,
+  async (data: IPCMessageType, sendResponse) => {
+    consoleLog(LogLevelEnum.DEBUG, data);
+    consoleLog(LogLevelEnum.DEBUG, "isProcessing " + aiProvider.isProcessing);
     if (
       data &&
-      data.type === CommunicationMessageTypeEnum.STREAM &&
+      data.type === ConversationMessageTypeEnum.STREAM &&
       data.payload.mode === LLMMODE.COMMUNICATION
     ) {
       if (aiProvider.isProcessing) {
@@ -72,7 +84,7 @@ ipcHost.register(
         .then(async (callback) => {
           callback((resData: AIResponseType) => {
             if (resData && resData.type === AIResponseTypeEnum.MESSAGE) {
-              sendResponse(CommunicationMessageTypeEnum.STREAM, {
+              sendResponse(ConversationMessageTypeEnum.STREAM, {
                 message: resData.message,
               });
             } else if (
@@ -87,9 +99,9 @@ ipcHost.register(
                   childMessageId: resData.payload!.childMessageId,
                 }),
               };
-              sendResponse(CommunicationMessageTypeEnum.COMPLETE, payload);
+              sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
             } else if (resData && resData.type === AIResponseTypeEnum.ERROR) {
-              sendResponse(CommunicationMessageTypeEnum.ERROR, {
+              sendResponse(ConversationMessageTypeEnum.ERROR, {
                 code: resData.code,
                 message: resData.message,
               });
@@ -98,7 +110,7 @@ ipcHost.register(
         });
     } else if (
       data &&
-      data.type === CommunicationMessageTypeEnum.MESSAGE &&
+      data.type === ConversationMessageTypeEnum.MESSAGE &&
       data.payload.mode === LLMMODE.COMMUNICATION
     ) {
       if (aiProvider.isProcessing) {
@@ -136,9 +148,9 @@ ipcHost.register(
                   }),
                 }),
               };
-              sendResponse(CommunicationMessageTypeEnum.COMPLETE, payload);
+              sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
             } else if (resData && resData.type === AIResponseTypeEnum.ERROR) {
-              sendResponse(CommunicationMessageTypeEnum.ERROR, {
+              sendResponse(ConversationMessageTypeEnum.ERROR, {
                 code: resData.code,
                 message: resData.message,
               });
@@ -147,22 +159,24 @@ ipcHost.register(
         });
     } else if (
       data &&
-      data.type === CommunicationMessageTypeEnum.MESSAGE &&
+      data.type === ConversationMessageTypeEnum.MESSAGE &&
       data.payload.mode === LLMMODE.DELETE_CONVERSATION
     ) {
       aiProvider.deleteConversation(data.payload.conversationId);
-      sendResponse(CommunicationMessageTypeEnum.COMPLETE, {
+      sendResponse(ConversationMessageTypeEnum.COMPLETE, {
         status: "success",
       });
     } else if (
       data &&
-      data.type === CommunicationMessageTypeEnum.MESSAGE &&
+      data.type === ConversationMessageTypeEnum.MESSAGE &&
       data.payload.mode === LLMMODE.STOP_GENERATING
     ) {
       aiProvider.closeStream();
-      sendResponse(CommunicationMessageTypeEnum.COMPLETE, {
-        status: "success",
-      });
+      const payload = {
+        message: "Stopped generating",
+        conversationId: aiProvider.conversationId,
+      };
+      sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
     }
   }
 );

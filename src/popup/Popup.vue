@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import { ElInput } from "element-plus";
 import { ChromeStorage } from "../hooks/chrome_storage";
+import { consoleLog, LogLevelEnum } from "../utils";
 
 import { onMounted, ref, watch } from "vue";
 const textarea = ref("");
@@ -26,7 +27,7 @@ watch(
         JSON.stringify(jsonValue)
       );
     } catch (e) {
-      console.log("error", e);
+      consoleLog(LogLevelEnum.DEBUG, "error", e);
       return;
     }
   }

@@ -256,7 +256,12 @@ import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import { LoadImg } from ".";
-import { selectedModeEnum } from "../types";
+import {
+  CommunicationMessageTypeEnum,
+  IPCTopicEnum,
+  IPCMessageType,
+  selectedModeEnum,
+} from "../types";
 import { FeatureType } from "../lib/features";
 import { ChainBuilder } from "../lib/chain/chain_builder";
 import { CWException } from "../types/exception";
@@ -267,6 +272,7 @@ import { SystemOptions } from "../constants/system_variables";
 import { useConversationStore } from "../store/conversation";
 import { useChatDialogStore } from "../store/chat_dialog";
 import { ChatAction } from "./Chat";
+import { consoleLog, LogLevelEnum } from "../utils";
 
 const props = defineProps({
   selectedText: {
@@ -470,10 +476,10 @@ const readOriginalActiveElementValue = (): string => {
 
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
   const chainBuilder = new ChainBuilder(currentFeature.value.Chains);
-  console.log(variables);
+  consoleLog(LogLevelEnum.DEBUG, variables);
   for (const key in variables) {
     const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:${key}`;
-    console.log(storageKey);
+    consoleLog(LogLevelEnum.DEBUG, storageKey);
     await ChromeStorage.getInstance().set(storageKey, variables[key]);
   }
   await chainBuilder.buildChains(variables);
@@ -509,18 +515,18 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     scrollToBottom();
   });
   result.on("complete", (data: any) => {
-    console.log("=====>complete");
+    consoleLog(LogLevelEnum.DEBUG, "=====>complete");
     outputContent.value += "\n";
-    console.log(`${data.message}`);
+    consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
   });
   result.on("endOfChain", (data: any) => {
-    console.log("=====>endOfChain");
+    consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
     isStreaming.value = false;
-    console.log(`${data.message}`);
+    consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
   });
   result.on("error", (error: CWException) => {
     isStreaming.value = false;
-    console.log(error);
+    consoleLog(LogLevelEnum.DEBUG, error);
     if (error.code === Status.CHATGPT_UNAUTHORIZED) {
       ElMessage.error(
         "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
@@ -548,8 +554,8 @@ async function handleFeature(
   currentFeature.value = feature;
   currentFeatureId.value = id;
   currentFeatureMode.value = type;
-  console.log(id);
-  console.log(feature.variableSchema);
+  consoleLog(LogLevelEnum.DEBUG, id);
+  consoleLog(LogLevelEnum.DEBUG, feature.variableSchema);
 
   formDataVariableSchema.value = {};
   for (const key in feature.variableSchema) {
@@ -558,9 +564,9 @@ async function handleFeature(
       continue;
     }
     const storageKey = `FEATURE:${id}:${type}:${key}`;
-    console.log(storageKey);
+    consoleLog(LogLevelEnum.DEBUG, storageKey);
     const value = await ChromeStorage.getInstance().get(storageKey);
-    console.log(value);
+    consoleLog(LogLevelEnum.DEBUG, value);
     if (!value) {
       checkShowDrawer = true;
       continue;
@@ -568,7 +574,7 @@ async function handleFeature(
     variables[key] = value;
     formDataVariableSchema.value[key] = value;
   }
-  console.log("checkShowDrawer", checkShowDrawer);
+  consoleLog(LogLevelEnum.DEBUG, "checkShowDrawer", checkShowDrawer);
   drawer.value = checkShowDrawer;
 
   if (!checkShowDrawer) {
@@ -584,14 +590,14 @@ function handleFeatureClick(
   type: selectedModeEnum
 ) {
   const id: string = featureSchema.id;
-  console.log("handleFeatureClick", index, type, id);
+  consoleLog(LogLevelEnum.DEBUG, "handleFeatureClick", index, type, id);
   outputContent.value = "";
   visible.value = true;
   handleFeature(id, featureSchema[type]!, type);
 }
 
 function close() {
-  console.log("Close");
+  consoleLog(LogLevelEnum.DEBUG, "Close");
   visible.value = false;
   setTimeout(() => {
     show.value = false;
@@ -624,7 +630,7 @@ function handleClose() {
 }
 
 const handleClickOutside = (event: MouseEvent) => {
-  console.log("handleClickOutside");
+  consoleLog(LogLevelEnum.DEBUG, "handleClickOutside");
   if (
     clickOutsideFocus.value &&
     !clickOutsideConfirm.value &&
@@ -690,35 +696,38 @@ const newChat = (value: string) => {
 const handleRegenerate = () => {
   clickOutsideFocus.value = true;
   drawer.value = false;
-  console.log(formDataVariableSchema.value);
+  consoleLog(LogLevelEnum.DEBUG, formDataVariableSchema.value);
   startGenerateResponse(formDataVariableSchema.value);
 };
 
 const handleCopyToClipboard = () => {
-  console.log("handleCopyToClipboard");
+  consoleLog(LogLevelEnum.DEBUG, "handleCopyToClipboard");
   if (outputContent.value) {
     navigator.clipboard.writeText(outputContent.value);
   }
 };
 
 onMounted(async () => {
-  console.log("onMounted");
+  consoleLog(LogLevelEnum.DEBUG, "onMounted");
   optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
   popoverRef.value = document.querySelector(".el-popover") as HTMLDivElement;
   document.addEventListener("mousedown", handleClickOutside);
-  await ChromeStorage.getInstance()
-    .get("FEATURE_JSON")
-    .then((result) => {
-      if (result) {
-        featureList.value = JSON.parse(result);
-      } else {
-        featureList.value = [];
-      }
-    });
+  const data: IPCMessageType = {
+    topic: IPCTopicEnum.COMMUNICATION,
+    type: CommunicationMessageTypeEnum.GET_FEATURES,
+    message: "Get JSON Features",
+  };
+  chrome.runtime.sendMessage(data, (response) => {
+    if (response.decrypted) {
+      featureList.value = response.decrypted;
+    } else {
+      featureList.value = [];
+    }
+  });
 });
 
 onUnmounted(() => {
-  console.log("onUnmounted");
+  consoleLog(LogLevelEnum.DEBUG, "onUnmounted");
   document.removeEventListener("mousedown", handleClickOutside);
 });
 </script>
