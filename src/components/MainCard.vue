@@ -361,7 +361,6 @@ import { ChromeStorage } from "../hooks/chrome_storage";
 import { FeatureSchema, Icon as IconType } from "../lib/features";
 import { Status } from "../constants/status";
 import { SystemOptions } from "../constants/system_variables";
-import { useConversationStore } from "../store/conversation";
 import { useChatDialogStore } from "../store/chat_dialog";
 import { ChatAction } from "./Chat";
 import { consoleLog, LogLevelEnum } from "../utils";
@@ -404,7 +403,6 @@ marked.use({ silent: true, breaks: true });
 
 const emits = defineEmits(["close"]);
 
-const conversation = useConversationStore();
 const chatDialog = useChatDialogStore();
 
 const optionBarShow = ref(props.show);
@@ -841,10 +839,6 @@ const handleCommand = (command: OptionCommandType) => {
       chrome.runtime.sendMessage(data, () => {});
       break;
   }
-};
-
-const handleMoreClick = async () => {
-  await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
 };
 
 onMounted(async () => {
