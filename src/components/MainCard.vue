@@ -1,21 +1,28 @@
 <template>
+  <div v-if="logoIconShow" class="cword-icon" @click="handleLogoIcon">
+    <LoadImg :filename="'cWord-logo-128.png'" :width="45" />
+  </div>
   <ElPopover
     style="word-break: normal"
     placement="auto"
-    :visible="visible"
+    :visible="popoverVisible"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
   >
     <template #reference>
-      <div class="option-bar" :style="{ top, left }" v-show="show">
-        <LoadImg class="cword-icon" :filename="'check64.png'" />
+      <div class="option-bar" :style="{ top, left }" v-show="optionBarShow">
+        <LoadImg
+          class="cword-icon-bar"
+          :filename="'cWord-logo-64.png'"
+          :width="20"
+        />
         <div v-if="selectedMode === selectedModeEnum.EDITABLE">
           <ElButtonGroup>
             <template
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElTooltip :content="feature.EDITABLE?.title" placement="top">
+              <ElTooltip :content="feature.EDITABLE?.label" placement="top">
                 <ElButton
                   type="success"
                   plain
@@ -39,12 +46,36 @@
                 </ElButton>
               </ElTooltip>
             </template>
-            <ElButton type="success" plain @click="handleMoreClick()">
-              <Icon
-                icon="material-symbols:more-vert"
-                :style="{ fontSize: '20px' }"
-              />
-            </ElButton>
+            <ElDropdown @command="handleCommand">
+              <ElButton type="success" plain>
+                <Icon
+                  icon="material-symbols:more-vert"
+                  :style="{ fontSize: '20px' }"
+                />
+              </ElButton>
+              <template #dropdown>
+                <ElDropdownMenu>
+                  <ElTooltip
+                    v-for="(option, index) in moreOptions"
+                    :key="index"
+                    :content="option.label"
+                    placement="top"
+                  >
+                    <ElDropdownItem :command="option.label">
+                      <Icon
+                        :icon="option.icon.content || ''"
+                        :style="{ fontSize: option.icon.fontSize }"
+                        v-if="option.icon.type === 'icon'"
+                      />
+                      <div
+                        v-if="option.icon.type === 'svg'"
+                        v-html="option.icon.content"
+                      ></div>
+                    </ElDropdownItem>
+                  </ElTooltip>
+                </ElDropdownMenu>
+              </template>
+            </ElDropdown>
           </ElButtonGroup>
         </div>
         <div v-else-if="selectedMode === selectedModeEnum.READONLY">
@@ -53,7 +84,7 @@
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElTooltip :content="feature.READONLY?.title" placement="top">
+              <ElTooltip :content="feature.READONLY?.label" placement="top">
                 <ElButton
                   type="success"
                   plain
@@ -82,12 +113,36 @@
                 </ElButton>
               </ElTooltip>
             </template>
-            <ElButton type="success" plain @click="handleMoreClick()">
-              <Icon
-                icon="material-symbols:more-vert"
-                :style="{ fontSize: '20px' }"
-              />
-            </ElButton>
+            <ElDropdown @command="handleCommand">
+              <ElButton type="success" plain>
+                <Icon
+                  icon="material-symbols:more-vert"
+                  :style="{ fontSize: '20px' }"
+                />
+              </ElButton>
+              <template #dropdown>
+                <ElDropdownMenu>
+                  <ElTooltip
+                    v-for="(option, index) in moreOptions"
+                    :key="index"
+                    :content="option.label"
+                    placement="top"
+                  >
+                    <ElDropdownItem :command="option.label">
+                      <Icon
+                        :icon="option.icon.content || ''"
+                        :style="{ fontSize: option.icon.fontSize }"
+                        v-if="option.icon.type === 'icon'"
+                      />
+                      <div
+                        v-if="option.icon.type === 'svg'"
+                        v-html="option.icon.content"
+                      ></div>
+                    </ElDropdownItem>
+                  </ElTooltip>
+                </ElDropdownMenu>
+              </template>
+            </ElDropdown>
           </ElButtonGroup>
         </div>
         <div v-else-if="selectedMode === selectedModeEnum.EDITABLE_NO_CONTENT">
@@ -97,7 +152,7 @@
               :key="index"
             >
               <ElTooltip
-                :content="feature.EDITABLE_NO_CONTENT?.title"
+                :content="feature.EDITABLE_NO_CONTENT?.label"
                 placement="top"
               >
                 <ElButton
@@ -130,17 +185,41 @@
                 </ElButton>
               </ElTooltip>
             </template>
-            <ElButton type="success" plain @click="handleMoreClick()">
-              <Icon
-                icon="material-symbols:more-vert"
-                :style="{ fontSize: '20px' }"
-              />
-            </ElButton>
+            <ElDropdown @command="handleCommand">
+              <ElButton type="success" plain>
+                <Icon
+                  icon="material-symbols:more-vert"
+                  :style="{ fontSize: '20px' }"
+                />
+              </ElButton>
+              <template #dropdown>
+                <ElDropdownMenu>
+                  <ElTooltip
+                    v-for="(option, index) in moreOptions"
+                    :key="index"
+                    :content="option.label"
+                    placement="top"
+                  >
+                    <ElDropdownItem :command="option.label">
+                      <Icon
+                        :icon="option.icon.content || ''"
+                        :style="{ fontSize: option.icon.fontSize }"
+                        v-if="option.icon.type === 'icon'"
+                      />
+                      <div
+                        v-if="option.icon.type === 'svg'"
+                        v-html="option.icon.content"
+                      ></div>
+                    </ElDropdownItem>
+                  </ElTooltip>
+                </ElDropdownMenu>
+              </template>
+            </ElDropdown>
           </ElButtonGroup>
         </div>
       </div>
     </template>
-    <div style="display: flex; justify-content: flex-end; margin-right: 40px">
+    <div style="display: flex; justify-content: flex-end; margin-right: 50px">
       <ElButtonGroup>
         <ElTooltip content="Regenerate response" placement="top">
           <ElButton plain @click="handleRegenerate">
@@ -158,7 +237,16 @@
       </ElButtonGroup>
     </div>
     <ElButton
-      class="card-close-icon"
+      class="minimize-icon"
+      type="warning"
+      plain
+      :icon="SemiSelect"
+      @click="handleMinimize"
+      size="small"
+      circle
+    ></ElButton>
+    <ElButton
+      class="close-icon"
       type="danger"
       plain
       :icon="Close"
@@ -250,7 +338,11 @@ import { ElFormItem } from "element-plus";
 import { ElDivider } from "element-plus";
 import { ElMessage } from "element-plus";
 import { ElTooltip } from "element-plus";
+import { ElDropdown } from "element-plus";
+import { ElDropdownMenu } from "element-plus";
+import { ElDropdownItem } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
+import { SemiSelect } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
@@ -266,7 +358,7 @@ import { FeatureType } from "../lib/features";
 import { ChainBuilder } from "../lib/chain/chain_builder";
 import { CWException } from "../types/exception";
 import { ChromeStorage } from "../hooks/chrome_storage";
-import { FeatureSchema } from "../lib/features";
+import { FeatureSchema, Icon as IconType } from "../lib/features";
 import { Status } from "../constants/status";
 import { SystemOptions } from "../constants/system_variables";
 import { useConversationStore } from "../store/conversation";
@@ -315,8 +407,8 @@ const emits = defineEmits(["close"]);
 const conversation = useConversationStore();
 const chatDialog = useChatDialogStore();
 
-const show = ref(props.show);
-const visible = ref(false);
+const optionBarShow = ref(props.show);
+const popoverVisible = ref(false);
 const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
@@ -331,6 +423,9 @@ const contentMaxHeight = ref(500);
 const clickOutsideConfirm = ref(false);
 const clickOutsideFocus = ref(true);
 const isStreaming = ref(false);
+const logoIconShow = ref(false);
+const drawer = ref(false);
+const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
 const currentFeatureMode: Ref<selectedModeEnum> = ref(
@@ -355,8 +450,25 @@ const filteredFeatureList = computed(() => {
   });
 });
 
-const drawer = ref(false);
-const formDataVariableSchema = ref<{ [key: string]: string }>({});
+enum OptionCommandType {
+  SETTINGS = "Settings",
+}
+
+const moreOptions: Ref<
+  {
+    label: string;
+    icon: IconType;
+  }[]
+> = ref([
+  {
+    label: OptionCommandType.SETTINGS,
+    icon: {
+      content: "solar:settings-line-duotone",
+      fontSize: "20px",
+      type: "icon",
+    },
+  },
+]);
 
 let startSelectionIndex: number = 0;
 let endSelectionIndex: number = 0;
@@ -364,8 +476,9 @@ let endSelectionIndex: number = 0;
 watch(
   () => props.show,
   (newValue) => {
-    show.value = newValue;
-    if (newValue === true) {
+    optionBarShow.value = newValue;
+    if (newValue === true && !logoIconShow.value) {
+      consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
       const activeElement = document.activeElement as HTMLElement;
       if (
         selectedMode.value === selectedModeEnum.EDITABLE_NO_CONTENT ||
@@ -478,7 +591,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   const chainBuilder = new ChainBuilder(currentFeature.value.Chains);
   consoleLog(LogLevelEnum.DEBUG, variables);
   for (const key in variables) {
-    const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:${key}`;
+    const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`;
     consoleLog(LogLevelEnum.DEBUG, storageKey);
     await ChromeStorage.getInstance().set(storageKey, variables[key]);
   }
@@ -563,7 +676,7 @@ async function handleFeature(
       checkShowDrawer = true;
       continue;
     }
-    const storageKey = `FEATURE:${id}:${type}:${key}`;
+    const storageKey = `FEATURE:${id}:${type}:variable:${key}`;
     consoleLog(LogLevelEnum.DEBUG, storageKey);
     const value = await ChromeStorage.getInstance().get(storageKey);
     consoleLog(LogLevelEnum.DEBUG, value);
@@ -592,15 +705,15 @@ function handleFeatureClick(
   const id: string = featureSchema.id;
   consoleLog(LogLevelEnum.DEBUG, "handleFeatureClick", index, type, id);
   outputContent.value = "";
-  visible.value = true;
+  popoverVisible.value = true;
   handleFeature(id, featureSchema[type]!, type);
 }
 
 function close() {
   consoleLog(LogLevelEnum.DEBUG, "Close");
-  visible.value = false;
+  popoverVisible.value = false;
   setTimeout(() => {
-    show.value = false;
+    optionBarShow.value = false;
     emits("close");
   }, 0);
 }
@@ -638,7 +751,7 @@ const handleClickOutside = (event: MouseEvent) => {
     !optionBarRef.value.contains(event.target as Node) &&
     popoverRef.value &&
     !popoverRef.value.contains(event.target as Node) &&
-    show.value
+    optionBarShow.value
   ) {
     if (isStreaming.value) {
       clickOutsideConfirm.value = true;
@@ -677,10 +790,6 @@ const handleCloseDrawer = () => {
   close();
 };
 
-const handleMoreClick = async () => {
-  await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
-};
-
 const newChat = (value: string) => {
   let text = "";
   text += props.selectedText + "\n";
@@ -705,6 +814,37 @@ const handleCopyToClipboard = () => {
   if (outputContent.value) {
     navigator.clipboard.writeText(outputContent.value);
   }
+};
+
+const handleMinimize = () => {
+  logoIconShow.value = true;
+  popoverVisible.value = false;
+  setTimeout(() => {
+    optionBarShow.value = false;
+  }, 0);
+};
+
+const handleLogoIcon = () => {
+  logoIconShow.value = false;
+  optionBarShow.value = true;
+  popoverVisible.value = true;
+};
+
+const handleCommand = (command: OptionCommandType) => {
+  switch (command) {
+    case OptionCommandType.SETTINGS:
+      const data: IPCMessageType = {
+        topic: IPCTopicEnum.COMMUNICATION,
+        type: CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE,
+        message: "Open options page",
+      };
+      chrome.runtime.sendMessage(data, () => {});
+      break;
+  }
+};
+
+const handleMoreClick = async () => {
+  await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
 };
 
 onMounted(async () => {
@@ -738,7 +878,14 @@ onUnmounted(() => {
   z-index: 99999;
 }
 
-.card-close-icon {
+.minimize-icon {
+  position: absolute;
+  top: 8px;
+  right: 36px;
+  cursor: pointer;
+}
+
+.close-icon {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -746,8 +893,14 @@ onUnmounted(() => {
 }
 
 .cword-icon {
+  position: fixed;
+  right: 8px;
+  bottom: 160px;
+}
+
+.cword-icon-bar {
   position: absolute;
-  top: -22px;
-  left: -20px;
+  top: -16px;
+  right: -16px;
 }
 </style>

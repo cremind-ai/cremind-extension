@@ -18,9 +18,9 @@ fs.readFile("./config.json", "utf8", (err, data) => {
 
     console.log(ciphertext);
 
-    const bytes = CryptoES.AES.decrypt(ciphertext, secretKey);
-    var originalText = bytes.toString(CryptoES.enc.Utf8);
-    console.log(originalText);
+    // const bytes = CryptoES.AES.decrypt(ciphertext, secretKey);
+    // var originalText = bytes.toString(CryptoES.enc.Utf8);
+    // console.log(originalText);
   } catch (err) {
     console.error(err);
   }

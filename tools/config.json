@@ -1,9 +1,10 @@
 [
   {
     "id": "89a0b644-361c-451b-b1a7-73418a132d1c",
+    "description": "Summary",
     "READONLY": {
-      "title": "Summary",
-      "description": "",
+      "label": "Summary",
+      "description": "Summary",
       "Icon": {
         "content": "system-uicons:document",
         "fontSize": "20px",
@@ -27,8 +28,9 @@
   },
   {
     "id": "4e93d17b-5646-4d65-afc1-d26dbcfd979e",
+    "description": "Summary",
     "READONLY": {
-      "title": "Dictionary",
+      "label": "Dictionary",
       "description": "",
       "Icon": {
         "content": "arcticons:dictionary",
@@ -56,8 +58,8 @@
       ]
     },
     "EDITABLE": {
-      "title": "Dictionary",
-      "description": "",
+      "label": "Dictionary",
+      "description": "Dictionary",
       "Icon": {
         "content": "arcticons:dictionary",
         "fontSize": "20px",
@@ -86,9 +88,10 @@
   },
   {
     "id": "e1b5a11b-d0c5-4c73-862b-e3dc9a2a7652",
+    "description": "Translate",
     "READONLY": {
-      "title": "Translate",
-      "description": "",
+      "label": "Translate",
+      "description": "Translate",
       "Icon": {
         "content": "system-uicons:translate",
         "fontSize": "20px",
@@ -110,8 +113,8 @@
       ]
     },
     "EDITABLE": {
-      "title": "Translate",
-      "description": "",
+      "label": "Translate",
+      "description": "Translate",
       "Icon": {
         "content": "system-uicons:translate",
         "fontSize": "20px",
@@ -135,9 +138,10 @@
   },
   {
     "id": "bd80fcb2-a871-45f6-b14c-fa59866d592d",
+    "description": "Correction",
     "EDITABLE": {
-      "title": "Correction",
-      "description": "",
+      "label": "Correction",
+      "description": "Correction",
       "Icon": {
         "content": "icon-park-outline:correct",
         "fontSize": "20px",
@@ -162,9 +166,10 @@
   },
   {
     "id": "d2d0c070-b580-4228-bc41-d6ffe87d17ee",
+    "description": "Explaination",
     "READONLY": {
-      "title": "Explaination",
-      "description": "",
+      "label": "Explaination",
+      "description": "Explaination",
       "Icon": {
         "content": "fluent:text-grammar-checkmark-24-regular",
         "fontSize": "20px",
@@ -191,8 +196,8 @@
       ]
     },
     "EDITABLE": {
-      "title": "Correct & Explain",
-      "description": "",
+      "label": "Correct & Explain",
+      "description": "Correct & Explain",
       "Icon": {
         "content": "fluent:text-grammar-checkmark-24-regular",
         "fontSize": "20px",
@@ -222,9 +227,10 @@
   },
   {
     "id": "7cbe5f85-03f6-41a7-b68f-818f6afa2a74",
+    "description": "Email Writing",
     "EDITABLE_NO_CONTENT": {
-      "title": "Email writing",
-      "description": "",
+      "label": "Email Writing",
+      "description": "Email Writing",
       "Icon": {
         "content": "iconamoon:email-thin",
         "fontSize": "16px",
@@ -257,9 +263,10 @@
   },
   {
     "id": "e8459864-2608-4623-8079-725d6a3d6925",
+    "description": "Explain code",
     "READONLY": {
-      "title": "Explain code",
-      "description": "",
+      "label": "Explain code",
+      "description": "Explain code",
       "Icon": {
         "content": "streamline:programming-browser-code-2-code-browser-tags-angle-programming-bracket",
         "fontSize": "16px",
@@ -281,8 +288,8 @@
       ]
     },
     "EDITABLE": {
-      "title": "Explain code",
-      "description": "",
+      "label": "Explain code",
+      "description": "Explain code",
       "Icon": {
         "content": "streamline:programming-browser-code-2-code-browser-tags-angle-programming-bracket",
         "fontSize": "16px",

@@ -1,64 +1,92 @@
 <template>
-  <ElDialog
-    v-model="chatDialogVisible"
-    :width="`50%`"
-    draggable
-    :before-close="handleCloseDialog"
-  >
-    <template #header>
-      <div
-        style="
-          white-space: nowrap;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          font-size: 16px;
-        "
-      >
-        <div>cWord AI</div>
-        <div style="margin-left: auto; margin-right: 20px">
-          <ElButtonGroup>
-            <ElTooltip content="Regenerate response" placement="top">
-              <ElButton plain @click="handleRegenerateConversation">
-                <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
-              </ElButton>
-            </ElTooltip>
-            <ElTooltip content="Save this conversation" placement="top">
-              <ElButton plain @click="handleSaveConversation">
-                <Icon
-                  icon="fluent:save-28-regular"
-                  :style="{ fontSize: '20px' }"
-                />
-              </ElButton>
-            </ElTooltip>
-            <ElTooltip content="Stop generating" placement="top">
-              <ElButton plain @click="handleStopGenerating">
-                <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
-              </ElButton>
-            </ElTooltip>
-          </ElButtonGroup>
+  <div>
+    <!-- Chat Dialog -->
+    <ElDialog
+      v-model="chatDialogVisible"
+      :show-close="false"
+      :width="`50%`"
+      draggable
+      :before-close="handleCloseDialog"
+    >
+      <!-- Header -->
+      <template #header>
+        <ElButton
+          class="minimize-icon"
+          type="warning"
+          plain
+          :icon="SemiSelect"
+          @click="handleMinimize"
+          size="small"
+          circle
+        ></ElButton>
+        <ElButton
+          class="close-icon"
+          type="danger"
+          plain
+          :icon="Close"
+          @click="handleCloseDialog"
+          size="small"
+          circle
+        ></ElButton>
+        <div
+          style="
+            white-space: nowrap;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            font-size: 16px;
+          "
+        >
+          <div>cWord AI</div>
+          <div style="margin-left: auto; margin-right: 26px">
+            <ElButtonGroup>
+              <ElTooltip content="Regenerate response" placement="top">
+                <ElButton plain @click="handleRegenerateConversation">
+                  <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="Save this conversation" placement="top">
+                <ElButton plain @click="handleSaveConversation">
+                  <Icon
+                    icon="fluent:save-28-regular"
+                    :style="{ fontSize: '20px' }"
+                  />
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="Stop generating" placement="top">
+                <ElButton plain @click="handleStopGenerating">
+                  <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
+                </ElButton>
+              </ElTooltip>
+            </ElButtonGroup>
+          </div>
         </div>
-      </div>
-    </template>
-    <Chat
-      ref="chatRef"
-      :chats="chats"
-      @new-chat="newChat"
-      v-model:blockSend="isStreaming"
-    />
-  </ElDialog>
-  <div class="button-chatting">
-    <Icon
-      icon="fluent:chat-12-filled"
-      :style="{ fontSize: '50px' }"
-      @click="onStartChatBox"
-    />
+      </template>
+      <!-- Chat component -->
+      <Chat
+        ref="chatRef"
+        :chats="chats"
+        @new-chat="newChat"
+        v-model:blockSend="isStreaming"
+      />
+    </ElDialog>
+
+    <!-- Chatting button -->
+    <div class="button-chatting">
+      <Icon
+        icon="fluent:chat-12-filled"
+        :style="{ fontSize: '50px' }"
+        @click="onStartChatBox"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { Close } from "@element-plus/icons-vue";
+import { SemiSelect } from "@element-plus/icons-vue";
 import { ElButton } from "element-plus";
 import { ElTooltip } from "element-plus";
 import { ElButtonGroup } from "element-plus";
@@ -66,6 +94,7 @@ import { ElDialog } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import { ConversationRoleEnum } from "../constants";
 import { Chat } from "./Chat";
+import { LoadImg } from ".";
 import { useConversationStore } from "../store/conversation";
 import { useChatDialogStore } from "../store/chat_dialog";
 import { PromptTemplate } from "../lib/prompt_template";
@@ -86,6 +115,7 @@ let childMessageId: string | null = null;
 let saveConversation = false;
 let currentPrompt: string | null = null;
 const isStreaming = ref(false);
+const isMinimized = ref(false);
 const llm = new LLM();
 
 watch(
@@ -191,6 +221,9 @@ const deleteConversation = () => {
 };
 
 const onStartChatBox = async () => {
+  if (isMinimized.value) {
+    isMinimized.value = false;
+  }
   chatDialog.setChatDialogVisible(true);
 };
 
@@ -216,7 +249,7 @@ const handleCloseDialog = () => {
       }
     )
       .then(async () => {
-        chatDialogVisible.value = true;
+        chatDialog.setChatDialogVisible(true);
         isStreaming.value = false;
         const resData = await llm.stopGenerating();
         conversationId = resData.conversationId;
@@ -235,6 +268,11 @@ const newChat = (value: string) => {
   sendMessage(value, false);
 };
 
+const handleMinimize = () => {
+  isMinimized.value = true;
+  chatDialog.setChatDialogVisible(false);
+};
+
 onMounted(() => {});
 </script>
 <style scoped>
@@ -248,5 +286,24 @@ onMounted(() => {});
 .button-chatting:hover {
   font-weight: bold;
   opacity: 1;
+}
+
+.minimize-icon {
+  position: absolute;
+  top: 8px;
+  right: 36px;
+  cursor: pointer;
+}
+.close-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+}
+
+.cword-icon {
+  position: fixed;
+  right: 5px;
+  bottom: 180px;
 }
 </style>

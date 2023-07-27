@@ -3,6 +3,7 @@ import {
   IPCMessageType,
   IPCTopicEnum,
   ConversationMessageTypeEnum,
+  CommunicationMessageTypeEnum,
 } from "./types";
 import { IPCHost } from "./lib/ipc_host";
 import { AIProvider } from "./background/providers/base";
@@ -13,16 +14,24 @@ import { consoleLog, LogLevelEnum } from "./utils";
 import CryptoES from "crypto-es";
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  try {
-    const bytes = CryptoES.AES.decrypt(
-      process.env.VUE_APP_CRYPTO_CONFIG_JSON!,
-      process.env.VUE_APP_CRYPTO_SECRET_KEY!
-    );
-    var originalText = bytes.toString(CryptoES.enc.Utf8);
+  const data: IPCMessageType = request;
+  if (data && data.topic === IPCTopicEnum.COMMUNICATION) {
+    if (data.type === CommunicationMessageTypeEnum.GET_FEATURES) {
+      try {
+        const bytes = CryptoES.AES.decrypt(
+          process.env.VUE_APP_CRYPTO_CONFIG_JSON!,
+          process.env.VUE_APP_CRYPTO_SECRET_KEY!
+        );
+        var originalText = bytes.toString(CryptoES.enc.Utf8);
 
-    sendResponse({ decrypted: JSON.parse(originalText) });
-  } catch (err) {
-    sendResponse({ decrypted: null });
+        sendResponse({ decrypted: JSON.parse(originalText) });
+      } catch (err) {
+        sendResponse({ decrypted: null });
+      }
+    } else if (data.type === CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE) {
+      chrome.runtime.openOptionsPage();
+      sendResponse({});
+    }
   }
 
   return;

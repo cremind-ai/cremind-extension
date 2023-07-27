@@ -1,1 +1,1 @@
-# cWord | Grammar Correction Extension
+# cWord GPT Extension

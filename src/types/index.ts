@@ -7,6 +7,7 @@ export enum ConversationMessageTypeEnum {
 
 export enum CommunicationMessageTypeEnum {
   GET_FEATURES = "get_features",
+  OPEN_OPTIONS_PAGE = "open_options_page",
   MESSAGE = "message",
   ERROR = "error",
 }

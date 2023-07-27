@@ -1,21 +1,25 @@
 {
-  "name": "cWord GPT extension",
+  "name": "cWord GPT Extension",
   "version": "0.0.1",
-  "description": "cWord GPT extension",
+  "description": "cWord GPT Extension",
   "manifest_version": 3,
+  "icons": {
+    "16": "assets/cWord-logo-16.png",
+    "48": "assets/cWord-logo-48.png",
+    "128": "assets/cWord-logo-128.png"
+  },
   "action": {
     "default_icon": {
-      "16": "assets/icon16.png",
-      "48": "assets/icon48.png",
-      "128": "assets/icon128.png"
+      "16": "assets/cWord-logo-16.png",
+      "48": "assets/cWord-logo-48.png",
+      "128": "assets/cWord-logo-128.png"
     },
-    "default_title": "Popup Sample",
+    "default_title": "cWord Popup Page",
     "default_popup": "popup/index.html"
   },
-  "icons": {
-    "16": "assets/icon16.png",
-    "48": "assets/icon48.png",
-    "128": "assets/icon128.png"
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": true
   },
   "background": {
     "service_worker": "background.ts"

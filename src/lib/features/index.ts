@@ -2,7 +2,7 @@ import { ChainVariableSchema } from "../chain";
 import { ChainConfig } from "../chain/chain_builder";
 type IconType = "icon" | "svg";
 
-type Icon = {
+export type Icon = {
   content: string;
   fontSize?: string;
   width?: string;
@@ -10,7 +10,7 @@ type Icon = {
   type: IconType;
 };
 export type FeatureType = {
-  title: string;
+  label: string;
   description: string;
   Icon: Icon;
   variableSchema: ChainVariableSchema;
@@ -19,6 +19,7 @@ export type FeatureType = {
 };
 export type FeatureSchema = {
   id: string;
+  description: string;
   READONLY?: FeatureType;
   EDITABLE?: FeatureType;
   EDITABLE_NO_CONTENT?: FeatureType;
