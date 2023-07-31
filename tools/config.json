@@ -1,7 +1,7 @@
 [
   {
     "id": "89a0b644-361c-451b-b1a7-73418a132d1c",
-    "description": "Summary",
+    "description": "This feature will summarize the selected text for you.",
     "READONLY": {
       "label": "Summary",
       "description": "Summary",
@@ -28,10 +28,10 @@
   },
   {
     "id": "4e93d17b-5646-4d65-afc1-d26dbcfd979e",
-    "description": "Dictionary",
+    "description": "This is a dictionary feature that helps you look up word types, meanings, and examples of how to use this word.",
     "READONLY": {
       "label": "Dictionary",
-      "description": "",
+      "description": "Dictionary",
       "Icon": {
         "content": "arcticons:dictionary",
         "fontSize": "20px",
@@ -40,19 +40,19 @@
       "variableSchema": {
         "from_language": {
           "systemOptions": "Language",
-          "description": "From language",
+          "description": "The original language that you want to translate into another language.",
           "storage": true
         },
         "to_language": {
           "systemOptions": "Language",
-          "description": "To language",
+          "description": "The sentence will be translated into this language.",
           "storage": true
         }
       },
       "Chains": [
         {
           "name": "ChainDictionary",
-          "promptTemplate": "You are an @{from_language}-to-@{to_language} dictionary. I use @{to_language} as my mother tongue. Please explain this English vocabulary to me, what kind of word this is and the cases it can be used in @{from_language}: \"&{SELECTED_TEXT}\"\nEXPLAIN (in @{to_language}):\n\n",
+          "promptTemplate": "You are an @{from_language}-to-@{to_language} dictionary. I use @{to_language} as my mother tongue. Please explain this English vocabulary to me, what kind of word this is and the cases it can be used in @{from_language}: \n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (in @{to_language}):\n\n",
           "variableOutput": null
         }
       ]
@@ -68,19 +68,19 @@
       "variableSchema": {
         "from_language": {
           "systemOptions": "Language",
-          "description": "From language",
+          "description": "The original language that you want to translate into another language.",
           "storage": true
         },
         "to_language": {
           "systemOptions": "Language",
-          "description": "To language",
+          "description": "The sentence will be translated into this language.",
           "storage": true
         }
       },
       "Chains": [
         {
           "name": "ChainDictionary",
-          "promptTemplate": "You are an @{from_language}-to-@{to_language} dictionary. I use @{to_language} as my mother tongue. Please explain this English vocabulary to me, what kind of word this is and the cases it can be used in @{from_language}: \"&{SELECTED_TEXT}\"\nEXPLAIN (in @{to_language}):\n\n",
+          "promptTemplate": "You are an @{from_language}-to-@{to_language} dictionary. I use @{to_language} as my mother tongue. Please explain this English vocabulary to me, what kind of word this is and the cases it can be used in @{from_language}: \n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (in @{to_language}):\n\n",
           "variableOutput": null
         }
       ]
@@ -88,7 +88,7 @@
   },
   {
     "id": "e1b5a11b-d0c5-4c73-862b-e3dc9a2a7652",
-    "description": "Translate",
+    "description": "This feature will translate sentences into the language of your choice.",
     "READONLY": {
       "label": "Translate",
       "description": "Translate",
@@ -100,7 +100,7 @@
       "variableSchema": {
         "target_language": {
           "systemOptions": "Language",
-          "description": "Target language",
+          "description": "You will translate into this language.",
           "storage": true
         }
       },
@@ -123,7 +123,7 @@
       "variableSchema": {
         "target_language": {
           "systemOptions": "Language",
-          "description": "Target language",
+          "description": "You will translate into this language.",
           "storage": true
         }
       },
@@ -138,7 +138,7 @@
   },
   {
     "id": "bd80fcb2-a871-45f6-b14c-fa59866d592d",
-    "description": "Correction",
+    "description": "This feature will assist you in revising grammatical errors and improper sentence structures, transforming them into a complete and polished sentence.",
     "EDITABLE": {
       "label": "Correction",
       "description": "Correction",
@@ -150,7 +150,7 @@
       "variableSchema": {
         "target_language": {
           "systemOptions": "Language",
-          "description": "Target language",
+          "description": "Language in which you will correct this sentence",
           "storage": true
         }
       },
@@ -162,14 +162,37 @@
         }
       ],
       "WriteResponse": true
+    },
+    "READONLY": {
+      "label": "Correction",
+      "description": "Correction",
+      "Icon": {
+        "content": "icon-park-outline:correct",
+        "fontSize": "20px",
+        "type": "icon"
+      },
+      "variableSchema": {
+        "target_language": {
+          "systemOptions": "Language",
+          "description": "Language in which you will correct this sentence",
+          "storage": true
+        }
+      },
+      "Chains": [
+        {
+          "name": "chainCorrect",
+          "promptTemplate": "Correct the following sentence to standard @{target_language} grammar:\nSENTENCE: ```\n&{SELECTED_TEXT}\n```\nCORRECTED:",
+          "variableOutput": null
+        }
+      ]
     }
   },
   {
     "id": "d2d0c070-b580-4228-bc41-d6ffe87d17ee",
-    "description": "Explaination",
+    "description": "This feature will assist you in correcting grammar errors, identifying and explaining those errors in detail.",
     "READONLY": {
-      "label": "Explaination",
-      "description": "Explaination",
+      "label": "Grammar Explaination",
+      "description": "Grammar Explaination",
       "Icon": {
         "content": "fluent:text-grammar-checkmark-24-regular",
         "fontSize": "20px",
@@ -178,12 +201,12 @@
       "variableSchema": {
         "target_language": {
           "systemOptions": "Language",
-          "description": "Target language",
+          "description": "Sentences after correction will use this language",
           "storage": true
         },
         "your_native_language": {
           "systemOptions": "Language",
-          "description": "Your native language",
+          "description": "Select your native language, and I will provide explanations in that language",
           "storage": true
         }
       },
@@ -196,8 +219,8 @@
       ]
     },
     "EDITABLE": {
-      "label": "Correct & Explain",
-      "description": "Correct & Explain",
+      "label": "Grammar Explaination",
+      "description": "Grammar Explaination",
       "Icon": {
         "content": "fluent:text-grammar-checkmark-24-regular",
         "fontSize": "20px",
@@ -206,7 +229,7 @@
       "variableSchema": {
         "target_language": {
           "systemOptions": "Language",
-          "description": "Target language",
+          "description": "Sentences will be in this language after correction.",
           "storage": true
         }
       },
@@ -227,7 +250,7 @@
   },
   {
     "id": "7cbe5f85-03f6-41a7-b68f-818f6afa2a74",
-    "description": "Email Writing",
+    "description": "This feature enables you to effortlessly compose emails with automated speed and professionalism, saving you valuable time by relieving the burden of content creation.",
     "EDITABLE_NO_CONTENT": {
       "label": "Email Writing",
       "description": "Email Writing",
@@ -263,7 +286,7 @@
   },
   {
     "id": "e8459864-2608-4623-8079-725d6a3d6925",
-    "description": "Explain code",
+    "description": "This feature will assist you in explaining code from any programming language effortlessly.",
     "READONLY": {
       "label": "Explain code",
       "description": "Explain code",
@@ -275,13 +298,13 @@
       "variableSchema": {
         "language": {
           "systemOptions": "Language",
-          "description": "Language",
+          "description": "Select your native language, and I will provide explanations in that language",
           "storage": true
         }
       },
       "Chains": [
         {
-          "name": "ChainDictionary",
+          "name": "ChainExplainCode",
           "promptTemplate": "I'm @{language}, I use @{language} as my mother tongue. Please explain below content:\n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (in @{language}):\n\n",
           "variableOutput": null
         }
@@ -298,13 +321,13 @@
       "variableSchema": {
         "language": {
           "systemOptions": "Language",
-          "description": "Language",
+          "description": "Select your native language, and I will provide explanations in that language",
           "storage": true
         }
       },
       "Chains": [
         {
-          "name": "ChainDictionary",
+          "name": "ChainExplainCode",
           "promptTemplate": "I'm @{language}, I use @{language} as my mother tongue. Please explain below content:\n```\n&{SELECTED_TEXT}\n```\nEXPLAIN (in @{language}):\n\n",
           "variableOutput": null
         }

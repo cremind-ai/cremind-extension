@@ -5,9 +5,16 @@
       <div style="max-width: 600px; margin: 0 auto">
         <ElCard>
           <ElCard style="margin-top: 10px; margin-bottom: 10px">
-            <ElButton type="primary" @click="handleResetAllVariables">
-              Reset all variables
-            </ElButton>
+            <ElForm label-position="right" label-width="160px">
+              <ElFormItem label="Reset all settings">
+                <ElButton type="primary" @click="handleResetAllVariables">
+                  <Icon
+                    icon="solar:restart-bold-duotone"
+                    :style="{ fontSize: '20px' }"
+                  />
+                </ElButton>
+              </ElFormItem>
+            </ElForm>
           </ElCard>
           <ElCard
             style="margin-top: 10px; margin-bottom: 10px"
@@ -19,12 +26,73 @@
                 {{ feature.description }}
               </ElFormItem>
               <ElFormItem label="Enable">
-                <ElSwitch />
+                <ElSwitch
+                  v-model="switchStates[index]"
+                  @change="handleSwitchChange(feature, switchStates[index])"
+                />
               </ElFormItem>
               <ElFormItem label="Reset variable">
                 <ElButton type="primary" @click="handleResetVariable(feature)">
-                  Reset variable
+                  <Icon
+                    icon="solar:restart-bold-duotone"
+                    :style="{ fontSize: '20px' }"
+                  />
                 </ElButton>
+              </ElFormItem>
+              <ElFormItem label="Support mode">
+                <div
+                  v-if="feature.READONLY"
+                  style="display: flex; align-items: center"
+                >
+                  <Icon
+                    :icon="feature.READONLY?.Icon.content || ''"
+                    :style="{ fontSize: feature.READONLY?.Icon.fontSize }"
+                    v-if="feature.READONLY?.Icon.type === 'icon'"
+                  />
+                  <div
+                    v-if="feature.READONLY?.Icon.type === 'svg'"
+                    v-html="feature.READONLY?.Icon.content"
+                  ></div>
+                  <span style="margin-left: 5px; margin-right: 8px"
+                    >READONLY</span
+                  >
+                </div>
+                <div
+                  v-if="feature.EDITABLE"
+                  style="display: flex; align-items: center"
+                >
+                  <Icon
+                    :icon="feature.EDITABLE?.Icon.content || ''"
+                    :style="{ fontSize: feature.EDITABLE?.Icon.fontSize }"
+                    v-if="feature.EDITABLE?.Icon.type === 'icon'"
+                  />
+                  <div
+                    v-if="feature.EDITABLE?.Icon.type === 'svg'"
+                    v-html="feature.EDITABLE?.Icon.content"
+                  ></div>
+                  <span style="margin-left: 5px; margin-right: 8px"
+                    >EDITABLE</span
+                  >
+                </div>
+                <div
+                  v-if="feature.EDITABLE_NO_CONTENT"
+                  style="display: flex; align-items: center"
+                >
+                  <Icon
+                    :icon="feature.EDITABLE_NO_CONTENT?.Icon.content || ''"
+                    :style="{
+                      fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
+                    }"
+                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'icon'"
+                  />
+                  <div
+                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'svg'"
+                    v-html="feature.EDITABLE_NO_CONTENT?.Icon.content"
+                  ></div>
+                  <span style="margin-left: 5px; margin-right: 8px"
+                    >EDITABLE_NO_CONTENT</span
+                  >
+                </div>
               </ElFormItem>
             </ElForm>
           </ElCard>
@@ -36,8 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, Ref } from "vue";
-import { ElInput } from "element-plus";
+import { onMounted, ref, Ref } from "vue";
 import { ElContainer } from "element-plus";
 import { ElHeader } from "element-plus";
 import { ElMain } from "element-plus";
@@ -47,7 +114,7 @@ import { ElCard } from "element-plus";
 import { ElForm } from "element-plus";
 import { ElFormItem } from "element-plus";
 import { ElSwitch } from "element-plus";
-import { ElSelect } from "element-plus";
+import { Icon } from "@iconify/vue";
 import { ChromeStorage } from "../hooks/chrome_storage";
 import { consoleLog, LogLevelEnum } from "../utils";
 import {
@@ -59,9 +126,27 @@ import {
 import { FeatureSchema, Icon as IconType } from "../lib/features";
 
 const featureList: Ref<FeatureSchema[]> = ref([]);
+const switchStates: Ref<boolean[]> = ref([]);
 
-const handleResetAllVariables = () => {
-  ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
+const getFeatureEnabledState = async (
+  feature: FeatureSchema
+): Promise<boolean> => {
+  const value = await ChromeStorage.getInstance().get(
+    `FEATURE:${feature.id}:enable`
+  );
+  if (value === undefined) {
+    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true);
+    return true;
+  } else if (value === false) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+const handleResetAllVariables = async () => {
+  await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
+  initialize();
 };
 
 const handleResetVariable = (feature: FeatureSchema) => {
@@ -72,25 +157,38 @@ const handleResetVariable = (feature: FeatureSchema) => {
       key === selectedModeEnum.READONLY ||
       key === selectedModeEnum.EDITABLE_NO_CONTENT
     ) {
-      ChromeStorage.getInstance().removeWithWildcard(`FEATURE:${feature.id}`);
-      `FEATURE:${feature.id}:${key}:variable`;
+      ChromeStorage.getInstance().removeWithWildcard(
+        `FEATURE:${feature.id}:${key}:variable`
+      );
     }
   }
 };
 
-onMounted(async () => {
+const handleSwitchChange = async (feature: FeatureSchema, value: boolean) => {
+  await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, value);
+};
+
+async function initialize() {
   const data: IPCMessageType = {
     topic: IPCTopicEnum.COMMUNICATION,
     type: CommunicationMessageTypeEnum.GET_FEATURES,
     message: "Get JSON Features",
   };
-  chrome.runtime.sendMessage(data, (response) => {
+  chrome.runtime.sendMessage(data, async (response) => {
     if (response.decrypted) {
       featureList.value = response.decrypted;
+
+      switchStates.value = await Promise.all(
+        response.decrypted.map((feature) => getFeatureEnabledState(feature))
+      );
     } else {
       featureList.value = [];
     }
   });
+}
+
+onMounted(() => {
+  initialize();
 });
 </script>
 

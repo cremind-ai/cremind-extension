@@ -22,7 +22,11 @@
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElTooltip :content="feature.EDITABLE?.label" placement="top">
+              <ElTooltip
+                :content="feature.EDITABLE?.label"
+                placement="top"
+                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+              >
                 <ElButton
                   type="success"
                   plain
@@ -55,24 +59,21 @@
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
-                  <ElTooltip
-                    v-for="(option, index) in moreOptions"
-                    :key="index"
-                    :content="option.label"
-                    placement="top"
-                  >
+                  <template v-for="(option, index) in moreOptions" :key="index">
                     <ElDropdownItem :command="option.label">
-                      <Icon
-                        :icon="option.icon.content || ''"
-                        :style="{ fontSize: option.icon.fontSize }"
-                        v-if="option.icon.type === 'icon'"
-                      />
-                      <div
-                        v-if="option.icon.type === 'svg'"
-                        v-html="option.icon.content"
-                      ></div>
+                      <ElTooltip :content="option.label" placement="auto">
+                        <Icon
+                          :icon="option.icon.content || ''"
+                          :style="{ fontSize: option.icon.fontSize }"
+                          v-if="option.icon.type === 'icon'"
+                        />
+                        <div
+                          v-if="option.icon.type === 'svg'"
+                          v-html="option.icon.content"
+                        ></div>
+                      </ElTooltip>
                     </ElDropdownItem>
-                  </ElTooltip>
+                  </template>
                 </ElDropdownMenu>
               </template>
             </ElDropdown>
@@ -84,7 +85,11 @@
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
-              <ElTooltip :content="feature.READONLY?.label" placement="top">
+              <ElTooltip
+                :content="feature.READONLY?.label"
+                placement="top"
+                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+              >
                 <ElButton
                   type="success"
                   plain
@@ -122,24 +127,21 @@
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
-                  <ElTooltip
-                    v-for="(option, index) in moreOptions"
-                    :key="index"
-                    :content="option.label"
-                    placement="top"
-                  >
+                  <template v-for="(option, index) in moreOptions" :key="index">
                     <ElDropdownItem :command="option.label">
-                      <Icon
-                        :icon="option.icon.content || ''"
-                        :style="{ fontSize: option.icon.fontSize }"
-                        v-if="option.icon.type === 'icon'"
-                      />
-                      <div
-                        v-if="option.icon.type === 'svg'"
-                        v-html="option.icon.content"
-                      ></div>
+                      <ElTooltip :content="option.label" placement="auto">
+                        <Icon
+                          :icon="option.icon.content || ''"
+                          :style="{ fontSize: option.icon.fontSize }"
+                          v-if="option.icon.type === 'icon'"
+                        />
+                        <div
+                          v-if="option.icon.type === 'svg'"
+                          v-html="option.icon.content"
+                        ></div>
+                      </ElTooltip>
                     </ElDropdownItem>
-                  </ElTooltip>
+                  </template>
                 </ElDropdownMenu>
               </template>
             </ElDropdown>
@@ -154,6 +156,7 @@
               <ElTooltip
                 :content="feature.EDITABLE_NO_CONTENT?.label"
                 placement="top"
+                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
               >
                 <ElButton
                   type="success"
@@ -194,24 +197,21 @@
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
-                  <ElTooltip
-                    v-for="(option, index) in moreOptions"
-                    :key="index"
-                    :content="option.label"
-                    placement="top"
-                  >
+                  <template v-for="(option, index) in moreOptions" :key="index">
                     <ElDropdownItem :command="option.label">
-                      <Icon
-                        :icon="option.icon.content || ''"
-                        :style="{ fontSize: option.icon.fontSize }"
-                        v-if="option.icon.type === 'icon'"
-                      />
-                      <div
-                        v-if="option.icon.type === 'svg'"
-                        v-html="option.icon.content"
-                      ></div>
+                      <ElTooltip :content="option.label" placement="auto">
+                        <Icon
+                          :icon="option.icon.content || ''"
+                          :style="{ fontSize: option.icon.fontSize }"
+                          v-if="option.icon.type === 'icon'"
+                        />
+                        <div
+                          v-if="option.icon.type === 'svg'"
+                          v-html="option.icon.content"
+                        ></div>
+                      </ElTooltip>
                     </ElDropdownItem>
-                  </ElTooltip>
+                  </template>
                 </ElDropdownMenu>
               </template>
             </ElDropdown>
@@ -424,6 +424,7 @@ const isStreaming = ref(false);
 const logoIconShow = ref(false);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
+const enabledFeatureStates: Ref<boolean[]> = ref([]);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
 const currentFeatureMode: Ref<selectedModeEnum> = ref(
@@ -432,7 +433,7 @@ const currentFeatureMode: Ref<selectedModeEnum> = ref(
 const featureList: Ref<FeatureSchema[]> = ref([]);
 
 const filteredFeatureList = computed(() => {
-  return featureList.value.filter((feature) => {
+  const _filteredFeatureList = featureList.value.filter((feature) => {
     const { READONLY, EDITABLE, EDITABLE_NO_CONTENT } = feature;
 
     switch (selectedMode.value) {
@@ -446,6 +447,7 @@ const filteredFeatureList = computed(() => {
         return false;
     }
   });
+  return _filteredFeatureList;
 });
 
 enum OptionCommandType {
@@ -695,7 +697,20 @@ async function handleFeature(
   }
 }
 
-function handleFeatureClick(
+function convertIndexToOriginal(indexInFiltered: number): number {
+  const filteredFeature = filteredFeatureList.value[indexInFiltered];
+  const idToFind = filteredFeature.id;
+
+  for (let i = 0; i < featureList.value.length; i++) {
+    if (featureList.value[i].id === idToFind) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+async function handleFeatureClick(
   featureSchema: FeatureSchema,
   index: number,
   type: selectedModeEnum
@@ -841,6 +856,22 @@ const handleCommand = (command: OptionCommandType) => {
   }
 };
 
+const getFeatureEnabledState = async (
+  feature: FeatureSchema
+): Promise<boolean> => {
+  const value = await ChromeStorage.getInstance().get(
+    `FEATURE:${feature.id}:enable`
+  );
+  if (value === undefined) {
+    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true);
+    return true;
+  } else if (value === false) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
 onMounted(async () => {
   consoleLog(LogLevelEnum.DEBUG, "onMounted");
   optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
@@ -851,9 +882,12 @@ onMounted(async () => {
     type: CommunicationMessageTypeEnum.GET_FEATURES,
     message: "Get JSON Features",
   };
-  chrome.runtime.sendMessage(data, (response) => {
+  chrome.runtime.sendMessage(data, async (response) => {
     if (response.decrypted) {
       featureList.value = response.decrypted;
+      enabledFeatureStates.value = await Promise.all(
+        response.decrypted.map((feature) => getFeatureEnabledState(feature))
+      );
     } else {
       featureList.value = [];
     }
