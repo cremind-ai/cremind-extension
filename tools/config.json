@@ -45,7 +45,7 @@
         },
         "to_language": {
           "systemOptions": "Language",
-          "description": "The sentence will be translated into this language.",
+          "description": "The dictionary will be translated into this language.",
           "storage": true
         }
       },
@@ -90,8 +90,8 @@
     "id": "e1b5a11b-d0c5-4c73-862b-e3dc9a2a7652",
     "description": "This feature will translate sentences into the language of your choice.",
     "READONLY": {
-      "label": "Translate",
-      "description": "Translate",
+      "label": "Translation",
+      "description": "Translation",
       "Icon": {
         "content": "system-uicons:translate",
         "fontSize": "20px",
@@ -113,8 +113,8 @@
       ]
     },
     "EDITABLE": {
-      "label": "Translate",
-      "description": "Translate",
+      "label": "Translation",
+      "description": "Translation",
       "Icon": {
         "content": "system-uicons:translate",
         "fontSize": "20px",

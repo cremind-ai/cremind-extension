@@ -37,7 +37,14 @@
             font-size: 16px;
           "
         >
-          <div>cWord AI</div>
+          <div>
+            cWord AI
+            <LoadImg
+              class="cword-icon-bar"
+              :filename="'cWord-logo-64.png'"
+              :width="25"
+            />
+          </div>
           <div style="margin-left: auto; margin-right: 26px">
             <ElButtonGroup>
               <ElTooltip content="Regenerate response" placement="top">
@@ -77,6 +84,11 @@
         icon="fluent:chat-12-filled"
         :style="{ fontSize: '50px' }"
         @click="onStartChatBox"
+      />
+      <LoadImg
+        class="cword-chatting"
+        :filename="'cWord-logo-64.png'"
+        :width="15"
       />
     </div>
   </div>
@@ -280,12 +292,18 @@ onMounted(() => {});
   position: fixed;
   right: 5px;
   bottom: 100px;
-  opacity: 0.4;
+  opacity: 0.7;
   z-index: 99999;
 }
 .button-chatting:hover {
   font-weight: bold;
   opacity: 1;
+}
+
+.cword-chatting {
+  position: absolute;
+  top: 0px;
+  right: 44px;
 }
 
 .minimize-icon {

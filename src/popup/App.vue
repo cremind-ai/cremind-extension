@@ -1,49 +1,39 @@
 <template>
   <div class="popupview">
-    <ElInput
-      v-model="textarea"
-      :rows="10"
-      type=""
-      placeholder="Please import JSON"
+    cWord AI
+    <LoadImg
+      class="cword-icon-bar"
+      :filename="'cWord-logo-500.png'"
+      :width="50"
     />
+    <ElButton class="settings" type="success" plain @click="handleSettings">
+      <Icon icon="solar:settings-line-duotone" :style="{ fontSize: '20px' }" />
+    </ElButton>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ElInput } from "element-plus";
-import { ChromeStorage } from "../hooks/chrome_storage";
-import { consoleLog, LogLevelEnum } from "../utils";
-
+import { ElButton } from "element-plus";
+import { Icon } from "@iconify/vue";
 import { onMounted, ref, watch } from "vue";
-const textarea = ref("");
+import {
+  CommunicationMessageTypeEnum,
+  IPCTopicEnum,
+  IPCMessageType,
+  selectedModeEnum,
+} from "../types";
+import { LoadImg } from "../components";
 
-watch(
-  () => textarea.value,
-  (newValue) => {
-    try {
-      const jsonValue = JSON.parse(newValue);
-      ChromeStorage.getInstance().set(
-        "FEATURE_JSON",
-        JSON.stringify(jsonValue)
-      );
-    } catch (e) {
-      consoleLog(LogLevelEnum.DEBUG, "error", e);
-      return;
-    }
-  }
-);
+const handleSettings = () => {
+  const data: IPCMessageType = {
+    topic: IPCTopicEnum.COMMUNICATION,
+    type: CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE,
+    message: "Open options page",
+  };
+  chrome.runtime.sendMessage(data, () => {});
+};
 
-onMounted(async () => {
-  await ChromeStorage.getInstance()
-    .get("FEATURE_JSON")
-    .then((result) => {
-      if (result) {
-        textarea.value = result;
-      } else {
-        textarea.value = "No data";
-      }
-    });
-});
+onMounted(async () => {});
 </script>
 
 <style scoped>
@@ -61,28 +51,10 @@ onMounted(async () => {
   gap: 5px;
 }
 
-.popupview__user-icon img {
-  width: 40px;
-  border-radius: 20px;
-}
-
-.popupview__user {
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.popupview__user-logout {
-  padding: 3px 12px;
-  border-radius: 10px;
-  background-color: white;
-  border: 1px solid gray;
-  color: black;
-}
-
-.popupview__user-logout:hover {
-  background-color: lightgray;
+.settings {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
 }
 </style>

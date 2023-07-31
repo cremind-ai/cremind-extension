@@ -1,7 +1,7 @@
 {
   "name": "cWord GPT Extension",
-  "version": "0.0.1",
-  "description": "cWord GPT Extension",
+  "version": "1.0.1",
+  "description": "Unlocking the Potential of AI GPT Technology: Empowering Productivity with this Feature-Packed Extension",
   "manifest_version": 3,
   "icons": {
     "16": "assets/cWord-logo-16.png",
