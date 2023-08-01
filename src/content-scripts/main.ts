@@ -7,12 +7,10 @@ import "../styles/element/index.scss";
 import "../styles/highlight.js/github-dark.css";
 import "./index.scss";
 
-window.onload = async () => {
-  const el = document.querySelector("body");
-  if (el) {
-    el.insertAdjacentHTML("beforeend", '<div id="cword-app-extension"></div>');
-    const app = createApp(App).use(createPinia());
-    app.use(ElementPlus);
-    app.mount("#cword-app-extension");
-  }
-};
+const el = document.querySelector("body");
+if (el) {
+  el.insertAdjacentHTML("beforeend", '<div id="cword-app-extension"></div>');
+  const app = createApp(App).use(createPinia());
+  app.use(ElementPlus);
+  app.mount("#cword-app-extension");
+}

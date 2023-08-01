@@ -103,6 +103,7 @@ import { ElButton } from "element-plus";
 import { ElTooltip } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { ElDialog } from "element-plus";
+import { ElMessage } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import { ConversationRoleEnum } from "../constants";
 import { Chat } from "./Chat";
@@ -114,6 +115,7 @@ import { Chain } from "../lib/chain";
 import { CWException } from "../types/exception";
 import { LLM } from "../lib/llm";
 import { consoleLog, LogLevelEnum } from "../utils";
+import { Status } from "../constants/status";
 
 const conversation = useConversationStore();
 const chatDialog = useChatDialogStore();
@@ -203,10 +205,23 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
     });
   });
 
-  result.on("error", (err: CWException) => {
+  result.on("error", (error: CWException) => {
     consoleLog(LogLevelEnum.DEBUG, "error");
     isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, err);
+    consoleLog(LogLevelEnum.DEBUG, error);
+    if (error.code === Status.CHATGPT_UNAUTHORIZED) {
+      ElMessage.error(
+        "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
+      );
+    } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
+      ElMessage.error(
+        "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
+      );
+    } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
+      ElMessage.error(`ChatGPT: ${error.message}`);
+    } else {
+      ElMessage.error(error.message);
+    }
   });
 
   chatDialog.setInitialPrompt(null);

@@ -20,7 +20,7 @@
       "Chains": [
         {
           "name": "ChainSummary",
-          "promptTemplate": "Summarize below content:\n```\n&{SELECTED_TEXT}\n```\nSUMMARIZE (in @{language}):\n\n",
+          "promptTemplate": "Summarize below content in @{language:\n```\n&{SELECTED_TEXT}\n```\nSUMMARIZE (in @{language}):\n\n",
           "variableOutput": null
         }
       ]
