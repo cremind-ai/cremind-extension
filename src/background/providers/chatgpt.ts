@@ -96,6 +96,7 @@ export class ChatGPT extends AIProvider {
     conversationId: string,
     propertyObject: object
   ) {
+    consoleLog(LogLevelEnum.DEBUG, "setConversationProperty");
     await this.request(
       token,
       "PATCH",
@@ -147,6 +148,7 @@ export class ChatGPT extends AIProvider {
   }
 
   public async deleteConversation(conversationId: string): Promise<void> {
+    consoleLog(LogLevelEnum.DEBUG, "deleteConversation");
     this.token = await this.getChatGPTAccessToken();
     this.setConversationProperty(this.token!, conversationId, {
       is_visible: false,
@@ -239,7 +241,7 @@ export class ChatGPT extends AIProvider {
             const error = await resp.json().catch(() => ({}));
             callback({
               type: AIResponseTypeEnum.ERROR,
-              message: error.detail.message,
+              message: error.detail,
               code: Status.CHATGPT_RESPONSE_ERROR,
             });
             if (this.conversationId) {

@@ -14,9 +14,11 @@ export type ChainConfig = {
 export class ChainBuilder {
   private chains: Chain[] = [];
   private configs: ChainConfig[] = [];
+  public llm: LLM;
 
   constructor(configs: ChainConfig[]) {
     this.configs = configs;
+    this.llm = new LLM();
   }
 
   public async buildChains(variables: { [key: string]: string }) {
@@ -33,10 +35,9 @@ export class ChainBuilder {
         }
       });
 
-      const llm = new LLM();
       const chain = new Chain(
         config.name,
-        llm,
+        this.llm,
         promptTemplate,
         _variables,
         config.variableOutput,

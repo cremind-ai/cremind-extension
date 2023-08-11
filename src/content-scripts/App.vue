@@ -88,7 +88,6 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
 document.addEventListener("keyup", function (event: KeyboardEvent) {
   const pressedKey = event.key;
   const selection = window.getSelection()?.toString().trim();
-  consoleLog(LogLevelEnum.DEBUG, "Key pressed keyup:", pressedKey);
   if (pressedKey === "Shift" || pressedKey === "Meta") {
     if (selection && !showMainCard.value) {
       selectedText.value = selection;

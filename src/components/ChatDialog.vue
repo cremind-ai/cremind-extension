@@ -60,11 +60,11 @@
                   />
                 </ElButton>
               </ElTooltip>
-              <ElTooltip content="Stop generating" placement="top">
+              <!-- <ElTooltip content="Stop generating" placement="top">
                 <ElButton plain @click="handleStopGenerating">
                   <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
                 </ElButton>
-              </ElTooltip>
+              </ElTooltip> -->
             </ElButtonGroup>
           </div>
         </div>
@@ -214,9 +214,9 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
         "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
       );
     } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
-      ElMessage.error(
-        "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
-      );
+      // ElMessage.error(
+      //   "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
+      // );
     } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
       ElMessage.error(`ChatGPT: ${error.message}`);
     } else {

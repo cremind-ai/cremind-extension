@@ -61,7 +61,9 @@ export class IPCHost {
       topic: request.topic,
       requestId: request.requestId,
     };
-    port.postMessage(fullResponse);
+    try {
+      port.postMessage(fullResponse);
+    } catch (err) {}
   }
 
   public register(

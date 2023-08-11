@@ -724,9 +724,9 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
         "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
       );
     } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
-      ElMessage.error(
-        "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
-      );
+      // ElMessage.error(
+      //   "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
+      // );
     } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
       ElMessage.error(`ChatGPT: ${error.message}`);
     } else {
@@ -795,7 +795,16 @@ async function handleFeatureClick(
   type: selectedModeEnum
 ) {
   const id: string = featureSchema.id;
-  consoleLog(LogLevelEnum.DEBUG, "handleFeatureClick", index, type, id);
+  if (isStreaming.value) {
+    ElMessageBox.alert(
+      "You cannot switch feature because the response is being streamed",
+      "Warning",
+      {
+        confirmButtonText: "OK",
+      }
+    );
+    return;
+  }
   outputContent.value = "";
   popoverVisible.value = true;
   handleFeature(id, featureSchema[type]!, type);
@@ -843,7 +852,8 @@ const handleClickOutside = (event: MouseEvent) => {
     !optionBarRef.value.contains(event.target as Node) &&
     popoverRef.value &&
     !popoverRef.value.contains(event.target as Node) &&
-    optionBarShow.value
+    optionBarShow.value &&
+    isStreaming.value === false
   ) {
     if (isStreaming.value) {
       clickOutsideConfirm.value = true;
