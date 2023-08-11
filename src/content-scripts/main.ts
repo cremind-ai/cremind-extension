@@ -9,8 +9,8 @@ import "./index.scss";
 
 const el = document.querySelector("body");
 if (el) {
-  el.insertAdjacentHTML("beforeend", '<div id="cword-app-extension"></div>');
+  el.insertAdjacentHTML("beforeend", '<div id="cremind-app-extension"></div>');
   const app = createApp(App).use(createPinia());
   app.use(ElementPlus);
-  app.mount("#cword-app-extension");
+  app.mount("#cremind-app-extension");
 }

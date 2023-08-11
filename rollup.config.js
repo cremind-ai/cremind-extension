@@ -56,11 +56,8 @@ export default {
       "process.env.VUE_APP_LOG_LEVEL": JSON.stringify(
         process.env.VUE_APP_LOG_LEVEL
       ),
-      "process.env.VUE_APP_CRYPTO_SECRET_KEY": JSON.stringify(
-        process.env.VUE_APP_CRYPTO_SECRET_KEY
-      ),
-      "process.env.VUE_APP_CRYPTO_CONFIG_JSON": JSON.stringify(
-        process.env.VUE_APP_CRYPTO_CONFIG_JSON
+      "process.env.VUE_APP_CREMIND_API": JSON.stringify(
+        process.env.VUE_APP_CREMIND_API
       ),
       preventAssignment: true,
     }),
@@ -75,6 +72,6 @@ export default {
     }),
     commonjs(),
     emptyDir(),
-    terser(),
+    process.env.ENV === "production" ? terser() : null,
   ],
 };

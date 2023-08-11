@@ -38,10 +38,10 @@
           "
         >
           <div>
-            cWord AI
+            CreMind AI
             <LoadImg
-              class="cword-icon-bar"
-              :filename="'cWord-logo-64.png'"
+              class="cremind-icon-bar"
+              :filename="'CreMind-logo-64.png'"
               :width="25"
             />
           </div>
@@ -86,8 +86,8 @@
         @click="onStartChatBox"
       />
       <LoadImg
-        class="cword-chatting"
-        :filename="'cWord-logo-64.png'"
+        class="cremind-chatting"
+        :filename="'CreMind-logo-64.png'"
         :width="15"
       />
     </div>
@@ -315,7 +315,7 @@ onMounted(() => {});
   opacity: 1;
 }
 
-.cword-chatting {
+.cremind-chatting {
   position: absolute;
   top: 0px;
   right: 44px;
@@ -334,7 +334,7 @@ onMounted(() => {});
   cursor: pointer;
 }
 
-.cword-icon {
+.cremind-icon {
   position: fixed;
   right: 5px;
   bottom: 180px;

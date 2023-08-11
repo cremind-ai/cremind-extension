@@ -1,20 +1,20 @@
 {
-  "name": "cWord GPT Extension",
+  "name": "CreMind GPT Extension",
   "version": "1.0.1",
   "description": "Unlocking the Potential of AI GPT Technology: Empowering Productivity with this Feature-Packed Extension",
   "manifest_version": 3,
   "icons": {
-    "16": "assets/cWord-logo-16.png",
-    "48": "assets/cWord-logo-48.png",
-    "128": "assets/cWord-logo-128.png"
+    "16": "assets/CreMind-logo-16.png",
+    "48": "assets/CreMind-logo-48.png",
+    "128": "assets/CreMind-logo-128.png"
   },
   "action": {
     "default_icon": {
-      "16": "assets/cWord-logo-16.png",
-      "48": "assets/cWord-logo-48.png",
-      "128": "assets/cWord-logo-128.png"
+      "16": "assets/CreMind-logo-16.png",
+      "48": "assets/CreMind-logo-48.png",
+      "128": "assets/CreMind-logo-128.png"
     },
-    "default_title": "cWord Popup Page",
+    "default_title": "CreMind Popup Page",
     "default_popup": "popup/index.html"
   },
   "options_ui": {
@@ -37,5 +37,5 @@
       "matches": ["*://*/*"]
     }
   ],
-  "permissions": ["identity", "storage", "tabs", "contextMenus"]
+  "permissions": ["storage", "tabs", "contextMenus"]
 }

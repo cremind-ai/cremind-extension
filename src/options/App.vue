@@ -75,22 +75,22 @@
                   >
                 </div>
                 <div
-                  v-if="feature.EDITABLE_NO_CONTENT"
+                  v-if="feature.EDITABLE_CONTEXT_MENU"
                   style="display: flex; align-items: center"
                 >
                   <Icon
-                    :icon="feature.EDITABLE_NO_CONTENT?.Icon.content || ''"
+                    :icon="feature.EDITABLE_CONTEXT_MENU?.Icon.content || ''"
                     :style="{
-                      fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
+                      fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
                     }"
-                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'icon'"
+                    v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'icon'"
                   />
                   <div
-                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'svg'"
-                    v-html="feature.EDITABLE_NO_CONTENT?.Icon.content"
+                    v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'svg'"
+                    v-html="feature.EDITABLE_CONTEXT_MENU?.Icon.content"
                   ></div>
                   <span style="margin-left: 5px; margin-right: 8px"
-                    >EDITABLE_NO_CONTENT</span
+                    >EDITABLE_CONTEXT_MENU</span
                   >
                 </div>
               </ElFormItem>
@@ -155,7 +155,7 @@ const handleResetVariable = (feature: FeatureSchema) => {
     if (
       key === selectedModeEnum.EDITABLE ||
       key === selectedModeEnum.READONLY ||
-      key === selectedModeEnum.EDITABLE_NO_CONTENT
+      key === selectedModeEnum.EDITABLE_CONTEXT_MENU
     ) {
       ChromeStorage.getInstance().removeWithWildcard(
         `FEATURE:${feature.id}:${key}:variable`
@@ -175,11 +175,11 @@ async function initialize() {
     message: "Get JSON Features",
   };
   chrome.runtime.sendMessage(data, async (response) => {
-    if (response.decrypted) {
-      featureList.value = response.decrypted;
+    if (response.features) {
+      featureList.value = response.features;
 
       switchStates.value = await Promise.all(
-        response.decrypted.map((feature) => getFeatureEnabledState(feature))
+        response.features.map((feature) => getFeatureEnabledState(feature))
       );
     } else {
       featureList.value = [];

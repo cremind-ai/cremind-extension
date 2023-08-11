@@ -22,7 +22,8 @@ export type FeatureSchema = {
   description: string;
   READONLY?: FeatureType;
   EDITABLE?: FeatureType;
-  EDITABLE_NO_CONTENT?: FeatureType;
+  READONLY_CONTEXT_MENU?: FeatureType;
+  EDITABLE_CONTEXT_MENU?: FeatureType;
 };
 
 export class Feature {}

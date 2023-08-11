@@ -1,9 +1,9 @@
 <template>
   <div class="popupview">
-    cWord AI
+    CreMind AI
     <LoadImg
-      class="cword-icon-bar"
-      :filename="'cWord-logo-500.png'"
+      class="cremind-icon-bar"
+      :filename="'CreMind-logo-500.png'"
       :width="50"
     />
     <ElButton class="settings" type="success" plain @click="handleSettings">

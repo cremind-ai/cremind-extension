@@ -26,7 +26,7 @@ const topMousedown = ref("");
 const leftMousedown = ref("");
 const showMainCard = ref(false);
 const selectedMode: Ref<selectedModeEnum> = ref(
-  selectedModeEnum.EDITABLE_NO_CONTENT
+  selectedModeEnum.EDITABLE_CONTEXT_MENU
 );
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -38,12 +38,15 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
         activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
-      selectedMode.value = selectedModeEnum.EDITABLE_NO_CONTENT;
+      selectedText.value = window.getSelection()!.toString().trim();
+      selectedMode.value = selectedModeEnum.EDITABLE_CONTEXT_MENU;
+    } else {
       selectedText.value = "";
-      top.value = topMousedown.value;
-      left.value = leftMousedown.value;
-      showMainCard.value = true;
+      selectedMode.value = selectedModeEnum.READONLY_CONTEXT_MENU;
     }
+    top.value = topMousedown.value;
+    left.value = leftMousedown.value;
+    showMainCard.value = true;
   }
 });
 
@@ -83,24 +86,30 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
 });
 
 document.addEventListener("keyup", function (event: KeyboardEvent) {
+  const pressedKey = event.key;
   const selection = window.getSelection()?.toString().trim();
-  if (selection && !showMainCard.value) {
-    selectedText.value = selection;
-    SystemVariableParser.getInstance().setSelectedText(selection);
-    top.value = topMousedown.value;
-    left.value = leftMousedown.value;
-    const activeElement = document.activeElement as HTMLElement;
-    if (
-      activeElement &&
-      (activeElement.isContentEditable ||
-        activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
-        activeElement.nodeName.toUpperCase() === "INPUT")
-    ) {
-      selectedMode.value = selectedModeEnum.EDITABLE;
-    } else {
-      selectedMode.value = selectedModeEnum.READONLY;
+  consoleLog(LogLevelEnum.DEBUG, "Key pressed keyup:", pressedKey);
+  if (pressedKey === "Shift" || pressedKey === "Meta") {
+    if (selection && !showMainCard.value) {
+      selectedText.value = selection;
+      SystemVariableParser.getInstance().setSelectedText(selection);
+      top.value = topMousedown.value;
+      left.value = leftMousedown.value;
+      const activeElement = document.activeElement as HTMLElement;
+      if (
+        activeElement &&
+        (activeElement.isContentEditable ||
+          activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
+          activeElement.nodeName.toUpperCase() === "INPUT")
+      ) {
+        selectedMode.value = selectedModeEnum.EDITABLE;
+      } else {
+        selectedMode.value = selectedModeEnum.READONLY;
+      }
+      showMainCard.value = true;
     }
-    showMainCard.value = true;
+  } else {
+    showMainCard.value = false;
   }
 });
 

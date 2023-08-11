@@ -231,6 +231,11 @@
           "systemOptions": "Language",
           "description": "Sentences will be in this language after correction.",
           "storage": true
+        },
+        "your_native_language": {
+          "systemOptions": "Language",
+          "description": "Select your native language, and I will provide explanations in that language",
+          "storage": true
         }
       },
       "Chains": [
@@ -241,7 +246,7 @@
         },
         {
           "name": "ChainExplain",
-          "promptTemplate": "Explain the grammar mistakes, why correct them in detail\nSENTENCE:\n```\n&{SELECTED_TEXT}\n```\nCORRECTED:\n```\n@{sentence_corrected}\n```\nEXPLAIN (in Vietnamese):",
+          "promptTemplate": "Explain the grammar mistakes, why correct them in detail\nSENTENCE:\n```\n&{SELECTED_TEXT}\n```\nCORRECTED:\n```\n@{sentence_corrected}\n```\nEXPLAIN (in @{your_native_language}):",
           "variableOutput": null
         }
       ],
@@ -251,7 +256,7 @@
   {
     "id": "7cbe5f85-03f6-41a7-b68f-818f6afa2a74",
     "description": "This feature enables you to effortlessly compose emails with automated speed and professionalism, saving you valuable time by relieving the burden of content creation.",
-    "EDITABLE_NO_CONTENT": {
+    "EDITABLE_CONTEXT_MENU": {
       "label": "Email Writing",
       "description": "Email Writing",
       "Icon": {

@@ -1,5 +1,5 @@
 <template>
-  <img :src="url" :width="width" />
+  <img :src="url" :width="width" class="load-img" />
 </template>
 
 <script setup lang="ts">
@@ -10,3 +10,9 @@ const props = defineProps<{
 }>();
 const url = computed(() => chrome.runtime.getURL(`assets/${props.filename}`));
 </script>
+
+<style scoped>
+.load-img {
+  filter: none;
+}
+</style>

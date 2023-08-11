@@ -1,6 +1,6 @@
 <template>
-  <div v-if="logoIconShow" class="cword-icon" @click="handleLogoIcon">
-    <LoadImg :filename="'cWord-logo-128.png'" :width="45" />
+  <div v-if="logoIconShow" class="cremind-icon" @click="handleLogoIcon">
+    <LoadImg :filename="'CreMind-logo-128.png'" :width="45" />
   </div>
   <ElPopover
     style="word-break: normal"
@@ -12,8 +12,8 @@
     <template #reference>
       <div class="option-bar" :style="{ top, left }" v-show="optionBarShow">
         <LoadImg
-          class="cword-icon-bar"
-          :filename="'cWord-logo-64.png'"
+          class="cremind-icon-bar"
+          :filename="'CreMind-logo-64.png'"
           :width="20"
         />
         <div v-if="selectedMode === selectedModeEnum.EDITABLE">
@@ -147,14 +147,16 @@
             </ElDropdown>
           </ElButtonGroup>
         </div>
-        <div v-else-if="selectedMode === selectedModeEnum.EDITABLE_NO_CONTENT">
+        <div
+          v-else-if="selectedMode === selectedModeEnum.READONLY_CONTEXT_MENU"
+        >
           <ElButtonGroup>
             <template
               v-for="(feature, index) in filteredFeatureList"
               :key="index"
             >
               <ElTooltip
-                :content="feature.EDITABLE_NO_CONTENT?.label"
+                :content="feature.READONLY_CONTEXT_MENU?.label"
                 placement="top"
                 v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
               >
@@ -165,24 +167,96 @@
                     handleFeatureClick(
                       feature,
                       index,
-                      selectedModeEnum.EDITABLE_NO_CONTENT
+                      selectedModeEnum.READONLY_CONTEXT_MENU
                     )
                   "
                 >
                   <Icon
-                    :icon="feature.EDITABLE_NO_CONTENT?.Icon.content || ''"
+                    :icon="feature.READONLY_CONTEXT_MENU?.Icon.content || ''"
                     :style="{
-                      fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
+                      fontSize: feature.READONLY_CONTEXT_MENU?.Icon.fontSize,
                     }"
-                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'icon'"
+                    v-if="feature.READONLY_CONTEXT_MENU?.Icon.type === 'icon'"
                   />
                   <span
-                    v-if="feature.EDITABLE_NO_CONTENT?.Icon.type === 'svg'"
-                    v-html="feature.EDITABLE_NO_CONTENT?.Icon.content"
+                    v-if="feature.READONLY_CONTEXT_MENU?.Icon.type === 'svg'"
+                    v-html="feature.READONLY_CONTEXT_MENU?.Icon.content"
                     :style="{
-                      fontSize: feature.EDITABLE_NO_CONTENT?.Icon.fontSize,
-                      width: feature.EDITABLE_NO_CONTENT?.Icon.width,
-                      height: feature.EDITABLE_NO_CONTENT?.Icon.height,
+                      fontSize: feature.READONLY_CONTEXT_MENU?.Icon.fontSize,
+                      width: feature.READONLY_CONTEXT_MENU?.Icon.width,
+                      height: feature.READONLY_CONTEXT_MENU?.Icon.height,
+                    }"
+                  ></span>
+                </ElButton>
+              </ElTooltip>
+            </template>
+            <ElDropdown @command="handleCommand">
+              <ElButton type="success" plain>
+                <Icon
+                  icon="material-symbols:more-vert"
+                  :style="{ fontSize: '20px' }"
+                />
+              </ElButton>
+              <template #dropdown>
+                <ElDropdownMenu>
+                  <template v-for="(option, index) in moreOptions" :key="index">
+                    <ElDropdownItem :command="option.label">
+                      <ElTooltip :content="option.label" placement="auto">
+                        <Icon
+                          :icon="option.icon.content || ''"
+                          :style="{ fontSize: option.icon.fontSize }"
+                          v-if="option.icon.type === 'icon'"
+                        />
+                        <div
+                          v-if="option.icon.type === 'svg'"
+                          v-html="option.icon.content"
+                        ></div>
+                      </ElTooltip>
+                    </ElDropdownItem>
+                  </template>
+                </ElDropdownMenu>
+              </template>
+            </ElDropdown>
+          </ElButtonGroup>
+        </div>
+        <div
+          v-else-if="selectedMode === selectedModeEnum.EDITABLE_CONTEXT_MENU"
+        >
+          <ElButtonGroup>
+            <template
+              v-for="(feature, index) in filteredFeatureList"
+              :key="index"
+            >
+              <ElTooltip
+                :content="feature.EDITABLE_CONTEXT_MENU?.label"
+                placement="top"
+                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+              >
+                <ElButton
+                  type="success"
+                  plain
+                  @click="
+                    handleFeatureClick(
+                      feature,
+                      index,
+                      selectedModeEnum.EDITABLE_CONTEXT_MENU
+                    )
+                  "
+                >
+                  <Icon
+                    :icon="feature.EDITABLE_CONTEXT_MENU?.Icon.content || ''"
+                    :style="{
+                      fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
+                    }"
+                    v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'icon'"
+                  />
+                  <span
+                    v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'svg'"
+                    v-html="feature.EDITABLE_CONTEXT_MENU?.Icon.content"
+                    :style="{
+                      fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
+                      width: feature.EDITABLE_CONTEXT_MENU?.Icon.width,
+                      height: feature.EDITABLE_CONTEXT_MENU?.Icon.height,
                     }"
                   ></span>
                 </ElButton>
@@ -256,7 +330,7 @@
     ></ElButton>
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
       <div ref="contentRef" style="padding: 20px">
-        <div v-if="selectedMode !== selectedModeEnum.EDITABLE_NO_CONTENT">
+        <div v-if="selectedMode !== selectedModeEnum.EDITABLE_CONTEXT_MENU">
           <pre style="white-space: pre-wrap; word-wrap: break-word">{{
             selectedText
           }}</pre>
@@ -310,6 +384,8 @@
         <template v-else>
           <ElInput
             v-model="formDataVariableSchema[key]"
+            autosize
+            type="textarea"
             placeholder="Enter text"
           ></ElInput>
         </template>
@@ -428,21 +504,24 @@ const enabledFeatureStates: Ref<boolean[]> = ref([]);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
 const currentFeatureMode: Ref<selectedModeEnum> = ref(
-  selectedModeEnum.EDITABLE_NO_CONTENT
+  selectedModeEnum.READONLY_CONTEXT_MENU
 );
 const featureList: Ref<FeatureSchema[]> = ref([]);
 
 const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
-    const { READONLY, EDITABLE, EDITABLE_NO_CONTENT } = feature;
+    const { READONLY, EDITABLE, READONLY_CONTEXT_MENU, EDITABLE_CONTEXT_MENU } =
+      feature;
 
     switch (selectedMode.value) {
       case selectedModeEnum.READONLY:
         return READONLY !== undefined;
       case selectedModeEnum.EDITABLE:
         return EDITABLE !== undefined;
-      case selectedModeEnum.EDITABLE_NO_CONTENT:
-        return EDITABLE_NO_CONTENT !== undefined;
+      case selectedModeEnum.READONLY_CONTEXT_MENU:
+        return READONLY_CONTEXT_MENU !== undefined;
+      case selectedModeEnum.EDITABLE_CONTEXT_MENU:
+        return EDITABLE_CONTEXT_MENU !== undefined;
       default:
         return false;
     }
@@ -481,7 +560,7 @@ watch(
       consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
       const activeElement = document.activeElement as HTMLElement;
       if (
-        selectedMode.value === selectedModeEnum.EDITABLE_NO_CONTENT ||
+        selectedMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
         selectedMode.value === selectedModeEnum.EDITABLE
       ) {
         originalActiveElement.value = activeElement as HTMLInputElement;
@@ -502,7 +581,7 @@ watch(
             originalActiveElement.value!.textContent !== null))
       ) {
         var selection = window.getSelection();
-        let selectedText = selection!.toString();
+        let selectedText = selection!.toString().trim();
         var range = selection!.getRangeAt(0).cloneRange();
         range.selectNodeContents(activeElement);
         range.setEnd(
@@ -601,7 +680,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   let startPart: string;
   let endPart: string;
   if (
-    (currentFeatureMode.value === selectedModeEnum.EDITABLE_NO_CONTENT ||
+    (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
       currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
     currentFeature.value.WriteResponse &&
     currentFeature.value.WriteResponse === true
@@ -617,7 +696,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   result.on("data", (data: string) => {
     outputContent.value += data;
     if (
-      (currentFeatureMode.value === selectedModeEnum.EDITABLE_NO_CONTENT ||
+      (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
         currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
       currentFeature.value.WriteResponse &&
       currentFeature.value.WriteResponse === true
@@ -883,10 +962,10 @@ onMounted(async () => {
     message: "Get JSON Features",
   };
   chrome.runtime.sendMessage(data, async (response) => {
-    if (response.decrypted) {
-      featureList.value = response.decrypted;
+    if (response.features) {
+      featureList.value = response.features;
       enabledFeatureStates.value = await Promise.all(
-        response.decrypted.map((feature) => getFeatureEnabledState(feature))
+        response.features.map((feature) => getFeatureEnabledState(feature))
       );
     } else {
       featureList.value = [];
@@ -920,13 +999,13 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.cword-icon {
+.cremind-icon {
   position: fixed;
   right: 8px;
   bottom: 160px;
 }
 
-.cword-icon-bar {
+.cremind-icon-bar {
   position: absolute;
   top: -16px;
   right: -16px;

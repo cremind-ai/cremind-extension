@@ -1,1 +1,1 @@
-# cWord GPT Extension
+# CreMind GPT Extension

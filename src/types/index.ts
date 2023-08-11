@@ -17,6 +17,14 @@ export enum IPCTopicEnum {
   COMMUNICATION = "communication",
 }
 
+export type ResPayloadType = {
+  status: number;
+  msg: string;
+  payload?: any;
+  requestId?: string;
+  code?: number;
+};
+
 export type IPCMessageType = {
   topic: IPCTopicEnum;
   type: ConversationMessageTypeEnum | CommunicationMessageTypeEnum;
@@ -29,7 +37,8 @@ export type IPCMessageType = {
 export enum selectedModeEnum {
   READONLY = "READONLY",
   EDITABLE = "EDITABLE",
-  EDITABLE_NO_CONTENT = "EDITABLE_NO_CONTENT",
+  READONLY_CONTEXT_MENU = "READONLY_CONTEXT_MENU",
+  EDITABLE_CONTEXT_MENU = "EDITABLE_CONTEXT_MENU",
 }
 
 export enum LLMMODE {

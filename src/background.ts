@@ -4,51 +4,79 @@ import {
   IPCTopicEnum,
   ConversationMessageTypeEnum,
   CommunicationMessageTypeEnum,
+  LLMMODE,
+  ResPayloadType,
 } from "./types";
 import { IPCHost } from "./lib/ipc_host";
 import { AIProvider } from "./background/providers/base";
 import { AIProviderFactory } from "./background/providers";
 import { AIMode } from "./constants";
-import { LLMMODE } from "./types";
 import { consoleLog, LogLevelEnum } from "./utils";
-import CryptoES from "crypto-es";
+import { CWException } from "./types/exception";
+import { Status } from "./constants/status";
+import { ChromeStorage } from "./hooks/chrome_storage";
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const data: IPCMessageType = request;
   if (data && data.topic === IPCTopicEnum.COMMUNICATION) {
     if (data.type === CommunicationMessageTypeEnum.GET_FEATURES) {
-      try {
-        const bytes = CryptoES.AES.decrypt(
-          process.env.VUE_APP_CRYPTO_CONFIG_JSON!,
-          process.env.VUE_APP_CRYPTO_SECRET_KEY!
-        );
-        var originalText = bytes.toString(CryptoES.enc.Utf8);
-
-        sendResponse({ decrypted: JSON.parse(originalText) });
-      } catch (err) {
-        sendResponse({ decrypted: null });
-      }
+      fetch(`${process.env.VUE_APP_CREMIND_API!}/prompt/features`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new CWException(
+              Status.BACKEND_REQUEST_UNKNOWN_ERROR,
+              "Request unknown error"
+            );
+          }
+          return response.json();
+        })
+        .then((resData: ResPayloadType) => {
+          sendResponse({ features: resData.payload.features });
+          if (resData.status === Status.SUCCESS && resData.payload.features) {
+            ChromeStorage.getInstance().set(
+              "FEATURES_JSON",
+              JSON.stringify(resData.payload.features)
+            );
+          }
+        })
+        .catch((error) => {
+          ChromeStorage.getInstance()
+            .get("FEATURES_JSON")
+            .then((value) => {
+              if (value) {
+                sendResponse({ features: JSON.parse(value) });
+              } else {
+                sendResponse({ features: null });
+              }
+            });
+        });
     } else if (data.type === CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE) {
       chrome.runtime.openOptionsPage();
       sendResponse({});
     }
   }
-
-  return;
+  return true;
 });
 
 let aiProvider: AIProvider;
-const aiMode: AIMode = AIMode.CHAT_GPT;
+const aiMode = AIMode.CHAT_GPT as AIMode;
 if (aiMode === AIMode.CHAT_GPT) {
   aiProvider = AIProviderFactory.createChatGPT();
 } else if (aiMode === AIMode.OPENAI_API) {
   aiProvider = AIProviderFactory.createOpenAI("");
+} else if (aiMode === AIMode.BARD) {
+  aiProvider = AIProviderFactory.createBard("");
 }
 
 chrome.runtime.onInstalled.addListener(function () {
   chrome.contextMenus.create({
     id: "menu",
-    title: "cWord",
+    title: "CreMind",
     contexts: ["all"],
   });
 });
@@ -171,7 +199,12 @@ ipcHost.register(
       data.type === ConversationMessageTypeEnum.MESSAGE &&
       data.payload.mode === LLMMODE.DELETE_CONVERSATION
     ) {
-      aiProvider.deleteConversation(data.payload.conversationId);
+      try {
+        aiProvider.deleteConversation(data.payload.conversationId);
+      } catch (err) {
+        consoleLog(LogLevelEnum.ERROR, err);
+      }
+
       sendResponse(ConversationMessageTypeEnum.COMPLETE, {
         status: "success",
       });
