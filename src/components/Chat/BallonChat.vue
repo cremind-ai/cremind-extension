@@ -65,7 +65,7 @@ const markedRender = (text: string) => {
   --tw-text-opacity: 1;
   color: rgb(243 244 246 / var(--tw-text-opacity));
   padding-left: 1.25rem;
-  padding-right: 0.75rem;
+  padding-right: 1.25rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
   font-size: 0.875rem;

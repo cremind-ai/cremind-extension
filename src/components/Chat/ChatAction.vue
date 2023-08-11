@@ -8,21 +8,25 @@
       type="textarea"
       show-word-limit
       style="padding: 0"
+      @keydown.enter="handleEnterKey"
     />
-    <span v-if="!blockSend" class="send-icon">
-      <Icon
-        icon="ep:promotion"
-        :style="{ fontSize: '25px' }"
-        @click="newChat"
-      />
-    </span>
+    <ElTooltip content="Double Enter quickly = Send" placement="top">
+      <span v-if="!blockSend" class="send-icon">
+        <Icon
+          icon="ep:promotion"
+          :style="{ fontSize: '25px' }"
+          @click="newChat"
+        />
+      </span>
+    </ElTooltip>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
 import { ElInput } from "element-plus";
-import { ref, watch } from "vue";
+import { ElTooltip } from "element-plus";
+import { ref } from "vue";
 
 const props = defineProps({
   blockSend: {
@@ -34,12 +38,24 @@ const props = defineProps({
 const emits = defineEmits(["new-chat", "update:modelValue"]);
 
 const textField = ref("");
+let lastEnterTime = 0;
 
 const newChat = () => {
   if (!props.blockSend && textField.value.trim().length > 0) {
     emits("new-chat", textField.value.trim());
-    textField.value = "";
+    setTimeout(() => {
+      textField.value = "";
+    }, 0);
   }
+};
+
+const handleEnterKey = () => {
+  const currentTime = Date.now();
+  if (currentTime - lastEnterTime < 200) {
+    // Check if time between two Enter presses is less than 200ms
+    newChat();
+  }
+  lastEnterTime = currentTime;
 };
 </script>
 
