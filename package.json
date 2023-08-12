@@ -7,26 +7,21 @@
     "dev": "env-cmd -f .env.development rollup -c -w"
   },
   "dependencies": {
-    "crypto-es": "^2.0.4",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.3.1",
     "element-plus": "^2.3.7",
     "env-cmd": "^10.1.0",
     "eventsource-parser": "^1.0.0",
     "expiry-map": "^2.0.0",
     "highlight.js": "^11.8.0",
-    "jssha": "^3.3.0",
     "marked": "^5.1.1",
     "marked-highlight": "^2.0.1",
     "ofetch": "^1.1.1",
-    "pinia": "^2.0.14",
+    "pinia": "^2.1.6",
     "rollup-plugin-alias": "^2.2.0",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-import-css": "^3.0.3",
     "sass": "^1.63.6",
-    "uuid": "^9.0.0",
-    "vue": "^3.3.4",
-    "webextension-polyfill": "^0.7.0",
-    "webextension-polyfill-ts": "^0.22.0"
+    "vue": "^3.3.4"
   },
   "devDependencies": {
     "@iconify/vue": "^4.1.1",
@@ -35,16 +30,15 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.0.1",
     "@rollup/plugin-replace": "^2.3.4",
-    "@types/chrome": "0.0.164",
-    "@types/fs-extra": "^9.0.13",
-    "@types/node": "^16.11.10",
-    "@vitejs/plugin-vue": "^1.9.3",
+    "@types/chrome": "0.0.243",
+    "@types/fs-extra": "^11.0.1",
+    "@types/node": "^20.4.10",
+    "@vitejs/plugin-vue": "^4.2.3",
     "autoprefixer": "^10.4.14",
-    "esno": "^0.12.1",
-    "fs-extra": "^10.0.0",
+    "esno": "^0.17.0",
+    "fs-extra": "^11.1.1",
     "npm-run-all": "^4.1.5",
-    "postcss": "^8.4.27",
-    "rimraf": "^3.0.2",
+    "rimraf": "^5.0.1",
     "rollup": "^2.38.5",
     "rollup-plugin-chrome-extension": "^3.5.3",
     "rollup-plugin-empty-dir": "^1.0.4",
@@ -55,8 +49,6 @@
     "rollup-plugin-vue": "^6.0.0",
     "rollup-plugin-zip": "^1.0.1",
     "tailwindcss": "^3.3.3",
-    "typescript": "^5.1.6",
-    "unplugin-auto-import": "^0.16.5",
-    "unplugin-vue-components": "^0.25.1"
+    "typescript": "^5.1.6"
   }
 }

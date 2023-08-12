@@ -29,25 +29,14 @@ export default {
   },
   // watch: { clearScreen: false }, // for dev debug
   plugins: [
+    // chromeExtension() must be first, in order to properly treat manifest.json as the entry point
+    chromeExtension(),
+    simpleReloader(), // Adds a Chrome extension reloader during watch mode
     alias({
       entries: {
         ["@"]: path.resolve(__dirname, "src"),
       },
     }),
-    // chromeExtension() must be first, in order to properly treat manifest.json as the entry point
-    chromeExtension({
-      extendManifest: {
-        //"oauth2": {
-        //  "client_id": process.env.VUE_APP_OAUTH2_CLIENT_ID,
-        //  "scopes": [
-        //    "https://www.googleapis.com/auth/userinfo.email",
-        //    "https://www.googleapis.com/auth/userinfo.profile"
-        //  ]
-        //},
-        key: process.env.VUE_APP_MV3_KEY,
-      },
-    }),
-    simpleReloader(), // Adds a Chrome extension reloader during watch mode
     vuePlugin({ target: "browser" }),
     replace({
       __VUE_OPTIONS_API__: true,

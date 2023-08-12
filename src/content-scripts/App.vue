@@ -14,7 +14,7 @@
 import { Ref, ref } from "vue";
 import { MainCard } from "../components";
 import { ChatDialog } from "../components";
-import { SystemVariableParser } from "../lib/system_variable_parser";
+import { SystemVariableParser } from "../lib";
 import { selectedModeEnum } from "../types";
 import { consoleLog, LogLevelEnum } from "../utils";
 
