@@ -27,7 +27,7 @@ export default {
     if (warning.code === "THIS_IS_UNDEFINED") return;
     defaultHandler(warning);
   },
-  // watch: { clearScreen: false }, // for dev debug
+  watch: { clearScreen: false }, // for dev debug
   plugins: [
     // chromeExtension() must be first, in order to properly treat manifest.json as the entry point
     chromeExtension(),
@@ -59,8 +59,8 @@ export default {
       },
       preferBuiltins: true,
     }),
-    commonjs(),
+    commonjs({ sourceMap: false }),
     emptyDir(),
-    process.env.ENV === "production" ? terser() : null,
+    process.env.ENV === "production" ? terser() : [],
   ],
 };

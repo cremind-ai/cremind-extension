@@ -4,6 +4,7 @@
     <ElDialog
       v-model="chatDialogVisible"
       :show-close="false"
+      :close-on-click-modal="false"
       :width="`50%`"
       draggable
       :before-close="handleCloseDialog"

@@ -66,8 +66,8 @@ const markedRender = (text: string) => {
   color: rgb(243 244 246 / var(--tw-text-opacity));
   padding-left: 1.25rem;
   padding-right: 1.25rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  /* padding-top: 1rem;
+  padding-bottom: 1rem; */
   font-size: 0.875rem;
   line-height: 1.25rem;
   flex: 1 1 0%;
@@ -103,6 +103,6 @@ const markedRender = (text: string) => {
   font-family: "Roboto", sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: white;
+  color: rgb(227, 227, 227);
 }
 </style>

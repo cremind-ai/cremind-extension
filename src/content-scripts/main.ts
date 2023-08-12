@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (el) {
     el.insertAdjacentHTML(
       "beforeend",
-      '<div id="cremind-app-extension"></div>'
+      '<cremind-app-extension id="cremind-app-extension"></cremind-app-extension>'
     );
     const app = createApp(App).use(createPinia());
     app.use(ElementPlus);

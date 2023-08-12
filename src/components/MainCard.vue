@@ -845,8 +845,6 @@ function handleClose() {
 
 const handleClickOutside = (event: MouseEvent) => {
   consoleLog(LogLevelEnum.DEBUG, "handleClickOutside");
-  // Disable this feature
-  return;
   if (
     clickOutsideFocus.value &&
     !clickOutsideConfirm.value &&
@@ -858,6 +856,7 @@ const handleClickOutside = (event: MouseEvent) => {
     isStreaming.value === false
   ) {
     if (isStreaming.value) {
+      /*
       clickOutsideConfirm.value = true;
       ElMessageBox.confirm(
         "The result is being streamed, do you want to exit?",
@@ -875,6 +874,7 @@ const handleClickOutside = (event: MouseEvent) => {
         .catch(() => {
           clickOutsideConfirm.value = false;
         });
+        */
     } else {
       close();
     }

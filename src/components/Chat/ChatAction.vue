@@ -10,15 +10,15 @@
       style="padding: 0"
       @keydown.enter="handleEnterKey"
     />
-    <ElTooltip content="Double Enter quickly = Send" placement="top">
-      <span v-if="!blockSend" class="send-icon">
+    <span v-if="!blockSend" class="send-icon">
+      <ElTooltip content="Double Enter quickly = Send" placement="top">
         <Icon
           icon="ep:promotion"
           :style="{ fontSize: '25px' }"
           @click="newChat"
         />
-      </span>
-    </ElTooltip>
+      </ElTooltip>
+    </span>
   </div>
 </template>
 
