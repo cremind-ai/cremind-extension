@@ -8,7 +8,7 @@
               ? 'rounded-bubble-left bg-gray-600'
               : 'rounded-bubble-right bg-blue-800'
           "
-          class="bubble"
+          class="bubble chat-message-content"
           v-html="markedRender(props.message)"
         ></div>
       </div>
@@ -97,5 +97,12 @@ const markedRender = (text: string) => {
   border-top-left-radius: 1.5rem;
   border-bottom-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
+}
+
+.chat-message-content {
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: white;
 }
 </style>

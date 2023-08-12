@@ -329,7 +329,7 @@
       circle
     ></ElButton>
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <div ref="contentRef" style="padding: 20px">
+      <div ref="contentRef" style="padding: 20px" class="scroll-content">
         <div v-if="selectedMode !== selectedModeEnum.EDITABLE_CONTEXT_MENU">
           <pre style="white-space: pre-wrap; word-wrap: break-word">{{
             selectedText
@@ -845,6 +845,8 @@ function handleClose() {
 
 const handleClickOutside = (event: MouseEvent) => {
   consoleLog(LogLevelEnum.DEBUG, "handleClickOutside");
+  // Disable this feature
+  return;
   if (
     clickOutsideFocus.value &&
     !clickOutsideConfirm.value &&
@@ -993,6 +995,13 @@ onUnmounted(() => {
 .option-bar {
   position: absolute;
   z-index: 99999;
+}
+
+.scroll-content {
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
 }
 
 .minimize-icon {
