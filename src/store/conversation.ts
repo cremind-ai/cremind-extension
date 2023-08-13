@@ -1,31 +1,31 @@
-import { defineStore } from "pinia";
-import { ConversationMessageType } from "../types/conversation";
+import { defineStore } from 'pinia'
+import { ConversationMessageType } from '@/types/conversation'
 
 interface ConversationState {
-  conversations: ConversationMessageType[];
+  conversations: ConversationMessageType[]
 }
 
 export const useConversationStore = defineStore({
-  id: "conversation",
+  id: 'conversation',
   state: (): ConversationState => {
     return {
       conversations: [],
-    };
+    }
   },
   getters: {
     getConversations(): ConversationMessageType[] {
-      return this.conversations;
+      return this.conversations
     },
   },
   actions: {
     setConversations(list: ConversationMessageType[]): void {
-      this.conversations = list;
+      this.conversations = list
     },
     addingNewMessage(payload: ConversationMessageType) {
-      this.conversations!.push(payload);
+      this.conversations!.push(payload)
     },
     updateLastMessage(payload: ConversationMessageType) {
-      this.conversations![this.conversations!.length - 1] = payload;
+      this.conversations![this.conversations!.length - 1] = payload
     },
   },
-});
+})

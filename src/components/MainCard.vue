@@ -11,17 +11,10 @@
   >
     <template #reference>
       <div class="option-bar" :style="{ top, left }" v-show="optionBarShow">
-        <LoadImg
-          class="cremind-icon-bar"
-          :filename="'CreMind-logo-64.png'"
-          :width="20"
-        />
+        <LoadImg class="cremind-icon-bar" :filename="'CreMind-logo-64.png'" :width="20" />
         <div v-if="selectedMode === selectedModeEnum.EDITABLE">
           <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
+            <template v-for="(feature, index) in filteredFeatureList" :key="index">
               <ElTooltip
                 :content="feature.EDITABLE?.label"
                 placement="top"
@@ -30,13 +23,7 @@
                 <ElButton
                   type="success"
                   plain
-                  @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.EDITABLE
-                    )
-                  "
+                  @click="handleFeatureClick(feature, index, selectedModeEnum.EDITABLE)"
                 >
                   <Icon
                     :icon="feature.EDITABLE?.Icon.content || ''"
@@ -52,10 +39,7 @@
             </template>
             <ElDropdown @command="handleCommand">
               <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
+                <Icon icon="material-symbols:more-vert" :style="{ fontSize: '20px' }" />
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
@@ -67,10 +51,7 @@
                           :style="{ fontSize: option.icon.fontSize }"
                           v-if="option.icon.type === 'icon'"
                         />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
+                        <div v-if="option.icon.type === 'svg'" v-html="option.icon.content"></div>
                       </ElTooltip>
                     </ElDropdownItem>
                   </template>
@@ -81,10 +62,7 @@
         </div>
         <div v-else-if="selectedMode === selectedModeEnum.READONLY">
           <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
+            <template v-for="(feature, index) in filteredFeatureList" :key="index">
               <ElTooltip
                 :content="feature.READONLY?.label"
                 placement="top"
@@ -93,13 +71,7 @@
                 <ElButton
                   type="success"
                   plain
-                  @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.READONLY
-                    )
-                  "
+                  @click="handleFeatureClick(feature, index, selectedModeEnum.READONLY)"
                 >
                   <Icon
                     :icon="feature.READONLY?.Icon.content || ''"
@@ -120,10 +92,7 @@
             </template>
             <ElDropdown @command="handleCommand">
               <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
+                <Icon icon="material-symbols:more-vert" :style="{ fontSize: '20px' }" />
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
@@ -135,10 +104,7 @@
                           :style="{ fontSize: option.icon.fontSize }"
                           v-if="option.icon.type === 'icon'"
                         />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
+                        <div v-if="option.icon.type === 'svg'" v-html="option.icon.content"></div>
                       </ElTooltip>
                     </ElDropdownItem>
                   </template>
@@ -147,14 +113,9 @@
             </ElDropdown>
           </ElButtonGroup>
         </div>
-        <div
-          v-else-if="selectedMode === selectedModeEnum.READONLY_CONTEXT_MENU"
-        >
+        <div v-else-if="selectedMode === selectedModeEnum.READONLY_CONTEXT_MENU">
           <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
+            <template v-for="(feature, index) in filteredFeatureList" :key="index">
               <ElTooltip
                 :content="feature.READONLY_CONTEXT_MENU?.label"
                 placement="top"
@@ -164,11 +125,7 @@
                   type="success"
                   plain
                   @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.READONLY_CONTEXT_MENU
-                    )
+                    handleFeatureClick(feature, index, selectedModeEnum.READONLY_CONTEXT_MENU)
                   "
                 >
                   <Icon
@@ -192,10 +149,7 @@
             </template>
             <ElDropdown @command="handleCommand">
               <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
+                <Icon icon="material-symbols:more-vert" :style="{ fontSize: '20px' }" />
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
@@ -207,10 +161,7 @@
                           :style="{ fontSize: option.icon.fontSize }"
                           v-if="option.icon.type === 'icon'"
                         />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
+                        <div v-if="option.icon.type === 'svg'" v-html="option.icon.content"></div>
                       </ElTooltip>
                     </ElDropdownItem>
                   </template>
@@ -219,14 +170,9 @@
             </ElDropdown>
           </ElButtonGroup>
         </div>
-        <div
-          v-else-if="selectedMode === selectedModeEnum.EDITABLE_CONTEXT_MENU"
-        >
+        <div v-else-if="selectedMode === selectedModeEnum.EDITABLE_CONTEXT_MENU">
           <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
+            <template v-for="(feature, index) in filteredFeatureList" :key="index">
               <ElTooltip
                 :content="feature.EDITABLE_CONTEXT_MENU?.label"
                 placement="top"
@@ -236,11 +182,7 @@
                   type="success"
                   plain
                   @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.EDITABLE_CONTEXT_MENU
-                    )
+                    handleFeatureClick(feature, index, selectedModeEnum.EDITABLE_CONTEXT_MENU)
                   "
                 >
                   <Icon
@@ -264,10 +206,7 @@
             </template>
             <ElDropdown @command="handleCommand">
               <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
+                <Icon icon="material-symbols:more-vert" :style="{ fontSize: '20px' }" />
               </ElButton>
               <template #dropdown>
                 <ElDropdownMenu>
@@ -279,10 +218,7 @@
                           :style="{ fontSize: option.icon.fontSize }"
                           v-if="option.icon.type === 'icon'"
                         />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
+                        <div v-if="option.icon.type === 'svg'" v-html="option.icon.content"></div>
                       </ElTooltip>
                     </ElDropdownItem>
                   </template>
@@ -302,10 +238,7 @@
         </ElTooltip>
         <ElTooltip content="Copy to clipboard" placement="top">
           <ElButton plain @click="handleCopyToClipboard">
-            <Icon
-              icon="solar:copy-line-duotone"
-              :style="{ fontSize: '20px' }"
-            />
+            <Icon icon="solar:copy-line-duotone" :style="{ fontSize: '20px' }" />
           </ElButton>
         </ElTooltip>
       </ElButtonGroup>
@@ -331,15 +264,13 @@
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
       <div ref="contentRef" style="padding: 20px" class="scroll-content">
         <div v-if="selectedMode !== selectedModeEnum.EDITABLE_CONTEXT_MENU">
-          <pre style="white-space: pre-wrap; word-wrap: break-word">{{
-            selectedText
-          }}</pre>
+          <pre style="white-space: pre-wrap; word-wrap: break-word">{{ selectedText }}</pre>
           <ElDivider></ElDivider>
         </div>
         <div v-html="markedRender(outputContent)"></div>
       </div>
     </ElScrollbar>
-    <ChatAction @new-chat="newChat" />
+    <ChatAction @new-chat="newChat" v-model:blockSend="blockSend" />
   </ElPopover>
   <ElDrawer
     v-model="drawer"
@@ -354,11 +285,7 @@
         :label="schema.description"
       >
         <template v-if="schema.systemOptions">
-          <ElSelect
-            v-model="formDataVariableSchema[key]"
-            placeholder="Select"
-            filterable
-          >
+          <ElSelect v-model="formDataVariableSchema[key]" placeholder="Select" filterable>
             <ElOption
               v-for="option in SystemOptions[`${schema.systemOptions}`]"
               :key="option"
@@ -368,11 +295,7 @@
           </ElSelect>
         </template>
         <template v-else-if="schema.options">
-          <ElSelect
-            v-model="formDataVariableSchema[key]"
-            placeholder="Select"
-            filterable
-          >
+          <ElSelect v-model="formDataVariableSchema[key]" placeholder="Select" filterable>
             <ElOption
               v-for="option in schema.options"
               :key="option"
@@ -399,47 +322,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, Ref, computed } from "vue";
-import { ElPopover } from "element-plus";
-import { ElButton } from "element-plus";
-import { ElButtonGroup } from "element-plus";
-import { ElScrollbar } from "element-plus";
-import { ElMessageBox } from "element-plus";
-import { ElDrawer } from "element-plus";
-import { ElInput } from "element-plus";
-import { ElSelect } from "element-plus";
-import { ElOption } from "element-plus";
-import { ElForm } from "element-plus";
-import { ElFormItem } from "element-plus";
-import { ElDivider } from "element-plus";
-import { ElMessage } from "element-plus";
-import { ElTooltip } from "element-plus";
-import { ElDropdown } from "element-plus";
-import { ElDropdownMenu } from "element-plus";
-import { ElDropdownItem } from "element-plus";
-import { Close } from "@element-plus/icons-vue";
-import { SemiSelect } from "@element-plus/icons-vue";
-import { Icon } from "@iconify/vue";
-import { Marked } from "marked";
-import { markedHighlight } from "marked-highlight";
-import hljs from "highlight.js";
-import { LoadImg } from ".";
+import { ref, watch, onMounted, onUnmounted, Ref, computed } from 'vue'
+import { ElPopover } from 'element-plus'
+import { ElButton } from 'element-plus'
+import { ElButtonGroup } from 'element-plus'
+import { ElScrollbar } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
+import { ElDrawer } from 'element-plus'
+import { ElInput } from 'element-plus'
+import { ElSelect } from 'element-plus'
+import { ElOption } from 'element-plus'
+import { ElForm } from 'element-plus'
+import { ElFormItem } from 'element-plus'
+import { ElDivider } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { ElTooltip } from 'element-plus'
+import { ElDropdown } from 'element-plus'
+import { ElDropdownMenu } from 'element-plus'
+import { ElDropdownItem } from 'element-plus'
+import { Close } from '@element-plus/icons-vue'
+import { SemiSelect } from '@element-plus/icons-vue'
+import { Icon } from '@iconify/vue'
+import { Marked } from 'marked'
+import { markedHighlight } from 'marked-highlight'
+import hljs from 'highlight.js'
+import { LoadImg } from '.'
 import {
   CommunicationMessageTypeEnum,
   IPCTopicEnum,
   IPCMessageType,
   selectedModeEnum,
-} from "../types";
-import { FeatureType } from "../lib/features";
-import { ChainBuilder } from "../lib/chain/chain_builder";
-import { CWException } from "../types/exception";
-import { ChromeStorage } from "../hooks/chrome_storage";
-import { FeatureSchema, Icon as IconType } from "../lib/features";
-import { Status } from "../constants/status";
-import { SystemOptions } from "../constants/system_variables";
-import { useChatDialogStore } from "../store/chat_dialog";
-import { ChatAction } from "./Chat";
-import { consoleLog, LogLevelEnum } from "../utils";
+} from '@/types'
+import { FeatureType } from '@/lib/features'
+import { ChainBuilder } from '@/lib/chain/chain_builder'
+import { CWException } from '@/types/exception'
+import { ChromeStorage } from '@/hooks/chrome_storage'
+import { FeatureSchema, Icon as IconType } from '@/lib/features'
+import { Status } from '@/constants/status'
+import { SystemOptions } from '@/constants/system_variables'
+import { useChatDialogStore } from '@/store/chat_dialog'
+import { ChatAction } from './Chat'
+import { consoleLog, LogLevelEnum } from '@/utils'
 
 const props = defineProps({
   selectedText: {
@@ -464,106 +387,103 @@ const props = defineProps({
     validator: (value: string) =>
       Object.values(selectedModeEnum).includes(value as selectedModeEnum),
   },
-});
+})
 
 const marked = new Marked(
   markedHighlight({
-    langPrefix: "hljs language-",
+    langPrefix: 'hljs language-',
     highlight(code, lang) {
-      const language = hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+      return hljs.highlight(code, { language }).value
     },
-  })
-);
-marked.use({ silent: true, breaks: true });
+  }),
+)
+marked.use({ silent: true, breaks: true })
 
-const emits = defineEmits(["close"]);
+const emits = defineEmits(['close'])
 
-const chatDialog = useChatDialogStore();
+const chatDialog = useChatDialogStore()
 
-const optionBarShow = ref(props.show);
-const popoverVisible = ref(false);
-const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
-const popoverRef: Ref<HTMLDivElement> = ref(null as any);
-const contentRef: Ref<HTMLDivElement> = ref(null as any);
-const originalActiveElement: Ref<any> = ref(null as any);
-const width = ref(0);
-const selectedMode: Ref<selectedModeEnum> = ref(
-  props.selectedMode as selectedModeEnum
-);
-const outputContent = ref("");
-const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
-const contentMaxHeight = ref(500);
-const clickOutsideConfirm = ref(false);
-const clickOutsideFocus = ref(true);
-const isStreaming = ref(false);
-const logoIconShow = ref(false);
-const drawer = ref(false);
-const formDataVariableSchema = ref<{ [key: string]: string }>({});
-const enabledFeatureStates: Ref<boolean[]> = ref([]);
-const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
-const currentFeatureId: Ref<string> = ref("");
-const currentFeatureMode: Ref<selectedModeEnum> = ref(
-  selectedModeEnum.READONLY_CONTEXT_MENU
-);
-const featureList: Ref<FeatureSchema[]> = ref([]);
+const optionBarShow = ref(props.show)
+const popoverVisible = ref(false)
+const optionBarRef: Ref<HTMLDivElement> = ref(null as any)
+const popoverRef: Ref<HTMLDivElement> = ref(null as any)
+const contentRef: Ref<HTMLDivElement> = ref(null as any)
+const originalActiveElement: Ref<any> = ref(null as any)
+const width = ref(0)
+const selectedMode: Ref<selectedModeEnum> = ref(props.selectedMode as selectedModeEnum)
+const outputContent = ref('')
+const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>()
+const contentMaxHeight = ref(500)
+const clickOutsideConfirm = ref(false)
+const clickOutsideFocus = ref(true)
+const isStreaming = ref(false)
+const logoIconShow = ref(false)
+const drawer = ref(false)
+const formDataVariableSchema = ref<{ [key: string]: string }>({})
+const enabledFeatureStates: Ref<boolean[]> = ref([])
+const currentFeature: Ref<FeatureType> = ref({} as FeatureType)
+const currentFeatureId: Ref<string> = ref('')
+const currentFeatureMode: Ref<selectedModeEnum> = ref(selectedModeEnum.READONLY_CONTEXT_MENU)
+const featureList: Ref<FeatureSchema[]> = ref([])
 
 const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
-    const { READONLY, EDITABLE, READONLY_CONTEXT_MENU, EDITABLE_CONTEXT_MENU } =
-      feature;
+    const { READONLY, EDITABLE, READONLY_CONTEXT_MENU, EDITABLE_CONTEXT_MENU } = feature
 
     switch (selectedMode.value) {
       case selectedModeEnum.READONLY:
-        return READONLY !== undefined;
+        return READONLY !== undefined
       case selectedModeEnum.EDITABLE:
-        return EDITABLE !== undefined;
+        return EDITABLE !== undefined
       case selectedModeEnum.READONLY_CONTEXT_MENU:
-        return READONLY_CONTEXT_MENU !== undefined;
+        return READONLY_CONTEXT_MENU !== undefined
       case selectedModeEnum.EDITABLE_CONTEXT_MENU:
-        return EDITABLE_CONTEXT_MENU !== undefined;
+        return EDITABLE_CONTEXT_MENU !== undefined
       default:
-        return false;
+        return false
     }
-  });
-  return _filteredFeatureList;
-});
+  })
+  return _filteredFeatureList
+})
 
 enum OptionCommandType {
-  SETTINGS = "Settings",
+  SETTINGS = 'Settings',
 }
 
 const moreOptions: Ref<
   {
-    label: string;
-    icon: IconType;
+    label: string
+    icon: IconType
   }[]
 > = ref([
   {
     label: OptionCommandType.SETTINGS,
     icon: {
-      content: "solar:settings-line-duotone",
-      fontSize: "20px",
-      type: "icon",
+      content: 'solar:settings-line-duotone',
+      fontSize: '20px',
+      type: 'icon',
     },
   },
-]);
+])
 
-let startSelectionIndex: number = 0;
-let endSelectionIndex: number = 0;
+const blockSend = ref(false)
+
+let startSelectionIndex: number = 0
+let endSelectionIndex: number = 0
 
 watch(
   () => props.show,
   (newValue) => {
-    optionBarShow.value = newValue;
+    optionBarShow.value = newValue
     if (newValue === true && !logoIconShow.value) {
-      consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
-      const activeElement = document.activeElement as HTMLElement;
+      consoleLog(LogLevelEnum.DEBUG, '===> Show menu')
+      const activeElement = document.activeElement as HTMLElement
       if (
         selectedMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
         selectedMode.value === selectedModeEnum.EDITABLE
       ) {
-        originalActiveElement.value = activeElement as HTMLInputElement;
+        originalActiveElement.value = activeElement as HTMLInputElement
       }
 
       if (
@@ -571,8 +491,8 @@ watch(
         originalActiveElement.value!.value !== undefined &&
         originalActiveElement.value!.value !== null
       ) {
-        startSelectionIndex = originalActiveElement.value!.selectionStart;
-        endSelectionIndex = originalActiveElement.value!.selectionEnd;
+        startSelectionIndex = originalActiveElement.value!.selectionStart
+        endSelectionIndex = originalActiveElement.value!.selectionEnd
       } else if (
         originalActiveElement.value &&
         ((originalActiveElement.value!.innerText !== undefined &&
@@ -580,105 +500,102 @@ watch(
           (originalActiveElement.value!.textContent !== undefined &&
             originalActiveElement.value!.textContent !== null))
       ) {
-        var selection = window.getSelection();
-        let selectedText = selection!.toString().trim();
-        var range = selection!.getRangeAt(0).cloneRange();
-        range.selectNodeContents(activeElement);
-        range.setEnd(
-          selection!.getRangeAt(0).startContainer,
-          selection!.getRangeAt(0).startOffset
-        );
-        startSelectionIndex = range.toString().length;
-        endSelectionIndex = startSelectionIndex + selectedText.length;
+        var selection = window.getSelection()
+        let selectedText = selection!.toString().trim()
+        var range = selection!.getRangeAt(0).cloneRange()
+        range.selectNodeContents(activeElement)
+        range.setEnd(selection!.getRangeAt(0).startContainer, selection!.getRangeAt(0).startOffset)
+        startSelectionIndex = range.toString().length
+        endSelectionIndex = startSelectionIndex + selectedText.length
       }
     }
-  }
-);
+  },
+)
 
 watch(
   () => props.selectedText,
   (newValue) => {
-    width.value = 0;
-  }
-);
+    width.value = 0
+  },
+)
 
 watch(
   () => outputContent.value,
   (newValue) => {
-    const _width = contentRef.value.offsetWidth;
+    const _width = contentRef.value.offsetWidth
     if (_width > 800) {
-      width.value = 800;
+      width.value = 800
     }
-  }
-);
+  },
+)
 
 watch(
   () => props.selectedMode,
   (newValue) => {
-    selectedMode.value = newValue as selectedModeEnum;
-  }
-);
+    selectedMode.value = newValue as selectedModeEnum
+  },
+)
 
 const markedRender = (text: string) => {
-  return marked.parse(text);
-};
+  return marked.parse(text)
+}
 
 const scrollToBottom = () => {
-  scrollContentRef.value!.setScrollTop(contentRef.value!.clientHeight);
-};
+  scrollContentRef.value!.setScrollTop(contentRef.value!.clientHeight)
+}
 
 const writeOriginalActiveElementValue = (text: string) => {
   if (
     originalActiveElement.value!.value !== undefined &&
     originalActiveElement.value!.value !== null
   ) {
-    originalActiveElement.value!.value = text;
+    originalActiveElement.value!.value = text
   } else if (
     originalActiveElement.value!.innerText !== undefined &&
     originalActiveElement.value!.innerText !== null
   ) {
-    originalActiveElement.value!.innerText = text;
+    originalActiveElement.value!.innerText = text
   } else if (
     originalActiveElement.value!.textContent !== undefined &&
     originalActiveElement.value!.textContent !== null
   ) {
-    originalActiveElement.value!.textContent = text;
+    originalActiveElement.value!.textContent = text
   }
-};
+}
 
 const readOriginalActiveElementValue = (): string => {
   if (
     originalActiveElement.value!.value !== undefined &&
     originalActiveElement.value!.value !== null
   ) {
-    return originalActiveElement.value!.value;
+    return originalActiveElement.value!.value
   } else if (
     originalActiveElement.value!.innerText !== undefined &&
     originalActiveElement.value!.innerText !== null
   ) {
-    return originalActiveElement.value!.innerText;
+    return originalActiveElement.value!.innerText
   } else if (
     originalActiveElement.value!.textContent !== undefined &&
     originalActiveElement.value!.textContent !== null
   ) {
-    return originalActiveElement.value!.textContent;
+    return originalActiveElement.value!.textContent
   }
-  return "";
-};
+  return ''
+}
 
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
-  const chainBuilder = new ChainBuilder(currentFeature.value.Chains);
-  consoleLog(LogLevelEnum.DEBUG, variables);
+  const chainBuilder = new ChainBuilder(currentFeature.value.Chains)
+  consoleLog(LogLevelEnum.DEBUG, variables)
   for (const key in variables) {
-    const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`;
-    consoleLog(LogLevelEnum.DEBUG, storageKey);
-    await ChromeStorage.getInstance().set(storageKey, variables[key]);
+    const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`
+    consoleLog(LogLevelEnum.DEBUG, storageKey)
+    await ChromeStorage.getInstance().set(storageKey, variables[key])
   }
-  await chainBuilder.buildChains(variables);
-  const result = await chainBuilder.executeChains();
+  await chainBuilder.buildChains(variables)
+  const result = await chainBuilder.executeChains()
 
-  let startPart: string;
-  let endPart: string;
+  let startPart: string
+  let endPart: string
   if (
     (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
       currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
@@ -686,165 +603,157 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     currentFeature.value.WriteResponse === true
   ) {
     // Remove selected text
-    let text = readOriginalActiveElementValue();
-    startPart = text.slice(0, startSelectionIndex);
-    endPart = text.slice(endSelectionIndex);
+    let text = readOriginalActiveElementValue()
+    startPart = text.slice(0, startSelectionIndex)
+    endPart = text.slice(endSelectionIndex)
   }
 
-  let responses = "";
-  outputContent.value = "";
-  result.on("data", (data: string) => {
-    outputContent.value += data;
+  let responses = ''
+  outputContent.value = ''
+  result.on('data', (data: string) => {
+    outputContent.value += data
     if (
       (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
         currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
       currentFeature.value.WriteResponse &&
       currentFeature.value.WriteResponse === true
     ) {
-      responses += data;
-      writeOriginalActiveElementValue(startPart + responses + endPart);
+      responses += data
+      writeOriginalActiveElementValue(startPart + responses + endPart)
     }
-    scrollToBottom();
-  });
-  result.on("complete", (data: any) => {
-    consoleLog(LogLevelEnum.DEBUG, "=====>complete");
-    outputContent.value += "\n";
-    consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
-  });
-  result.on("endOfChain", (data: any) => {
-    consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
-    isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
-  });
-  result.on("error", (error: CWException) => {
-    isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, error);
+    scrollToBottom()
+  })
+  result.on('complete', (data: any) => {
+    consoleLog(LogLevelEnum.DEBUG, '=====>complete')
+    outputContent.value += '\n'
+    consoleLog(LogLevelEnum.DEBUG, `${data.message}`)
+  })
+  result.on('endOfChain', (data: any) => {
+    consoleLog(LogLevelEnum.DEBUG, '=====>endOfChain')
+    isStreaming.value = false
+    consoleLog(LogLevelEnum.DEBUG, `${data.message}`)
+  })
+  result.on('error', (error: CWException) => {
+    isStreaming.value = false
+    consoleLog(LogLevelEnum.DEBUG, error)
     if (error.code === Status.CHATGPT_UNAUTHORIZED) {
       ElMessage.error(
-        "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
-      );
+        'ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/',
+      )
     } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
       // ElMessage.error(
       //   "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
       // );
     } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
-      ElMessage.error(`ChatGPT: ${error.message}`);
+      ElMessage.error(`ChatGPT: ${error.message}`)
     } else {
-      ElMessage.error(error.message);
+      ElMessage.error(error.message)
     }
-  });
-};
+  })
+}
 
-async function handleFeature(
-  id: string,
-  feature: FeatureType,
-  type: selectedModeEnum
-) {
-  const variables: { [key: string]: string } = {};
-  let checkShowDrawer: boolean = false;
-  isStreaming.value = true;
-  currentFeature.value = feature;
-  currentFeatureId.value = id;
-  currentFeatureMode.value = type;
-  consoleLog(LogLevelEnum.DEBUG, id);
-  consoleLog(LogLevelEnum.DEBUG, feature.variableSchema);
+async function handleFeature(id: string, feature: FeatureType, type: selectedModeEnum) {
+  const variables: { [key: string]: string } = {}
+  let checkShowDrawer: boolean = false
+  isStreaming.value = true
+  currentFeature.value = feature
+  currentFeatureId.value = id
+  currentFeatureMode.value = type
+  consoleLog(LogLevelEnum.DEBUG, id)
+  consoleLog(LogLevelEnum.DEBUG, feature.variableSchema)
 
-  formDataVariableSchema.value = {};
+  formDataVariableSchema.value = {}
   for (const key in feature.variableSchema) {
     if (!feature.variableSchema[key].storage) {
-      checkShowDrawer = true;
-      continue;
+      checkShowDrawer = true
+      continue
     }
-    const storageKey = `FEATURE:${id}:${type}:variable:${key}`;
-    consoleLog(LogLevelEnum.DEBUG, storageKey);
-    const value = await ChromeStorage.getInstance().get(storageKey);
-    consoleLog(LogLevelEnum.DEBUG, value);
+    const storageKey = `FEATURE:${id}:${type}:variable:${key}`
+    consoleLog(LogLevelEnum.DEBUG, storageKey)
+    const value = await ChromeStorage.getInstance().get(storageKey)
+    consoleLog(LogLevelEnum.DEBUG, value)
     if (!value) {
-      checkShowDrawer = true;
-      continue;
+      checkShowDrawer = true
+      continue
     }
-    variables[key] = value;
-    formDataVariableSchema.value[key] = value;
+    variables[key] = value
+    formDataVariableSchema.value[key] = value
   }
-  consoleLog(LogLevelEnum.DEBUG, "checkShowDrawer", checkShowDrawer);
-  drawer.value = checkShowDrawer;
+  consoleLog(LogLevelEnum.DEBUG, 'checkShowDrawer', checkShowDrawer)
+  drawer.value = checkShowDrawer
 
   if (!checkShowDrawer) {
-    startGenerateResponse(variables);
+    startGenerateResponse(variables)
   } else {
-    clickOutsideFocus.value = false;
+    clickOutsideFocus.value = false
   }
 }
 
 function convertIndexToOriginal(indexInFiltered: number): number {
-  const filteredFeature = filteredFeatureList.value[indexInFiltered];
-  const idToFind = filteredFeature.id;
+  const filteredFeature = filteredFeatureList.value[indexInFiltered]
+  const idToFind = filteredFeature.id
 
   for (let i = 0; i < featureList.value.length; i++) {
     if (featureList.value[i].id === idToFind) {
-      return i;
+      return i
     }
   }
 
-  return -1;
+  return -1
 }
 
 async function handleFeatureClick(
   featureSchema: FeatureSchema,
   index: number,
-  type: selectedModeEnum
+  type: selectedModeEnum,
 ) {
-  const id: string = featureSchema.id;
+  const id: string = featureSchema.id
   if (isStreaming.value) {
     ElMessageBox.alert(
-      "You cannot switch feature because the response is being streamed",
-      "Warning",
+      'You cannot switch feature because the response is being streamed',
+      'Warning',
       {
-        confirmButtonText: "OK",
-      }
-    );
-    return;
+        confirmButtonText: 'OK',
+      },
+    )
+    return
   }
-  outputContent.value = "";
-  popoverVisible.value = true;
-  handleFeature(id, featureSchema[type]!, type);
+  outputContent.value = ''
+  popoverVisible.value = true
+  handleFeature(id, featureSchema[type]!, type)
 }
 
 function close() {
-  consoleLog(LogLevelEnum.DEBUG, "Close");
-  popoverVisible.value = false;
+  consoleLog(LogLevelEnum.DEBUG, 'Close')
+  popoverVisible.value = false
   setTimeout(() => {
-    optionBarShow.value = false;
-    emits("close");
-  }, 0);
+    optionBarShow.value = false
+    emits('close')
+  }, 0)
 }
 
 function handleClose() {
   if (isStreaming.value) {
-    clickOutsideConfirm.value = true;
-    ElMessageBox.confirm(
-      "The result is being streamed, do you want to exit?",
-      "Warning",
-      {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning",
-      }
-    )
+    clickOutsideConfirm.value = true
+    ElMessageBox.confirm('The result is being streamed, do you want to exit?', 'Warning', {
+      confirmButtonText: 'OK',
+      cancelButtonText: 'Cancel',
+      type: 'warning',
+    })
       .then(() => {
-        close();
-        clickOutsideConfirm.value = false;
+        close()
+        clickOutsideConfirm.value = false
       })
       .catch(() => {
-        clickOutsideConfirm.value = false;
-      });
+        clickOutsideConfirm.value = false
+      })
   } else {
-    close();
+    close()
   }
 }
 
 const handleClickOutside = (event: MouseEvent) => {
-  consoleLog(LogLevelEnum.DEBUG, "handleClickOutside");
+  consoleLog(LogLevelEnum.DEBUG, 'handleClickOutside')
   if (
     clickOutsideFocus.value &&
     !clickOutsideConfirm.value &&
@@ -876,63 +785,63 @@ const handleClickOutside = (event: MouseEvent) => {
         });
         */
     } else {
-      close();
+      close()
     }
   }
-};
+}
 
 const handleStartGenerateResponse = () => {
-  clickOutsideFocus.value = true;
-  drawer.value = false;
-  startGenerateResponse(formDataVariableSchema.value);
-};
+  clickOutsideFocus.value = true
+  drawer.value = false
+  startGenerateResponse(formDataVariableSchema.value)
+}
 
 const handleCloseDrawer = () => {
-  clickOutsideFocus.value = true;
-  drawer.value = false;
-  isStreaming.value = false;
-  close();
-};
+  clickOutsideFocus.value = true
+  drawer.value = false
+  isStreaming.value = false
+  close()
+}
 
 const newChat = (value: string) => {
-  let text = "";
-  text += props.selectedText + "\n";
-  text += "\\-\\-\\-\n";
-  text += outputContent.value + "\n";
-  text += "\\-\\-\\-\n";
-  text += value + "\n";
-  close();
-  chatDialog.setInitialPrompt(text);
-  chatDialog.setChatDialogVisible(true);
-};
+  let text = ''
+  text += props.selectedText + '\n'
+  text += '\\-\\-\\-\n'
+  text += outputContent.value + '\n'
+  text += '\\-\\-\\-\n'
+  text += value + '\n'
+  close()
+  chatDialog.setInitialPrompt(text)
+  chatDialog.setChatDialogVisible(true)
+}
 
 const handleRegenerate = () => {
-  clickOutsideFocus.value = true;
-  drawer.value = false;
-  consoleLog(LogLevelEnum.DEBUG, formDataVariableSchema.value);
-  startGenerateResponse(formDataVariableSchema.value);
-};
+  clickOutsideFocus.value = true
+  drawer.value = false
+  consoleLog(LogLevelEnum.DEBUG, formDataVariableSchema.value)
+  startGenerateResponse(formDataVariableSchema.value)
+}
 
 const handleCopyToClipboard = () => {
-  consoleLog(LogLevelEnum.DEBUG, "handleCopyToClipboard");
+  consoleLog(LogLevelEnum.DEBUG, 'handleCopyToClipboard')
   if (outputContent.value) {
-    navigator.clipboard.writeText(outputContent.value);
+    navigator.clipboard.writeText(outputContent.value)
   }
-};
+}
 
 const handleMinimize = () => {
-  logoIconShow.value = true;
-  popoverVisible.value = false;
+  logoIconShow.value = true
+  popoverVisible.value = false
   setTimeout(() => {
-    optionBarShow.value = false;
-  }, 0);
-};
+    optionBarShow.value = false
+  }, 0)
+}
 
 const handleLogoIcon = () => {
-  logoIconShow.value = false;
-  optionBarShow.value = true;
-  popoverVisible.value = true;
-};
+  logoIconShow.value = false
+  optionBarShow.value = true
+  popoverVisible.value = true
+}
 
 const handleCommand = (command: OptionCommandType) => {
   switch (command) {
@@ -940,55 +849,51 @@ const handleCommand = (command: OptionCommandType) => {
       const data: IPCMessageType = {
         topic: IPCTopicEnum.COMMUNICATION,
         type: CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE,
-        message: "Open options page",
-      };
-      chrome.runtime.sendMessage(data, () => {});
-      break;
+        message: 'Open options page',
+      }
+      chrome.runtime.sendMessage(data, () => {})
+      break
   }
-};
+}
 
-const getFeatureEnabledState = async (
-  feature: FeatureSchema
-): Promise<boolean> => {
-  const value = await ChromeStorage.getInstance().get(
-    `FEATURE:${feature.id}:enable`
-  );
+const getFeatureEnabledState = async (feature: FeatureSchema): Promise<boolean> => {
+  const value = await ChromeStorage.getInstance().get(`FEATURE:${feature.id}:enable`)
   if (value === undefined) {
-    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true);
-    return true;
+    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true)
+    return true
   } else if (value === false) {
-    return false;
+    return false
   } else {
-    return true;
+    return true
   }
-};
+}
 
 onMounted(async () => {
-  consoleLog(LogLevelEnum.DEBUG, "onMounted");
-  optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
-  popoverRef.value = document.querySelector(".el-popover") as HTMLDivElement;
-  document.addEventListener("mousedown", handleClickOutside);
+  consoleLog(LogLevelEnum.DEBUG, 'onMounted')
+  optionBarRef.value = document.querySelector('.option-bar') as HTMLDivElement
+  popoverRef.value = document.querySelector('.el-popover') as HTMLDivElement
+  document.addEventListener('mousedown', handleClickOutside)
   const data: IPCMessageType = {
     topic: IPCTopicEnum.COMMUNICATION,
     type: CommunicationMessageTypeEnum.GET_FEATURES,
-    message: "Get JSON Features",
-  };
+    message: 'Get JSON Features',
+  }
   chrome.runtime.sendMessage(data, async (response) => {
     if (response.features) {
-      featureList.value = response.features;
+      featureList.value = response.features
       enabledFeatureStates.value = await Promise.all(
-        response.features.map((feature) => getFeatureEnabledState(feature))
-      );
+        response.features.map((feature: any) => getFeatureEnabledState(feature)),
+      )
     } else {
-      featureList.value = [];
+      featureList.value = []
     }
-  });
-});
+  })
+})
 
 onUnmounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "onUnmounted");
-  document.removeEventListener("mousedown", handleClickOutside);
-});
+  consoleLog(LogLevelEnum.DEBUG, 'onUnmounted')
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 </script>
 
 <style scoped>
@@ -998,7 +903,7 @@ onUnmounted(() => {
 }
 
 .scroll-content {
-  font-family: "Roboto", sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: #333;

@@ -1,6 +1,6 @@
-import { ConversationRoleEnum } from "../constants";
+import { ConversationRoleEnum } from '@/constants'
 
 export type ConversationMessageType = {
-  role: ConversationRoleEnum;
-  text: string;
-};
+  role: ConversationRoleEnum
+  text: string
+}

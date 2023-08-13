@@ -1,9 +1,10 @@
 node_modules
-dist
-_dist
+build
+_build
 extension/manifest.json
 extension/dist
 .DS_Store
 .env
 .env.*
 .zip
+package/*

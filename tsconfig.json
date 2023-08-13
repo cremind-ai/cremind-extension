@@ -1,22 +1,18 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "ESNext",
     "useDefineForClassFields": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
-    "noImplicitAny": false,
-    "lib": ["esnext", "dom"],
-    "types": [
-      "@types/chrome",
-      "@types/node",
-      "@types/fs-extra",
-      "element-plus/global"
-    ],
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "types": ["@types/chrome", "@types/node", "element-plus/global"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
