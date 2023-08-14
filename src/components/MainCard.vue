@@ -10,7 +10,11 @@
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
   >
     <template #reference>
-      <div class="option-bar" :style="{ top, left }" v-show="optionBarShow">
+      <div
+        class="option-bar"
+        :style="{ zIndex: optionBarZIndex, top, left }"
+        v-show="optionBarShow"
+      >
         <LoadImg
           class="cremind-icon-bar"
           :filename="'CreMind-logo-64.png'"
@@ -392,6 +396,7 @@
       </ElFormItem>
       <br />
       <ElFormItem>
+        <ElButton @click="handleAutoFillSample">Auto Fill Sample</ElButton>
         <ElButton @click="handleStartGenerateResponse">Run</ElButton>
       </ElFormItem>
     </ElForm>
@@ -483,6 +488,7 @@ const chatDialog = useChatDialogStore();
 
 const optionBarShow = ref(props.show);
 const popoverVisible = ref(false);
+const optionBarZIndex = ref(1000000000);
 const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
@@ -619,6 +625,17 @@ watch(
   () => props.selectedMode,
   (newValue) => {
     selectedMode.value = newValue as selectedModeEnum;
+  }
+);
+
+watch(
+  () => drawer.value,
+  (newValue) => {
+    if (newValue) {
+      optionBarZIndex.value = 2000;
+    } else {
+      optionBarZIndex.value = 1000000000;
+    }
   }
 );
 
@@ -892,6 +909,22 @@ const handleMouseup = (event: MouseEvent) => {
   }
 };
 
+const handleAutoFillSample = () => {
+  for (const key in currentFeature.value.variableSchema) {
+    if (currentFeature.value.variableSchema[key].options) {
+      formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+        key
+      ].options![
+        currentFeature.value.variableSchema[key].sample as number
+      ] as string;
+    } else {
+      formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+        key
+      ].sample as string;
+    }
+  }
+};
+
 const handleStartGenerateResponse = () => {
   clickOutsideFocus.value = true;
   drawer.value = false;
@@ -1008,7 +1041,6 @@ onUnmounted(() => {
 <style scoped>
 .option-bar {
   position: absolute;
-  z-index: 99999;
 }
 
 .scroll-content {
