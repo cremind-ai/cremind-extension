@@ -1,98 +1,83 @@
 <template>
-  <div>
-    <!-- Chat Dialog -->
-    <ElDialog
-      v-model="chatDialogVisible"
-      :show-close="false"
-      :close-on-click-modal="false"
-      :width="`50%`"
-      draggable
-      :before-close="handleCloseDialog"
-    >
-      <!-- Header -->
-      <template #header>
-        <ElButton
-          class="minimize-icon"
-          type="warning"
-          plain
-          :icon="SemiSelect"
-          @click="handleMinimize"
-          size="small"
-          circle
-        ></ElButton>
-        <ElButton
-          class="close-icon"
-          type="danger"
-          plain
-          :icon="Close"
-          @click="handleCloseDialog"
-          size="small"
-          circle
-        ></ElButton>
-        <div
-          style="
-            white-space: nowrap;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            font-size: 16px;
-          "
-        >
-          <div>
-            CreMind AI
-            <LoadImg
-              class="cremind-icon-bar"
-              :filename="'CreMind-logo-64.png'"
-              :width="25"
-            />
-          </div>
-          <div style="margin-left: auto; margin-right: 26px">
-            <ElButtonGroup>
-              <ElTooltip content="Regenerate response" placement="top">
-                <ElButton plain @click="handleRegenerateConversation">
-                  <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
-                </ElButton>
-              </ElTooltip>
-              <ElTooltip content="Save this conversation" placement="top">
-                <ElButton plain @click="handleSaveConversation">
-                  <Icon
-                    icon="fluent:save-28-regular"
-                    :style="{ fontSize: '20px' }"
-                  />
-                </ElButton>
-              </ElTooltip>
-              <!-- <ElTooltip content="Stop generating" placement="top">
+  <!-- Chat Dialog -->
+  <ElDialog
+    v-model="chatDialogVisible"
+    :show-close="false"
+    :close-on-click-modal="false"
+    :width="`50%`"
+    draggable
+    :before-close="handleCloseDialog"
+  >
+    <!-- Header -->
+    <template #header>
+      <ElButton
+        class="minimize-icon"
+        type="warning"
+        plain
+        :icon="SemiSelect"
+        @click="handleMinimize"
+        size="small"
+        circle
+      ></ElButton>
+      <ElButton
+        class="close-icon"
+        type="danger"
+        plain
+        :icon="Close"
+        @click="handleCloseDialog"
+        size="small"
+        circle
+      ></ElButton>
+      <div
+        style="
+          white-space: nowrap;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          font-size: 14px;
+          line-height: 1.3;
+        "
+      >
+        <div>
+          CreMind AI
+          <LoadImg
+            class="cremind-icon-bar"
+            :filename="'CreMind-logo-64.png'"
+            :width="25"
+          />
+        </div>
+        <div style="margin-left: auto; margin-right: 26px">
+          <ElButtonGroup>
+            <ElTooltip content="Regenerate response" placement="top">
+              <ElButton plain @click="handleRegenerateConversation">
+                <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+              </ElButton>
+            </ElTooltip>
+            <ElTooltip content="Save this conversation" placement="top">
+              <ElButton plain @click="handleSaveConversation">
+                <Icon
+                  icon="fluent:save-28-regular"
+                  :style="{ fontSize: '20px' }"
+                />
+              </ElButton>
+            </ElTooltip>
+            <!-- <ElTooltip content="Stop generating" placement="top">
                 <ElButton plain @click="handleStopGenerating">
                   <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
                 </ElButton>
               </ElTooltip> -->
-            </ElButtonGroup>
-          </div>
+          </ElButtonGroup>
         </div>
-      </template>
-      <!-- Chat component -->
-      <Chat
-        ref="chatRef"
-        :chats="chats"
-        @new-chat="newChat"
-        v-model:blockSend="isStreaming"
-      />
-    </ElDialog>
-
-    <!-- Chatting button -->
-    <div class="button-chatting">
-      <Icon
-        icon="fluent:chat-12-filled"
-        :style="{ fontSize: '50px' }"
-        @click="onStartChatBox"
-      />
-      <LoadImg
-        class="cremind-chatting"
-        :filename="'CreMind-logo-64.png'"
-        :width="15"
-      />
-    </div>
-  </div>
+      </div>
+    </template>
+    <!-- Chat component -->
+    <Chat
+      ref="chatRef"
+      :chats="chats"
+      @new-chat="newChat"
+      v-model:blockSend="isStreaming"
+    />
+  </ElDialog>
 </template>
 
 <script setup lang="ts">
@@ -140,6 +125,9 @@ watch(
     const prompt = chatDialog.getInitialPrompt;
     if (value && prompt) {
       sendMessage(prompt!, false);
+    }
+    if (value && isMinimized.value) {
+      isMinimized.value = false;
     }
   }
 );
@@ -248,13 +236,6 @@ const deleteConversation = () => {
   messageId = null;
 };
 
-const onStartChatBox = async () => {
-  if (isMinimized.value) {
-    isMinimized.value = false;
-  }
-  chatDialog.setChatDialogVisible(true);
-};
-
 const handleSaveConversation = () => {
   saveConversation = true;
 };
@@ -304,24 +285,6 @@ const handleMinimize = () => {
 onMounted(() => {});
 </script>
 <style scoped>
-.button-chatting {
-  position: fixed;
-  right: 5px;
-  bottom: 100px;
-  opacity: 0.7;
-  z-index: 1000000000;
-}
-.button-chatting:hover {
-  font-weight: bold;
-  opacity: 1;
-}
-
-.cremind-chatting {
-  position: absolute;
-  top: 0px;
-  right: 44px;
-}
-
 .minimize-icon {
   position: absolute;
   top: 8px;

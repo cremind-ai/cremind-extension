@@ -4,7 +4,7 @@ export default defineManifest({
   name: "CreMind GPT Extension",
   description:
     "Unlocking the Potential of AI GPT Technology: Empowering Productivity with this Feature-Packed Extension",
-  version: "1.0.2",
+  version: "1.0.3",
   manifest_version: 3,
   icons: {
     "16": "img/CreMind-logo-16.png",

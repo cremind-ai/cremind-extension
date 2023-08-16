@@ -101,8 +101,8 @@ const markedRender = (text: string) => {
 
 .chat-message-content {
   font-family: "Roboto", sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.3;
   color: rgb(227, 227, 227);
 }
 </style>

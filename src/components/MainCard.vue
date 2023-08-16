@@ -1,10 +1,21 @@
 <template>
-  <div v-if="logoIconShow" class="cremind-icon" @click="handleLogoIcon">
-    <LoadImg :filename="'CreMind-logo-128.png'" :width="45" />
+  <div v-if="logoIconShow" class="maximize">
+    <ElTooltip
+      content="Go back to the CreMind Extension dialog"
+      placement="top"
+    >
+      <ElButton
+        type="success"
+        plain
+        :icon="FullScreen"
+        @click="handleGoback"
+        circle
+      ></ElButton>
+    </ElTooltip>
   </div>
   <ElPopover
     style="word-break: normal"
-    placement="auto"
+    placement="bottom"
     :visible="popoverVisible"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
@@ -27,7 +38,7 @@
               :key="index"
             >
               <ElTooltip
-                :content="feature.EDITABLE?.label"
+                :content="feature.EDITABLE?.title"
                 placement="top"
                 v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
               >
@@ -90,7 +101,7 @@
               :key="index"
             >
               <ElTooltip
-                :content="feature.READONLY?.label"
+                :content="feature.READONLY?.title"
                 placement="top"
                 v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
               >
@@ -160,7 +171,7 @@
               :key="index"
             >
               <ElTooltip
-                :content="feature.READONLY_CONTEXT_MENU?.label"
+                :content="feature.READONLY_CONTEXT_MENU?.title"
                 placement="top"
                 v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
               >
@@ -232,7 +243,7 @@
               :key="index"
             >
               <ElTooltip
-                :content="feature.EDITABLE_CONTEXT_MENU?.label"
+                :content="feature.EDITABLE_CONTEXT_MENU?.title"
                 placement="top"
                 v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
               >
@@ -333,12 +344,18 @@
       circle
     ></ElButton>
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <div ref="contentRef" style="padding: 20px" class="scroll-content">
+      <div
+        ref="contentRef"
+        class="scroll-content"
+        :style="{
+          padding: '20px',
+        }"
+      >
         <div v-if="selectedMode !== selectedModeEnum.EDITABLE_CONTEXT_MENU">
-          <pre style="white-space: pre-wrap; word-wrap: break-word">{{
+          <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
             selectedText
           }}</pre>
-          <ElDivider></ElDivider>
+          <ElDivider></ElDivider> -->
         </div>
         <div v-html="markedRender(outputContent)"></div>
       </div>
@@ -424,6 +441,7 @@ import { ElDropdownMenu } from "element-plus";
 import { ElDropdownItem } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
+import { FullScreen } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
@@ -445,6 +463,7 @@ import { SystemOptions } from "@/constants/system_variables";
 import { useChatDialogStore } from "@/store/chat_dialog";
 import { ChatAction } from "./Chat";
 import { consoleLog, LogLevelEnum } from "@/utils";
+import { useUserSettingsStore } from "@/store/user_settings";
 
 const props = defineProps({
   selectedText: {
@@ -485,6 +504,7 @@ marked.use({ silent: true, breaks: true });
 const emits = defineEmits(["close"]);
 
 const chatDialog = useChatDialogStore();
+const userSettings = useUserSettingsStore();
 
 const optionBarShow = ref(props.show);
 const popoverVisible = ref(false);
@@ -556,6 +576,7 @@ const moreOptions: Ref<
 ]);
 
 const blockSend = ref(false);
+const isDark = ref(userSettings.getIsDark);
 
 let startSelectionIndex: number = 0;
 let endSelectionIndex: number = 0;
@@ -564,8 +585,8 @@ let prevOptionBarShow = false;
 watch(
   () => props.show,
   (newValue) => {
-    optionBarShow.value = newValue;
     if (newValue === true && !logoIconShow.value) {
+      optionBarShow.value = newValue;
       consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
       const activeElement = document.activeElement as HTMLElement;
       if (
@@ -636,6 +657,13 @@ watch(
     } else {
       optionBarZIndex.value = 1000000000;
     }
+  }
+);
+
+watch(
+  () => userSettings.getIsDark,
+  (value) => {
+    isDark.value = value;
   }
 );
 
@@ -865,37 +893,12 @@ function handleClose() {
 
 const clickOutside = (event: MouseEvent) => {
   if (
-    clickOutsideFocus.value &&
-    !clickOutsideConfirm.value &&
+    optionBarShow.value &&
+    !popoverVisible.value &&
     optionBarRef.value &&
-    !optionBarRef.value.contains(event.target as Node) &&
-    popoverRef.value &&
-    !popoverRef.value.contains(event.target as Node) &&
-    isStreaming.value === false
+    !optionBarRef.value.contains(event.target as Node)
   ) {
-    if (isStreaming.value) {
-      /*
-      clickOutsideConfirm.value = true;
-      ElMessageBox.confirm(
-        "The result is being streamed, do you want to exit?",
-        "Warning",
-        {
-          confirmButtonText: "OK",
-          cancelButtonText: "Cancel",
-          type: "warning",
-        }
-      )
-        .then(() => {
-          close();
-          clickOutsideConfirm.value = false;
-        })
-        .catch(() => {
-          clickOutsideConfirm.value = false;
-        });
-        */
-    } else {
-      close();
-    }
+    close();
   }
 };
 
@@ -972,7 +975,7 @@ const handleMinimize = () => {
   }, 0);
 };
 
-const handleLogoIcon = () => {
+const handleGoback = () => {
   logoIconShow.value = false;
   optionBarShow.value = true;
   popoverVisible.value = true;
@@ -1045,9 +1048,9 @@ onUnmounted(() => {
 
 .scroll-content {
   font-family: "Roboto", sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  color: #333;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--el-text-color-regular);
 }
 
 .minimize-icon {
@@ -1064,10 +1067,10 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.cremind-icon {
+.maximize {
   position: fixed;
-  right: 8px;
-  bottom: 160px;
+  right: 14px;
+  bottom: 260px;
 }
 
 .cremind-icon-bar {

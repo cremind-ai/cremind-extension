@@ -2,10 +2,10 @@
   <ElContainer>
     <ElHeader></ElHeader>
     <ElMain>
-      <div style="max-width: 1000px; margin: 0 auto">
+      <div style="max-width: 1060px; margin: 0 auto">
         <ElCard>
           <ElCard style="margin-top: 10px; margin-bottom: 10px">
-            <ElForm label-position="right" label-width="160px">
+            <ElForm inline label-position="right" label-width="160px">
               <ElFormItem label="Reset all settings">
                 <ElButton type="primary" @click="handleResetAllVariables">
                   <Icon
@@ -14,98 +14,27 @@
                   />
                 </ElButton>
               </ElFormItem>
+              <ElFormItem label="Dark mode">
+                <ElSwitch v-model="isDark" @change="handleDarkMode" />
+              </ElFormItem>
             </ElForm>
           </ElCard>
           <div class="feature-grid">
-            <ElCard
+            <div
               v-for="(feature, index) in featureList"
               :key="index"
               class="feature-card"
             >
-              <ElTooltip :content="feature.description" placement="top">
-                <ElForm label-position="right" label-width="120px">
-                  <ElFormItem label="Enable">
-                    <ElSwitch
-                      v-model="switchStates[index]"
-                      @change="handleSwitchChange(feature, switchStates[index])"
-                    />
-                  </ElFormItem>
-                  <ElFormItem label="Reset variable">
-                    <ElButton
-                      type="primary"
-                      @click="handleResetVariable(feature)"
-                    >
-                      <Icon
-                        icon="solar:restart-bold-duotone"
-                        :style="{ fontSize: '20px' }"
-                      />
-                    </ElButton>
-                  </ElFormItem>
-                  <ElFormItem label="Support mode">
-                    <div
-                      v-if="feature.READONLY"
-                      style="display: flex; align-items: center"
-                    >
-                      <Icon
-                        :icon="feature.READONLY?.Icon.content || ''"
-                        :style="{ fontSize: feature.READONLY?.Icon.fontSize }"
-                        v-if="feature.READONLY?.Icon.type === 'icon'"
-                      />
-                      <div
-                        v-if="feature.READONLY?.Icon.type === 'svg'"
-                        v-html="feature.READONLY?.Icon.content"
-                      ></div>
-                      <span style="margin-left: 5px; margin-right: 8px"
-                        >READONLY</span
-                      >
-                    </div>
-                    <div
-                      v-if="feature.EDITABLE"
-                      style="display: flex; align-items: center"
-                    >
-                      <Icon
-                        :icon="feature.EDITABLE?.Icon.content || ''"
-                        :style="{ fontSize: feature.EDITABLE?.Icon.fontSize }"
-                        v-if="feature.EDITABLE?.Icon.type === 'icon'"
-                      />
-                      <div
-                        v-if="feature.EDITABLE?.Icon.type === 'svg'"
-                        v-html="feature.EDITABLE?.Icon.content"
-                      ></div>
-                      <span style="margin-left: 5px; margin-right: 8px"
-                        >EDITABLE</span
-                      >
-                    </div>
-                    <div
-                      v-if="feature.EDITABLE_CONTEXT_MENU"
-                      style="display: flex; align-items: center"
-                    >
-                      <Icon
-                        :icon="
-                          feature.EDITABLE_CONTEXT_MENU?.Icon.content || ''
-                        "
-                        :style="{
-                          fontSize:
-                            feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
-                        }"
-                        v-if="
-                          feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'icon'
-                        "
-                      />
-                      <div
-                        v-if="
-                          feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'svg'
-                        "
-                        v-html="feature.EDITABLE_CONTEXT_MENU?.Icon.content"
-                      ></div>
-                      <span style="margin-left: 5px; margin-right: 8px"
-                        >EDITABLE_CONTEXT_MENU</span
-                      >
-                    </div>
-                  </ElFormItem>
-                </ElForm>
-              </ElTooltip>
-            </ElCard>
+              <PromptCardSetting
+                :id="index"
+                :title="feature.title"
+                :description="feature.description"
+                @enable-change="handleEnableChange"
+                @reset-variable="handleResetVariable"
+                v-model:enable="switchStates[index]"
+                :supportModes="supportModes[index]"
+              ></PromptCardSetting>
+            </div>
           </div>
         </ElCard>
       </div>
@@ -115,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, Ref } from "vue";
+import { watch, computed, onMounted, ref, Ref } from "vue";
 import { ElContainer } from "element-plus";
 import { ElHeader } from "element-plus";
 import { ElMain } from "element-plus";
@@ -135,9 +64,22 @@ import {
   selectedModeEnum,
 } from "@/types";
 import { FeatureSchema, Icon as IconType } from "@/lib/features";
+import { PromptCardSetting } from "@/components";
+import { useUserSettingsStore } from "@/store/user_settings";
+
+const userSettings = useUserSettingsStore();
 
 const featureList: Ref<FeatureSchema[]> = ref([]);
 const switchStates: Ref<boolean[]> = ref([]);
+const supportModes: Ref<selectedModeEnum[][]> = ref([]);
+const isDark = ref(userSettings.getIsDark);
+
+watch(
+  () => userSettings.getIsDark,
+  (value) => {
+    isDark.value = value;
+  }
+);
 
 const getFeatureEnabledState = async (
   feature: FeatureSchema
@@ -160,23 +102,33 @@ const handleResetAllVariables = async () => {
   initialize();
 };
 
-const handleResetVariable = (feature: FeatureSchema) => {
-  consoleLog(LogLevelEnum.DEBUG, feature);
-  for (let key in feature) {
+const handleEnableChange = async (index: number, value: boolean) => {
+  console.log("handleEnableChange", index, value);
+  console.log(featureList.value[index].id);
+  switchStates.value[index] = value;
+  await ChromeStorage.getInstance().set(
+    `FEATURE:${featureList.value[index].id}:enable`,
+    value
+  );
+};
+const handleResetVariable = (index: number) => {
+  console.log("handleResetVariable", index);
+  console.log(featureList.value[index].id);
+  for (let key in featureList.value[index]) {
     if (
       key === selectedModeEnum.EDITABLE ||
       key === selectedModeEnum.READONLY ||
       key === selectedModeEnum.EDITABLE_CONTEXT_MENU
     ) {
       ChromeStorage.getInstance().removeWithWildcard(
-        `FEATURE:${feature.id}:${key}:variable`
+        `FEATURE:${featureList.value[index].id}:${key}:variable`
       );
     }
   }
 };
 
-const handleSwitchChange = async (feature: FeatureSchema, value: boolean) => {
-  await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, value);
+const handleDarkMode = () => {
+  userSettings.setIsDark(isDark.value);
 };
 
 async function initialize() {
@@ -192,28 +144,45 @@ async function initialize() {
       switchStates.value = await Promise.all(
         response.features.map((feature: any) => getFeatureEnabledState(feature))
       );
+
+      for (let i = 0; i < featureList.value.length; i++) {
+        supportModes.value[i] = [];
+        if (featureList.value[i].READONLY) {
+          supportModes.value[i].push(selectedModeEnum.READONLY);
+        }
+        if (featureList.value[i].EDITABLE) {
+          supportModes.value[i].push(selectedModeEnum.EDITABLE);
+        }
+        if (featureList.value[i].READONLY_CONTEXT_MENU) {
+          supportModes.value[i].push(selectedModeEnum.READONLY_CONTEXT_MENU);
+        }
+        if (featureList.value[i].EDITABLE_CONTEXT_MENU) {
+          supportModes.value[i].push(selectedModeEnum.EDITABLE_CONTEXT_MENU);
+        }
+      }
     } else {
       featureList.value = [];
     }
   });
 }
 
-onMounted(() => {
+onMounted(async () => {
   initialize();
+  await userSettings.initialize();
 });
 </script>
 
 <style scoped>
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
   gap: 10px;
   margin-top: 10px;
 }
 
 .feature-card {
-  max-width: 400px;
-  max-height: 200px;
+  max-width: 500px;
+  max-height: 300px;
   overflow: hidden;
 }
 
