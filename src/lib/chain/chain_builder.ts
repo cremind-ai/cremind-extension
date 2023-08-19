@@ -1,37 +1,39 @@
-import { Chain } from '.'
-import { PromptTemplate } from '../prompt_template'
-import { CWException } from '@/types/exception'
-import { SystemVariableParser } from '../system_variable_parser'
-import { EventEmitter } from '@/utils/event_emitter'
-import { LLM } from '../llm'
+import { Chain } from ".";
+import { PromptTemplate } from "../prompt_template";
+import { CWException } from "@/types/exception";
+import { SystemVariableParser } from "../system_variable_parser";
+import { EventEmitter } from "@/utils/event_emitter";
+import { LLM } from "../llm";
 
 export type ChainConfig = {
-  name: string
-  promptTemplate: string
-  variableOutput: string | null
-}
+  name: string;
+  promptTemplate: string;
+  variableOutput: string | null;
+};
 
 export class ChainBuilder {
-  private chains: Chain[] = []
-  private configs: ChainConfig[] = []
-  public llm: LLM
+  private chains: Chain[] = [];
+  private configs: ChainConfig[] = [];
+  public llm: LLM;
 
   constructor(configs: ChainConfig[]) {
-    this.configs = configs
-    this.llm = new LLM()
+    this.configs = configs;
+    this.llm = new LLM();
   }
 
   public async buildChains(variables: { [key: string]: string }) {
-    let previousChain: Chain | null = null
+    let previousChain: Chain | null = null;
     for (const config of this.configs) {
-      const _variables: { [key: string]: string } = {}
-      const prompt = await SystemVariableParser.getInstance().parse(config.promptTemplate)
-      const promptTemplate = new PromptTemplate(prompt)
+      const _variables: { [key: string]: string } = {};
+      const prompt = await SystemVariableParser.getInstance().parse(
+        config.promptTemplate
+      );
+      const promptTemplate = new PromptTemplate(prompt);
       promptTemplate.getVariables().forEach((variable) => {
         if (variables[variable]) {
-          _variables[variable] = variables[variable]
+          _variables[variable] = variables[variable];
         }
-      })
+      });
 
       const chain: Chain = new Chain(
         config.name,
@@ -40,40 +42,40 @@ export class ChainBuilder {
         _variables,
         config.variableOutput,
         previousChain,
-        true,
-      )
+        true
+      );
 
-      this.chains.push(chain)
-      previousChain = chain
+      this.chains.push(chain);
+      previousChain = chain;
     }
   }
 
   public async executeChains(): Promise<EventEmitter> {
     return new Promise(async (resolve, reject) => {
-      const emitter = new EventEmitter()
-      resolve(emitter)
+      const emitter = new EventEmitter();
+      resolve(emitter);
       if (this.chains.length > 0) {
         const result = await this.chains[this.chains.length - 1].execute(true, {
           conversationId: null,
           deleteConversation: true,
-        })
+        });
 
-        result.on('data', (data: any) => {
-          emitter.emit('data', data)
-        })
+        result.on("data", (data: any) => {
+          emitter.emit("data", data);
+        });
 
-        result.on('complete', (data: any) => {
-          emitter.emit('complete', data)
-        })
+        result.on("complete", (data: any) => {
+          emitter.emit("complete", data);
+        });
 
-        result.on('endOfChain', (data: any) => {
-          emitter.emit('endOfChain', data)
-        })
+        result.on("endOfChain", (data: any) => {
+          emitter.emit("endOfChain", data);
+        });
 
-        result.on('error', (err: CWException) => {
-          emitter.emit('error', err)
-        })
+        result.on("error", (err: CWException) => {
+          emitter.emit("error", err);
+        });
       }
-    })
+    });
   }
 }

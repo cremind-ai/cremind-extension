@@ -1,5 +1,5 @@
 <template>
-  <div v-if="logoIconShow" class="maximize">
+  <div v-if="toolbarShow" class="maximize">
     <ElTooltip
       content="Go back to the CreMind Extension dialog"
       placement="top"
@@ -523,7 +523,7 @@ const contentMaxHeight = ref(500);
 const clickOutsideConfirm = ref(false);
 const clickOutsideFocus = ref(true);
 const isStreaming = ref(false);
-const logoIconShow = ref(false);
+const toolbarShow = ref(false);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const enabledFeatureStates: Ref<boolean[]> = ref([]);
@@ -585,7 +585,7 @@ let prevOptionBarShow = false;
 watch(
   () => props.show,
   (newValue) => {
-    if (newValue === true && !logoIconShow.value) {
+    if (newValue === true && !toolbarShow.value) {
       optionBarShow.value = newValue;
       consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
       const activeElement = document.activeElement as HTMLElement;
@@ -621,6 +621,8 @@ watch(
         startSelectionIndex = range.toString().length;
         endSelectionIndex = startSelectionIndex + selectedText.length;
       }
+    } else if (newValue === false && !popoverVisible.value) {
+      close();
     }
   }
 );
@@ -968,7 +970,7 @@ const handleCopyToClipboard = () => {
 };
 
 const handleMinimize = () => {
-  logoIconShow.value = true;
+  toolbarShow.value = true;
   popoverVisible.value = false;
   setTimeout(() => {
     optionBarShow.value = false;
@@ -976,7 +978,7 @@ const handleMinimize = () => {
 };
 
 const handleGoback = () => {
-  logoIconShow.value = false;
+  toolbarShow.value = false;
   optionBarShow.value = true;
   popoverVisible.value = true;
 };

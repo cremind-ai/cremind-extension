@@ -8,6 +8,7 @@
       type="textarea"
       show-word-limit
       style="padding: 0"
+      :disabled="blockSend"
       @keydown.enter="handleEnterKey"
     />
     <span v-if="!blockSend" class="send-icon">

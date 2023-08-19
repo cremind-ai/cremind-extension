@@ -16,6 +16,7 @@ export type FeatureType = {
   variableSchema: ChainVariableSchema;
   Chains: ChainConfig[];
   WriteResponse?: boolean;
+  Segmentation?: boolean;
 };
 export type FeatureSchema = {
   id: string;
@@ -25,6 +26,7 @@ export type FeatureSchema = {
   EDITABLE?: FeatureType;
   READONLY_CONTEXT_MENU?: FeatureType;
   EDITABLE_CONTEXT_MENU?: FeatureType;
+  APP?: FeatureType;
 };
 
 export class Feature {}

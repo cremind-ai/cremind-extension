@@ -15,6 +15,7 @@ import { ElCard } from "element-plus";
 import { ElSwitch } from "element-plus";
 import { ElButton } from "element-plus";
 import { selectedModeEnum } from "@/types";
+
 const props = defineProps({
   enable: {
     type: Boolean,
@@ -41,6 +42,7 @@ const props = defineProps({
 });
 
 const emits = defineEmits(["reset-variable", "enable-change"]);
+const enable = ref(props.enable);
 
 watch(
   () => props.enable,
@@ -48,8 +50,6 @@ watch(
     enable.value = value;
   }
 );
-
-const enable = ref(props.enable);
 
 const handleEnableChange = (value: boolean) => {
   emits("enable-change", props.id, value);

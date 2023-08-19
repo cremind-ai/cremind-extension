@@ -12,5 +12,6 @@ export type AIResponseType = {
     conversationId?: string;
     messageId?: string;
     childMessageId?: string;
+    endTurn?: boolean;
   };
 };

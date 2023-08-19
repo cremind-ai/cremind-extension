@@ -1,4 +1,4 @@
-import type { AIResponseType } from '@/types/provider'
+import type { AIResponseType } from "@/types/provider";
 
 // export interface AIProvider {
 //   isProcessing: boolean;
@@ -10,15 +10,15 @@ import type { AIResponseType } from '@/types/provider'
 // }
 
 export abstract class AIProvider {
-  isProcessing: boolean = false
-  conversationId: string | null = null
-  abstract closeStream(): void
-  abstract deleteConversation(conversationId: string): void
+  isProcessing: boolean = false;
+  conversationId: string | null = null;
+  abstract closeStream(): void;
+  abstract deleteConversation(conversationId: string): void;
   abstract conversation(
     conversationId: string | null,
     messageId: string | null,
     prompt: string,
     isStream: boolean,
-    args: any,
-  ): Promise<(callback: (data: AIResponseType) => void) => void>
+    args: any
+  ): Promise<(callback: (data: AIResponseType) => void) => void>;
 }

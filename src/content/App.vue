@@ -43,12 +43,14 @@
           <Icon
             icon="icon-park-twotone:more-app"
             :style="{ fontSize: '25px' }"
+            @click="handleApps"
           />
         </div>
       </ElTooltip>
     </div>
   </div>
   <ChatDialog />
+  <Apps v-model="appVisible" />
 </template>
 
 <script setup lang="ts">
@@ -57,6 +59,7 @@ import { Icon } from "@iconify/vue";
 import { ElTooltip } from "element-plus";
 import { MainCard } from "@/components";
 import { ChatDialog } from "@/components";
+import { Apps } from "@/components";
 import { LoadImg } from "@/components";
 import { SystemVariableParser } from "@/lib";
 import {
@@ -83,7 +86,7 @@ const selectedMode: Ref<selectedModeEnum> = ref(
   selectedModeEnum.EDITABLE_CONTEXT_MENU
 );
 const featureVisible = ref(false);
-const chatVisible = ref(false);
+const appVisible = ref(false);
 const isDark = ref(userSettings.getIsDark);
 let showFeaturesTimeout: any;
 
@@ -200,6 +203,14 @@ const handleSettings = () => {
 
 const handleStartChat = () => {
   chatDialog.setChatDialogVisible(true);
+};
+
+const handleApps = () => {
+  if (appVisible.value) {
+    appVisible.value = false;
+  } else {
+    appVisible.value = true;
+  }
 };
 
 function showFeatures() {

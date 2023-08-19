@@ -61,6 +61,18 @@
                 />
               </ElButton>
             </ElTooltip>
+            <ElTooltip
+              v-if="endTurn === false"
+              content="Continue generating"
+              placement="top"
+            >
+              <ElButton plain @click="handleContinueGenerating">
+                <Icon
+                  icon="pepicons-print:next-track"
+                  :style="{ fontSize: '20px' }"
+                />
+              </ElButton>
+            </ElTooltip>
             <!-- <ElTooltip content="Stop generating" placement="top">
                 <ElButton plain @click="handleStopGenerating">
                   <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
@@ -81,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, Ref, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { Close } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
@@ -102,6 +114,7 @@ import { CWException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { Status } from "@/constants/status";
+import { ConversationModeEnum } from "@/types/conversation";
 
 const conversation = useConversationStore();
 const chatDialog = useChatDialogStore();
@@ -112,6 +125,7 @@ const chats = computed(() => conversation.getConversations);
 let conversationId: string | null = null;
 let messageId: string | null = null;
 let childMessageId: string | null = null;
+let endTurn: Ref<boolean> = ref(true);
 let saveConversation = false;
 let currentPrompt: string | null = null;
 const isStreaming = ref(false);
@@ -124,7 +138,7 @@ watch(
     chatDialogVisible.value = value;
     const prompt = chatDialog.getInitialPrompt;
     if (value && prompt) {
-      sendMessage(prompt!, false);
+      sendMessage(prompt!, ConversationModeEnum.NORMAL);
     }
     if (value && isMinimized.value) {
       isMinimized.value = false;
@@ -132,10 +146,14 @@ watch(
   }
 );
 
-const sendMessage = async (prompt: string, regenerate: boolean) => {
+const sendMessage = async (
+  prompt: string,
+  conversationMode: ConversationModeEnum
+) => {
   isStreaming.value = true;
+  endTurn.value = true;
   currentPrompt = prompt;
-  if (!regenerate) {
+  if (conversationMode === ConversationModeEnum.NORMAL) {
     conversation.addingNewMessage({
       role: ConversationRoleEnum.USER,
       text: prompt,
@@ -159,14 +177,17 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
   const result = await chain.execute(true, {
     conversationId: conversationId,
     messageId: messageId,
-    ...(regenerate && {
+    conversationMode: conversationMode,
+    ...(conversationMode === ConversationModeEnum.REGENERATE && {
       childMessageId: childMessageId,
     }),
     deleteConversation: false,
-    regenerate: regenerate,
   });
 
-  let response = "";
+  let response =
+    conversationMode === ConversationModeEnum.CONTINUE
+      ? chats.value[chats.value.length - 1].text
+      : "";
   result.on("data", (data: string) => {
     consoleLog(LogLevelEnum.DEBUG, data);
     response += data;
@@ -188,15 +209,13 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
     conversationId = data.conversationId;
     messageId = data.messageId;
     childMessageId = data.childMessageId;
-    conversation.updateLastMessage({
-      role: ConversationRoleEnum.ASSISTANT,
-      text: data.message,
-    });
+    endTurn.value = data.endTurn;
   });
 
   result.on("error", (error: CWException) => {
     consoleLog(LogLevelEnum.DEBUG, "error");
     isStreaming.value = false;
+    endTurn.value = true;
     consoleLog(LogLevelEnum.DEBUG, error);
     if (error.code === Status.CHATGPT_UNAUTHORIZED) {
       ElMessage.error(
@@ -218,7 +237,7 @@ const sendMessage = async (prompt: string, regenerate: boolean) => {
 
 const handleRegenerateConversation = () => {
   if (currentPrompt) {
-    sendMessage(currentPrompt, true);
+    sendMessage(currentPrompt, ConversationModeEnum.REGENERATE);
   }
 };
 
@@ -238,6 +257,11 @@ const deleteConversation = () => {
 
 const handleSaveConversation = () => {
   saveConversation = true;
+};
+
+const handleContinueGenerating = async () => {
+  // await llm.continueGenerating();
+  sendMessage("", ConversationModeEnum.CONTINUE);
 };
 
 const handleStopGenerating = async () => {
@@ -274,7 +298,9 @@ const handleCloseDialog = () => {
 const newChat = (value: string) => {
   consoleLog(LogLevelEnum.DEBUG, "newChat", value);
   chatRef.value?.scrollToBottom();
-  sendMessage(value, false);
+  if (!isStreaming.value) {
+    sendMessage(value, ConversationModeEnum.NORMAL);
+  }
 };
 
 const handleMinimize = () => {
