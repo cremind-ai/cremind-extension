@@ -61,11 +61,47 @@ function tokenConcat(texts: string[], chunkSize: number): Promise<string[]> {
   });
 }
 
+function textSplit(content: string): Promise<string[]> {
+  return new Promise<string[]>((resolve, reject) => {
+    fetch(`${import.meta.env.VITE_UNSTRUCTURED_API!}/loader/text_split`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content: content,
+        chunk_size: 500,
+        chunk_overlap: 0,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new CWException(
+            Status.BACKEND_REQUEST_UNKNOWN_ERROR,
+            "Request unknown error"
+          );
+        }
+        return response.json();
+      })
+      .then((resData: ResPayloadType) => {
+        if (resData.status === Status.SUCCESS && resData.payload) {
+          resolve(resData.payload.items);
+        }
+      })
+      .catch((error) => {
+        reject(
+          new CWException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
+        );
+      });
+  });
+}
+
 export {
   uuid,
   streamAsyncIterable,
   sleep,
   tokenConcat,
+  textSplit,
   consoleLog,
   LogLevelEnum,
 };

@@ -18,7 +18,7 @@ export default defineManifest({
       "128": "img/CreMind-logo-128.png",
     },
     default_title: "CreMind Popup Page",
-    default_popup: "popup.html",
+    // default_popup: "popup.html",
   },
   options_page: "options.html",
   background: {

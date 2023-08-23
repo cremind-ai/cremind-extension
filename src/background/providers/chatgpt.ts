@@ -207,7 +207,8 @@ export class ChatGPT extends AIProvider {
                     metadata: {},
                   },
                 ],
-                parent_message_id: uuid(),
+                conversation_id: conversationId ? conversationId : null,
+                parent_message_id: messageId ? messageId : uuid(),
                 model: "text-davinci-002-render-sha",
                 timezone_offset_min: -420,
                 suggestions: [],
@@ -258,6 +259,7 @@ export class ChatGPT extends AIProvider {
               };
               break;
           }
+          consoleLog(LogLevelEnum.DEBUG, "payload", payload);
           const resp = await fetch(
             this.CHATGPT_URL + "/backend-api/conversation",
             {

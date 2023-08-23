@@ -2,7 +2,7 @@
   <ElContainer>
     <ElHeader></ElHeader>
     <ElMain>
-      <div style="max-width: 1060px; margin: 0 auto">
+      <div style="max-width: 1120px; margin: 0 auto">
         <ElCard>
           <ElCard style="margin-top: 10px; margin-bottom: 10px">
             <ElForm inline label-position="right" label-width="160px">
@@ -103,8 +103,6 @@ const handleResetAllVariables = async () => {
 };
 
 const handleEnableChange = async (index: number, value: boolean) => {
-  console.log("handleEnableChange", index, value);
-  console.log(featureList.value[index].id);
   switchStates.value[index] = value;
   await ChromeStorage.getInstance().set(
     `FEATURE:${featureList.value[index].id}:enable`,
@@ -112,13 +110,13 @@ const handleEnableChange = async (index: number, value: boolean) => {
   );
 };
 const handleResetVariable = (index: number) => {
-  console.log("handleResetVariable", index);
-  console.log(featureList.value[index].id);
   for (let key in featureList.value[index]) {
     if (
       key === selectedModeEnum.EDITABLE ||
       key === selectedModeEnum.READONLY ||
-      key === selectedModeEnum.EDITABLE_CONTEXT_MENU
+      key === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
+      key === selectedModeEnum.READONLY_CONTEXT_MENU ||
+      key === selectedModeEnum.APP
     ) {
       ChromeStorage.getInstance().removeWithWildcard(
         `FEATURE:${featureList.value[index].id}:${key}:variable`
@@ -159,6 +157,9 @@ async function initialize() {
         if (featureList.value[i].EDITABLE_CONTEXT_MENU) {
           supportModes.value[i].push(selectedModeEnum.EDITABLE_CONTEXT_MENU);
         }
+        if (featureList.value[i].APP) {
+          supportModes.value[i].push(selectedModeEnum.APP);
+        }
       }
     } else {
       featureList.value = [];
@@ -175,18 +176,16 @@ onMounted(async () => {
 <style scoped>
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 10px;
   margin-top: 10px;
 }
 
 .feature-card {
-  max-width: 500px;
-  max-height: 300px;
   overflow: hidden;
 }
 
-.feature-card .el-card {
+.feature-card {
   height: 100%;
   display: flex;
   flex-direction: column;

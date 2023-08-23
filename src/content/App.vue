@@ -1,14 +1,5 @@
 <template>
-  <MainCard
-    :selectedText="selectedText"
-    :top="top"
-    :left="left"
-    :show="showMainCard"
-    :selectedMode="selectedMode"
-    @close="handleMainCardClose"
-  />
-
-  <div class="cremind-features">
+  <div v-if="currentVisibleManager" class="cremind-features">
     <LoadImg
       :filename="'CreMind-logo-white-128.png'"
       :width="45"
@@ -49,12 +40,20 @@
       </ElTooltip>
     </div>
   </div>
+  <MainCard
+    :selectedText="selectedText"
+    :top="top"
+    :left="left"
+    :show="showMainCard"
+    :selectedMode="selectedMode"
+    @close="handleMainCardClose"
+  />
   <ChatDialog />
   <Apps v-model="appVisible" />
 </template>
 
 <script setup lang="ts">
-import { onMounted, Ref, ref, watch } from "vue";
+import { computed, onMounted, Ref, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { ElTooltip } from "element-plus";
 import { MainCard } from "@/components";
@@ -71,9 +70,14 @@ import {
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { useChatDialogStore } from "@/store/chat_dialog";
+import {
+  useVisibleManagerStore,
+  VisibleManagerTypeEnum,
+} from "@/store/visible_manager";
 
 const userSettings = useUserSettingsStore();
 const chatDialog = useChatDialogStore();
+const visibleManager = useVisibleManagerStore();
 
 const selectedText = ref("");
 const mousedownSelectedText = ref(false);
@@ -88,6 +92,10 @@ const selectedMode: Ref<selectedModeEnum> = ref(
 const featureVisible = ref(false);
 const appVisible = ref(false);
 const isDark = ref(userSettings.getIsDark);
+const currentVisibleManager = computed(() => {
+  return visibleManager.getVisible(VisibleManagerTypeEnum.LOGO);
+});
+const visibleStates = computed(() => visibleManager.getVisibles);
 let showFeaturesTimeout: any;
 
 watch(
@@ -97,8 +105,21 @@ watch(
   }
 );
 
+function checkVisibleState(): boolean {
+  return Object.keys(visibleStates.value).every((key) => {
+    if (key === VisibleManagerTypeEnum.LOGO) {
+      return visibleStates.value[key] === true;
+    } else {
+      return visibleStates.value[key] === false;
+    }
+  });
+}
+
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (!showMainCard.value) {
+    if (checkVisibleState() === false) {
+      return;
+    }
     const activeElement = document.activeElement as HTMLElement;
     if (
       activeElement &&
@@ -132,6 +153,9 @@ document.addEventListener("mousedown", function (event: MouseEvent) {
 document.addEventListener("mouseup", function (event: MouseEvent) {
   var selection = window.getSelection();
   let selectionText = selection!.toString().trim();
+  if (selection!.rangeCount <= 0) {
+    return;
+  }
   var range = selection!.getRangeAt(0);
   const rect = range.getBoundingClientRect();
   const activeElement = document.activeElement as HTMLElement;
@@ -156,7 +180,9 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
     } else {
       selectedMode.value = selectedModeEnum.READONLY;
     }
-    showMainCard.value = true;
+    if (checkVisibleState() === true) {
+      showMainCard.value = true;
+    }
   }
 });
 
@@ -180,10 +206,14 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
       } else {
         selectedMode.value = selectedModeEnum.READONLY;
       }
-      showMainCard.value = true;
+      if (checkVisibleState() === true) {
+        showMainCard.value = true;
+      }
     }
   } else {
-    showMainCard.value = false;
+    if (checkVisibleState() === true) {
+      showMainCard.value = false;
+    }
   }
 });
 
@@ -225,6 +255,8 @@ function hideFeatures() {
 }
 
 onMounted(async () => {
+  visibleManager.register(VisibleManagerTypeEnum.LOGO);
+  visibleManager.resetShow();
   await userSettings.initialize();
 });
 </script>

@@ -3,6 +3,7 @@ import { ChromeStorage } from "@/hooks/chrome_storage";
 
 interface UserSettingsState {
   isDark: boolean;
+  tidyDisplayOptionBarMode: boolean;
 }
 
 export const useUserSettingsStore = defineStore({
@@ -10,11 +11,15 @@ export const useUserSettingsStore = defineStore({
   state: (): UserSettingsState => {
     return {
       isDark: false,
+      tidyDisplayOptionBarMode: false,
     };
   },
   getters: {
     getIsDark(): boolean {
       return this.isDark;
+    },
+    getTidyDisplayOptionBarMode(): boolean {
+      return this.tidyDisplayOptionBarMode;
     },
   },
   actions: {
@@ -43,9 +48,14 @@ export const useUserSettingsStore = defineStore({
       await this.updateSettingsInStorage();
       this.applyDarkModeClass();
     },
+    async setTidyDisplayOptionBarMode(tidyDisplayOptionBarMode: boolean) {
+      this.tidyDisplayOptionBarMode = tidyDisplayOptionBarMode;
+      await this.updateSettingsInStorage();
+    },
     async updateSettingsInStorage() {
       const settingsToStore: UserSettingsState = {
         isDark: this.isDark,
+        tidyDisplayOptionBarMode: this.tidyDisplayOptionBarMode,
       };
       await ChromeStorage.getInstance().set(
         "USER_SETTINGS",

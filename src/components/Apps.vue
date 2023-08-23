@@ -3,9 +3,10 @@
   <ElDialog
     v-model="appDialogVisible"
     :show-close="false"
+    :file-list="fileList"
     :close-on-click-modal="false"
     :width="`80%`"
-    draggable
+    :fullscreen="isMaximized"
     :before-close="handleCloseDialog"
   >
     <!-- Header -->
@@ -25,6 +26,15 @@
         plain
         :icon="Close"
         @click="handleCloseDialog"
+        size="small"
+        circle
+      ></ElButton>
+      <ElButton
+        class="maximize-icon"
+        type="success"
+        plain
+        :icon="FullScreen"
+        @click="handleMaximize"
         size="small"
         circle
       ></ElButton>
@@ -49,18 +59,22 @@
       </div>
     </template>
 
-    <!-- Chat component -->
-    <!-- <Chat
-      ref="chatRef"
-      :chats="chats"
-      @new-chat="newChat"
-      v-model:blockSend="isStreaming"
-    /> -->
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
       <ElTimeline>
-        <ElTimelineItem timestamp="Upload" placement="top">
+        <ElTimelineItem timestamp="Input" placement="top">
           <ElCard>
+            <ElMenu
+              :default-active="InputMode.UPLOAD"
+              class="ElMenu-demo"
+              mode="horizontal"
+              :ellipsis="false"
+              @select="handleSelectInput"
+            >
+              <ElMenuItem index="0">UPLOAD</ElMenuItem>
+              <ElMenuItem index="1">INSERT TEXT</ElMenuItem>
+            </ElMenu>
             <ElUpload
+              v-if="activeIndexInput === InputMode.UPLOAD"
               class="upload-demo"
               drag
               :on-success="onSuccess"
@@ -75,9 +89,21 @@
               </div>
 
               <template #tip>
-                <div class="el-upload__tip">.txt .pdf .doc .js .py ...</div>
+                <div class="el-upload__tip">
+                  .txt .pdf .doc .docx .rtf .ppt .pptx .xls .xlsx .csv .json
+                  .xml .html .css .cpp .js .py .java ... and many other text
+                  formats
+                </div>
               </template>
             </ElUpload>
+
+            <ElInput
+              v-if="activeIndexInput === InputMode.INSERT_TEXT"
+              v-model="insertText"
+              placeholder="Please insert text here"
+              :autosize="{ minRows: 9, maxRows: 20 }"
+              type="textarea"
+            />
           </ElCard>
         </ElTimelineItem>
         <ElTimelineItem timestamp="Menu" placement="top">
@@ -116,6 +142,18 @@
         </ElTimelineItem>
         <ElTimelineItem timestamp="Output" placement="top">
           <ElCard>
+            <div style="display: flex; justify-content: flex-end">
+              <ElButtonGroup>
+                <ElTooltip content="Copy to clipboard" placement="top">
+                  <ElButton plain @click="handleCopyToClipboard">
+                    <Icon
+                      icon="solar:copy-line-duotone"
+                      :style="{ fontSize: '20px' }"
+                    />
+                  </ElButton>
+                </ElTooltip>
+              </ElButtonGroup>
+            </div>
             <div
               ref="contentRef"
               class="scroll-content"
@@ -124,11 +162,15 @@
               }"
             >
               <div v-html="markedRender(outputContent)"></div>
+              <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
+                outputContent
+              }}</pre> -->
             </div>
           </ElCard>
         </ElTimelineItem>
       </ElTimeline>
     </ElScrollbar>
+    <!-- <template #footer>hello footer</template> -->
   </ElDialog>
 
   <ElDrawer
@@ -190,15 +232,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, Ref, ref, watch } from "vue";
+import { computed, nextTick, onMounted, Ref, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import {
   UploadFile,
   UploadFiles,
   UploadProgressEvent,
   UploadProps,
+  UploadUserFile,
 } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
+import { FullScreen } from "@element-plus/icons-vue";
 import { UploadFilled } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
 import { ElButton } from "element-plus";
@@ -215,17 +259,30 @@ import { ElForm, ElFormItem } from "element-plus";
 import { ElOption } from "element-plus";
 import { ElSelect } from "element-plus";
 import { ElScrollbar } from "element-plus";
+import { ElMenu } from "element-plus";
+import { ElMenuItem } from "element-plus";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
-import { ConversationRoleEnum } from "@/constants";
+import {
+  APP_MAX_CHUNKSIZE,
+  APP_MAX_RETRIES,
+  APP_RETRY_TIME,
+  ConversationRoleEnum,
+} from "@/constants";
 import { Chat } from "./Chat";
 import { LoadImg } from ".";
 import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
 import { CWException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
-import { consoleLog, LogLevelEnum, tokenConcat } from "@/utils";
+import {
+  consoleLog,
+  LogLevelEnum,
+  sleep,
+  tokenConcat,
+  textSplit,
+} from "@/utils";
 import { Status } from "@/constants/status";
 import {
   CommunicationMessageTypeEnum,
@@ -239,6 +296,18 @@ import { ChromeStorage } from "@/hooks/chrome_storage";
 import { SystemOptions } from "@/constants/system_variables";
 import { SystemVariableParser } from "@/lib";
 import { ChainBuilder } from "@/lib/chain/chain_builder";
+import { ConversationModeEnum } from "@/types/conversation";
+import {
+  useVisibleManagerStore,
+  VisibleManagerTypeEnum,
+} from "@/store/visible_manager";
+
+enum InputMode {
+  UPLOAD = "0",
+  INSERT_TEXT = "1",
+}
+
+const visibleManager = useVisibleManagerStore();
 
 const props = defineProps({
   modelValue: {
@@ -264,6 +333,7 @@ const emits = defineEmits(["update:modelValue"]);
 const appDialogVisible = ref(props.modelValue);
 const isStreaming = ref(false);
 const isMinimized = ref(false);
+const isMaximized = ref(false);
 const llm = new LLM();
 const selectedMode: Ref<selectedModeEnum> = ref(selectedModeEnum.APP);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
@@ -290,14 +360,26 @@ const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const clickOutsideFocus = ref(true);
 const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
-const contentMaxHeight = ref(500);
+const contentMaxHeight = ref(document.documentElement.offsetHeight);
 const outputContent = ref("");
+const activeIndexInput = ref(InputMode.UPLOAD);
+const insertText = ref("");
+const fileList = ref<UploadUserFile[]>([]);
+const currentVisibleManager = computed(() => {
+  return visibleManager.getVisible(VisibleManagerTypeEnum.APP_DIALOG);
+});
 
 let uploadItems: string[] = [];
+let conversationId: string | null = null;
+let messageId: string | null = null;
+let continueGenerating: boolean = false;
 
 watch(
   () => props.modelValue,
   (value) => {
+    if (value) {
+      visibleManager.takeVisible(VisibleManagerTypeEnum.APP_DIALOG);
+    }
     appDialogVisible.value = value;
   }
 );
@@ -306,6 +388,13 @@ watch(
   () => appDialogVisible.value,
   (value) => {
     emits("update:modelValue", value);
+  }
+);
+
+watch(
+  () => currentVisibleManager.value,
+  (value) => {
+    appDialogVisible.value = value;
   }
 );
 
@@ -341,7 +430,7 @@ const getFeatureEnabledState = async (
 const handleCloseDialog = () => {
   if (isStreaming.value) {
     ElMessageBox.confirm(
-      "The result is being streamed, do you want to exit?",
+      "The result is being streamed, do you want to stop?",
       "Warning",
       {
         confirmButtonText: "OK",
@@ -354,13 +443,32 @@ const handleCloseDialog = () => {
       })
       .catch(() => {});
   } else {
+    deleteConversation();
+    outputContent.value = "";
     isStreaming.value = false;
     appDialogVisible.value = false;
+    fileList.value = [];
+    uploadItems = [];
+    visibleManager.resetShow();
   }
 };
 
 const handleMinimize = () => {
-  isMinimized.value = true;
+  appDialogVisible.value = false;
+  visibleManager.resetShow();
+};
+
+const handleMaximize = () => {
+  if (isMaximized.value) {
+    isMaximized.value = false;
+  } else {
+    isMaximized.value = true;
+  }
+};
+
+const handleSelectInput = (key: string, keyPath: string[]) => {
+  const inputModeEnum: InputMode = key as InputMode;
+  activeIndexInput.value = inputModeEnum;
 };
 
 const onSuccess = async (
@@ -368,7 +476,6 @@ const onSuccess = async (
   uploadFile: UploadFile,
   uploadFiles: UploadFiles
 ) => {
-  console.log(response);
   uploadItems = response.payload.items;
 };
 
@@ -389,9 +496,7 @@ const onProgress = (
   evt: UploadProgressEvent,
   uploadFile: UploadFile,
   uploadFiles: UploadFiles
-) => {
-  console.log(evt);
-};
+) => {};
 
 const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
   if (rawFile.size / 1024 / 1024 > 2) {
@@ -403,6 +508,18 @@ const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
 
 const markedRender = (text: string) => {
   return marked.parse(text);
+};
+
+const deleteConversation = () => {
+  consoleLog(LogLevelEnum.DEBUG, "onDeleteConversation", conversationId);
+  if (conversationId) {
+    llm.deleteConversation({
+      conversationId: conversationId!,
+    });
+  }
+
+  conversationId = null;
+  messageId = null;
 };
 
 const scrollToBottom = () => {
@@ -438,16 +555,32 @@ const handleCloseDrawer = () => {
   close();
 };
 
+const handleCopyToClipboard = () => {
+  consoleLog(LogLevelEnum.DEBUG, "handleCopyToClipboard");
+  if (outputContent.value) {
+    navigator.clipboard.writeText(outputContent.value);
+  }
+};
+
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
   consoleLog(LogLevelEnum.DEBUG, variables);
   try {
+    if (activeIndexInput.value === InputMode.INSERT_TEXT) {
+      if (insertText.value.trim() === "") {
+        return;
+      }
+      uploadItems = await textSplit(insertText.value);
+    }
     if (uploadItems.length === 0) {
       return;
     }
-    const items = await tokenConcat(uploadItems, 4000);
+    const chunkSize: number = currentFeature.value.Segmentation
+      ? currentFeature.value.ChunkSize!
+      : APP_MAX_CHUNKSIZE;
+    const items = await tokenConcat(uploadItems, chunkSize);
     if (!currentFeature.value.Segmentation && items.length > 1) {
       ElMessage.error(
-        "This feature exceeds the number of input tokens allowed! Please upload the file with a smaller size."
+        "This feature exceeds the number of input tokens allowed! Please upload the file or insert the text with a smaller."
       );
       return;
     }
@@ -459,50 +592,102 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     }
 
     outputContent.value = "";
-    console.log(items);
+    let completeContent = "";
+    continueGenerating = false;
+    conversationId = null;
+    messageId = null;
+
     for (let item of items) {
+      let retryCount = 0;
       try {
-        SystemVariableParser.getInstance().setUploadedText(item);
-        console.log(currentFeature.value.Chains);
-        const chainBuilder = new ChainBuilder(currentFeature.value.Chains);
-        await chainBuilder.buildChains(variables);
-        const result = await chainBuilder.executeChains();
-        result.on("data", (data) => {
-          outputContent.value += data;
-          scrollToBottom();
-        });
-        await new Promise((resolve) => {
-          result.on("complete", (data) => {
-            consoleLog(LogLevelEnum.DEBUG, "=====>complete");
-            consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
-            outputContent.value += "\n";
+        do {
+          SystemVariableParser.getInstance().setUploadedText(item);
+          const chainBuilder = new ChainBuilder(
+            llm,
+            currentFeature.value.Chains
+          );
+          await chainBuilder.buildChains(variables);
+          const result = await chainBuilder.executeChains(true, {
+            conversationId: conversationId,
+            messageId: messageId,
+            conversationMode: continueGenerating
+              ? ConversationModeEnum.CONTINUE
+              : ConversationModeEnum.NORMAL,
+            deleteConversation: false,
           });
-          result.on("endOfChain", (data) => {
-            consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
-            isStreaming.value = false;
-            consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
-            outputContent.value += "\n";
-            resolve(null);
+          result.on("data", (data) => {
+            outputContent.value += data;
+            scrollToBottom();
           });
-          result.on("error", (error) => {
-            isStreaming.value = false;
-            consoleLog(LogLevelEnum.DEBUG, error);
-            if (error.code === Status.CHATGPT_UNAUTHORIZED) {
-              ElMessage.error(
-                "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
-              );
-            } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
-              // ElMessage.error(
-              //   "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
-              // );
-            } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
-              ElMessage.error(`ChatGPT: ${error.message}`);
-            } else {
-              ElMessage.error(error.message);
+          let resStt: ResPayloadType = await new Promise<ResPayloadType>(
+            (resolve) => {
+              result.on("complete", (data) => {
+                consoleLog(LogLevelEnum.DEBUG, "=====>complete");
+                consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
+                outputContent.value += "\n";
+              });
+              result.on("endOfChain", (data) => {
+                consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
+                completeContent += data.message;
+                conversationId = data.conversationId;
+                messageId = data.messageId;
+                continueGenerating = data.endTurn ? false : true;
+                isStreaming.value = false;
+                consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
+                if (!continueGenerating) {
+                  completeContent += "\n\n";
+                }
+                outputContent.value = completeContent;
+
+                resolve({
+                  status: Status.SUCCESS,
+                  msg: "Successfully generated",
+                });
+              });
+              result.on("error", (error) => {
+                isStreaming.value = false;
+                consoleLog(LogLevelEnum.DEBUG, error);
+                if (error.code === Status.CHATGPT_UNAUTHORIZED) {
+                  ElMessage.error(
+                    "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
+                  );
+                } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
+                  // ElMessage.error(
+                  //   "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
+                  // );
+                } else if (error.code === Status.CHATGPT_RESPONSE_ERROR) {
+                  ElMessage.error(`ChatGPT: ${error.message}`);
+                } else {
+                  ElMessage.error(error.message);
+                }
+                resolve({
+                  status: Status.ERROR,
+                  code: error.code,
+                  msg: error.message,
+                });
+              });
             }
-            resolve(null);
-          });
-        });
+          );
+
+          if (resStt.status === Status.ERROR) {
+            retryCount++;
+            if (retryCount > APP_MAX_RETRIES) {
+              ElMessage.error("Exceeded maximum retry attempts.");
+              return;
+            }
+            await sleep(APP_RETRY_TIME);
+          } else {
+            retryCount = 0;
+            await sleep(5000);
+          }
+          consoleLog(
+            LogLevelEnum.DEBUG,
+            ">> continueGenerating",
+            continueGenerating,
+            retryCount
+          );
+        } while (continueGenerating || retryCount > 0);
+        deleteConversation();
       } catch (error) {
         consoleLog(LogLevelEnum.DEBUG, error);
         break;
@@ -570,13 +755,12 @@ async function handleFeatureClick(
     );
     return;
   }
-  // outputContent.value = "";
-  // popoverVisible.value = true;
-
+  outputContent.value = "";
   handleFeature(id, featureSchema[type]!, type);
 }
 
 onMounted(() => {
+  visibleManager.register(VisibleManagerTypeEnum.APP_DIALOG);
   const data: IPCMessageType = {
     topic: IPCTopicEnum.COMMUNICATION,
     type: CommunicationMessageTypeEnum.GET_FEATURES,
@@ -595,16 +779,24 @@ onMounted(() => {
 });
 </script>
 <style scoped>
+.maximize-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+}
+
 .minimize-icon {
   position: absolute;
   top: 8px;
   right: 36px;
   cursor: pointer;
 }
+
 .close-icon {
   position: absolute;
   top: 8px;
-  right: 8px;
+  right: 64px;
   cursor: pointer;
 }
 
@@ -619,5 +811,7 @@ onMounted(() => {
   font-size: 14px;
   line-height: 1.3;
   color: var(--el-text-color-regular);
+  /* white-space: pre-wrap;
+  word-wrap: break-word; */
 }
 </style>

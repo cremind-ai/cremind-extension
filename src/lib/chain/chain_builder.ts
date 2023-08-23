@@ -16,9 +16,9 @@ export class ChainBuilder {
   private configs: ChainConfig[] = [];
   public llm: LLM;
 
-  constructor(configs: ChainConfig[]) {
+  constructor(llm: LLM, configs: ChainConfig[]) {
     this.configs = configs;
-    this.llm = new LLM();
+    this.llm = llm;
   }
 
   public async buildChains(variables: { [key: string]: string }) {
@@ -50,15 +50,18 @@ export class ChainBuilder {
     }
   }
 
-  public async executeChains(): Promise<EventEmitter> {
+  public async executeChains(
+    isStream: boolean,
+    args: any
+  ): Promise<EventEmitter> {
     return new Promise(async (resolve, reject) => {
       const emitter = new EventEmitter();
       resolve(emitter);
       if (this.chains.length > 0) {
-        const result = await this.chains[this.chains.length - 1].execute(true, {
-          conversationId: null,
-          deleteConversation: true,
-        });
+        const result = await this.chains[this.chains.length - 1].execute(
+          isStream,
+          args
+        );
 
         result.on("data", (data: any) => {
           emitter.emit("data", data);

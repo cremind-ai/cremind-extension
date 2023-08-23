@@ -9,3 +9,10 @@ export enum ConversationRoleEnum {
   USER = 0,
   ASSISTANT = 1,
 }
+
+export const APP_RETRY_TIME = 10000;
+export const APP_MAX_RETRIES = 20;
+export const APP_MAX_CHUNKSIZE = 5000;
+
+export const LOGO_COLOR = "#4a1568";
+export const LOGO_COLOR_DARK = "#6e4486";

@@ -17,6 +17,7 @@ export type FeatureType = {
   Chains: ChainConfig[];
   WriteResponse?: boolean;
   Segmentation?: boolean;
+  ChunkSize?: number;
 };
 export type FeatureSchema = {
   id: string;

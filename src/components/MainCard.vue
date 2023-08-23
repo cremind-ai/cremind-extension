@@ -16,295 +16,322 @@
   <ElPopover
     style="word-break: normal"
     placement="bottom"
-    :visible="popoverVisible"
+    :visible="popoverVisible && currentVisibleManager"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
   >
     <template #reference>
       <div
-        class="option-bar"
+        class="cremind-icon-bar"
         :style="{ zIndex: optionBarZIndex, top, left }"
-        v-show="optionBarShow"
       >
         <LoadImg
-          class="cremind-icon-bar"
-          :filename="'CreMind-logo-64.png'"
+          class="cremind-logo"
+          :filename="'CreMind-logo-white-64.png'"
           :width="20"
-        />
-        <div v-if="selectedMode === selectedModeEnum.EDITABLE">
-          <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
-              <ElTooltip
-                :content="feature.EDITABLE?.title"
-                placement="top"
-                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+          v-show="logoShow"
+          @click="handleClickLogo"
+        ></LoadImg>
+        <div class="option-bar" v-show="vitualOptionBarShow">
+          <div v-if="selectedMode === selectedModeEnum.EDITABLE">
+            <ElButtonGroup>
+              <template
+                v-for="(feature, index) in filteredFeatureList"
+                :key="index"
               >
-                <ElButton
-                  type="success"
-                  plain
-                  @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.EDITABLE
-                    )
-                  "
+                <ElTooltip
+                  :content="feature.EDITABLE?.title"
+                  placement="top"
+                  v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
+                  <ElButton
+                    type="success"
+                    plain
+                    @click="
+                      handleFeatureClick(
+                        feature,
+                        index,
+                        selectedModeEnum.EDITABLE
+                      )
+                    "
+                  >
+                    <Icon
+                      :icon="feature.EDITABLE?.Icon.content || ''"
+                      :style="{ fontSize: feature.EDITABLE?.Icon.fontSize }"
+                      v-if="feature.EDITABLE?.Icon.type === 'icon'"
+                    />
+                    <div
+                      v-if="feature.EDITABLE?.Icon.type === 'svg'"
+                      v-html="feature.EDITABLE?.Icon.content"
+                    ></div>
+                  </ElButton>
+                </ElTooltip>
+              </template>
+              <ElDropdown @command="handleCommand">
+                <ElButton type="success" plain>
                   <Icon
-                    :icon="feature.EDITABLE?.Icon.content || ''"
-                    :style="{ fontSize: feature.EDITABLE?.Icon.fontSize }"
-                    v-if="feature.EDITABLE?.Icon.type === 'icon'"
+                    icon="material-symbols:more-vert"
+                    :style="{ fontSize: '20px' }"
                   />
-                  <div
-                    v-if="feature.EDITABLE?.Icon.type === 'svg'"
-                    v-html="feature.EDITABLE?.Icon.content"
-                  ></div>
+                </ElButton>
+                <template #dropdown>
+                  <ElDropdownMenu>
+                    <template
+                      v-for="(option, index) in moreOptions"
+                      :key="index"
+                    >
+                      <ElDropdownItem :command="option.label">
+                        <ElTooltip :content="option.label" placement="auto">
+                          <Icon
+                            :icon="option.icon.content || ''"
+                            :style="{ fontSize: option.icon.fontSize }"
+                            v-if="option.icon.type === 'icon'"
+                          />
+                          <div
+                            v-if="option.icon.type === 'svg'"
+                            v-html="option.icon.content"
+                          ></div>
+                        </ElTooltip>
+                      </ElDropdownItem>
+                    </template>
+                  </ElDropdownMenu>
+                </template>
+              </ElDropdown>
+            </ElButtonGroup>
+          </div>
+          <div v-else-if="selectedMode === selectedModeEnum.READONLY">
+            <ElButtonGroup>
+              <ElTooltip
+                content="Click the icon for a tidy display of the 'Options Bar'. Change mode now 👇."
+                placement="top"
+              >
+                <ElButton style="padding: 2px" type="success" plain>
+                  <ElSwitch
+                    style="--el-switch-on-color: #13ce66"
+                    v-model="tidyDisplayOptionBarMode"
+                  />
                 </ElButton>
               </ElTooltip>
-            </template>
-            <ElDropdown @command="handleCommand">
-              <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
-              </ElButton>
-              <template #dropdown>
-                <ElDropdownMenu>
-                  <template v-for="(option, index) in moreOptions" :key="index">
-                    <ElDropdownItem :command="option.label">
-                      <ElTooltip :content="option.label" placement="auto">
-                        <Icon
-                          :icon="option.icon.content || ''"
-                          :style="{ fontSize: option.icon.fontSize }"
-                          v-if="option.icon.type === 'icon'"
-                        />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
-                      </ElTooltip>
-                    </ElDropdownItem>
-                  </template>
-                </ElDropdownMenu>
-              </template>
-            </ElDropdown>
-          </ElButtonGroup>
-        </div>
-        <div v-else-if="selectedMode === selectedModeEnum.READONLY">
-          <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
-              <ElTooltip
-                :content="feature.READONLY?.title"
-                placement="top"
-                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+
+              <template
+                v-for="(feature, index) in filteredFeatureList"
+                :key="index"
               >
-                <ElButton
-                  type="success"
-                  plain
-                  @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.READONLY
-                    )
-                  "
+                <ElTooltip
+                  :content="feature.READONLY?.title"
+                  placement="top"
+                  v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
-                  <Icon
-                    :icon="feature.READONLY?.Icon.content || ''"
-                    :style="{ fontSize: feature.READONLY?.Icon.fontSize }"
-                    v-if="feature.READONLY?.Icon.type === 'icon'"
-                  />
-                  <span
-                    v-if="feature.READONLY?.Icon.type === 'svg'"
-                    v-html="feature.READONLY?.Icon.content"
-                    :style="{
-                      fontSize: feature.READONLY?.Icon.fontSize,
-                      width: feature.READONLY?.Icon.width,
-                      height: feature.READONLY?.Icon.height,
-                    }"
-                  ></span>
-                </ElButton>
-              </ElTooltip>
-            </template>
-            <ElDropdown @command="handleCommand">
-              <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
-              </ElButton>
-              <template #dropdown>
-                <ElDropdownMenu>
-                  <template v-for="(option, index) in moreOptions" :key="index">
-                    <ElDropdownItem :command="option.label">
-                      <ElTooltip :content="option.label" placement="auto">
-                        <Icon
-                          :icon="option.icon.content || ''"
-                          :style="{ fontSize: option.icon.fontSize }"
-                          v-if="option.icon.type === 'icon'"
-                        />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
-                      </ElTooltip>
-                    </ElDropdownItem>
-                  </template>
-                </ElDropdownMenu>
+                  <ElButton
+                    type="success"
+                    plain
+                    @click="
+                      handleFeatureClick(
+                        feature,
+                        index,
+                        selectedModeEnum.READONLY
+                      )
+                    "
+                  >
+                    <Icon
+                      :icon="feature.READONLY?.Icon.content || ''"
+                      :style="{ fontSize: feature.READONLY?.Icon.fontSize }"
+                      v-if="feature.READONLY?.Icon.type === 'icon'"
+                    />
+                    <span
+                      v-if="feature.READONLY?.Icon.type === 'svg'"
+                      v-html="feature.READONLY?.Icon.content"
+                      :style="{
+                        fontSize: feature.READONLY?.Icon.fontSize,
+                        width: feature.READONLY?.Icon.width,
+                        height: feature.READONLY?.Icon.height,
+                      }"
+                    ></span>
+                  </ElButton>
+                </ElTooltip>
               </template>
-            </ElDropdown>
-          </ElButtonGroup>
-        </div>
-        <div
-          v-else-if="selectedMode === selectedModeEnum.READONLY_CONTEXT_MENU"
-        >
-          <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
-              <ElTooltip
-                :content="feature.READONLY_CONTEXT_MENU?.title"
-                placement="top"
-                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+              <ElDropdown @command="handleCommand">
+                <ElButton type="success" plain>
+                  <Icon
+                    icon="material-symbols:more-vert"
+                    :style="{ fontSize: '20px' }"
+                  />
+                </ElButton>
+                <template #dropdown>
+                  <ElDropdownMenu>
+                    <template
+                      v-for="(option, index) in moreOptions"
+                      :key="index"
+                    >
+                      <ElDropdownItem :command="option.label">
+                        <ElTooltip :content="option.label" placement="auto">
+                          <Icon
+                            :icon="option.icon.content || ''"
+                            :style="{ fontSize: option.icon.fontSize }"
+                            v-if="option.icon.type === 'icon'"
+                          />
+                          <div
+                            v-if="option.icon.type === 'svg'"
+                            v-html="option.icon.content"
+                          ></div>
+                        </ElTooltip>
+                      </ElDropdownItem>
+                    </template>
+                  </ElDropdownMenu>
+                </template>
+              </ElDropdown>
+            </ElButtonGroup>
+          </div>
+          <div
+            v-else-if="selectedMode === selectedModeEnum.READONLY_CONTEXT_MENU"
+          >
+            <ElButtonGroup>
+              <template
+                v-for="(feature, index) in filteredFeatureList"
+                :key="index"
               >
-                <ElButton
-                  type="success"
-                  plain
-                  @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.READONLY_CONTEXT_MENU
-                    )
-                  "
+                <ElTooltip
+                  :content="feature.READONLY_CONTEXT_MENU?.title"
+                  placement="top"
+                  v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
-                  <Icon
-                    :icon="feature.READONLY_CONTEXT_MENU?.Icon.content || ''"
-                    :style="{
-                      fontSize: feature.READONLY_CONTEXT_MENU?.Icon.fontSize,
-                    }"
-                    v-if="feature.READONLY_CONTEXT_MENU?.Icon.type === 'icon'"
-                  />
-                  <span
-                    v-if="feature.READONLY_CONTEXT_MENU?.Icon.type === 'svg'"
-                    v-html="feature.READONLY_CONTEXT_MENU?.Icon.content"
-                    :style="{
-                      fontSize: feature.READONLY_CONTEXT_MENU?.Icon.fontSize,
-                      width: feature.READONLY_CONTEXT_MENU?.Icon.width,
-                      height: feature.READONLY_CONTEXT_MENU?.Icon.height,
-                    }"
-                  ></span>
-                </ElButton>
-              </ElTooltip>
-            </template>
-            <ElDropdown @command="handleCommand">
-              <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
-              </ElButton>
-              <template #dropdown>
-                <ElDropdownMenu>
-                  <template v-for="(option, index) in moreOptions" :key="index">
-                    <ElDropdownItem :command="option.label">
-                      <ElTooltip :content="option.label" placement="auto">
-                        <Icon
-                          :icon="option.icon.content || ''"
-                          :style="{ fontSize: option.icon.fontSize }"
-                          v-if="option.icon.type === 'icon'"
-                        />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
-                      </ElTooltip>
-                    </ElDropdownItem>
-                  </template>
-                </ElDropdownMenu>
+                  <ElButton
+                    type="success"
+                    plain
+                    @click="
+                      handleFeatureClick(
+                        feature,
+                        index,
+                        selectedModeEnum.READONLY_CONTEXT_MENU
+                      )
+                    "
+                  >
+                    <Icon
+                      :icon="feature.READONLY_CONTEXT_MENU?.Icon.content || ''"
+                      :style="{
+                        fontSize: feature.READONLY_CONTEXT_MENU?.Icon.fontSize,
+                      }"
+                      v-if="feature.READONLY_CONTEXT_MENU?.Icon.type === 'icon'"
+                    />
+                    <span
+                      v-if="feature.READONLY_CONTEXT_MENU?.Icon.type === 'svg'"
+                      v-html="feature.READONLY_CONTEXT_MENU?.Icon.content"
+                      :style="{
+                        fontSize: feature.READONLY_CONTEXT_MENU?.Icon.fontSize,
+                        width: feature.READONLY_CONTEXT_MENU?.Icon.width,
+                        height: feature.READONLY_CONTEXT_MENU?.Icon.height,
+                      }"
+                    ></span>
+                  </ElButton>
+                </ElTooltip>
               </template>
-            </ElDropdown>
-          </ElButtonGroup>
-        </div>
-        <div
-          v-else-if="selectedMode === selectedModeEnum.EDITABLE_CONTEXT_MENU"
-        >
-          <ElButtonGroup>
-            <template
-              v-for="(feature, index) in filteredFeatureList"
-              :key="index"
-            >
-              <ElTooltip
-                :content="feature.EDITABLE_CONTEXT_MENU?.title"
-                placement="top"
-                v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+              <ElDropdown @command="handleCommand">
+                <ElButton type="success" plain>
+                  <Icon
+                    icon="material-symbols:more-vert"
+                    :style="{ fontSize: '20px' }"
+                  />
+                </ElButton>
+                <template #dropdown>
+                  <ElDropdownMenu>
+                    <template
+                      v-for="(option, index) in moreOptions"
+                      :key="index"
+                    >
+                      <ElDropdownItem :command="option.label">
+                        <ElTooltip :content="option.label" placement="auto">
+                          <Icon
+                            :icon="option.icon.content || ''"
+                            :style="{ fontSize: option.icon.fontSize }"
+                            v-if="option.icon.type === 'icon'"
+                          />
+                          <div
+                            v-if="option.icon.type === 'svg'"
+                            v-html="option.icon.content"
+                          ></div>
+                        </ElTooltip>
+                      </ElDropdownItem>
+                    </template>
+                  </ElDropdownMenu>
+                </template>
+              </ElDropdown>
+            </ElButtonGroup>
+          </div>
+          <div
+            v-else-if="selectedMode === selectedModeEnum.EDITABLE_CONTEXT_MENU"
+          >
+            <ElButtonGroup>
+              <template
+                v-for="(feature, index) in filteredFeatureList"
+                :key="index"
               >
-                <ElButton
-                  type="success"
-                  plain
-                  @click="
-                    handleFeatureClick(
-                      feature,
-                      index,
-                      selectedModeEnum.EDITABLE_CONTEXT_MENU
-                    )
-                  "
+                <ElTooltip
+                  :content="feature.EDITABLE_CONTEXT_MENU?.title"
+                  placement="top"
+                  v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
-                  <Icon
-                    :icon="feature.EDITABLE_CONTEXT_MENU?.Icon.content || ''"
-                    :style="{
-                      fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
-                    }"
-                    v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'icon'"
-                  />
-                  <span
-                    v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'svg'"
-                    v-html="feature.EDITABLE_CONTEXT_MENU?.Icon.content"
-                    :style="{
-                      fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
-                      width: feature.EDITABLE_CONTEXT_MENU?.Icon.width,
-                      height: feature.EDITABLE_CONTEXT_MENU?.Icon.height,
-                    }"
-                  ></span>
-                </ElButton>
-              </ElTooltip>
-            </template>
-            <ElDropdown @command="handleCommand">
-              <ElButton type="success" plain>
-                <Icon
-                  icon="material-symbols:more-vert"
-                  :style="{ fontSize: '20px' }"
-                />
-              </ElButton>
-              <template #dropdown>
-                <ElDropdownMenu>
-                  <template v-for="(option, index) in moreOptions" :key="index">
-                    <ElDropdownItem :command="option.label">
-                      <ElTooltip :content="option.label" placement="auto">
-                        <Icon
-                          :icon="option.icon.content || ''"
-                          :style="{ fontSize: option.icon.fontSize }"
-                          v-if="option.icon.type === 'icon'"
-                        />
-                        <div
-                          v-if="option.icon.type === 'svg'"
-                          v-html="option.icon.content"
-                        ></div>
-                      </ElTooltip>
-                    </ElDropdownItem>
-                  </template>
-                </ElDropdownMenu>
+                  <ElButton
+                    type="success"
+                    plain
+                    @click.stop="
+                      handleFeatureClick(
+                        feature,
+                        index,
+                        selectedModeEnum.EDITABLE_CONTEXT_MENU
+                      )
+                    "
+                  >
+                    <Icon
+                      :icon="feature.EDITABLE_CONTEXT_MENU?.Icon.content || ''"
+                      :style="{
+                        fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
+                      }"
+                      v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'icon'"
+                    />
+                    <span
+                      v-if="feature.EDITABLE_CONTEXT_MENU?.Icon.type === 'svg'"
+                      v-html="feature.EDITABLE_CONTEXT_MENU?.Icon.content"
+                      :style="{
+                        fontSize: feature.EDITABLE_CONTEXT_MENU?.Icon.fontSize,
+                        width: feature.EDITABLE_CONTEXT_MENU?.Icon.width,
+                        height: feature.EDITABLE_CONTEXT_MENU?.Icon.height,
+                      }"
+                    ></span>
+                  </ElButton>
+                </ElTooltip>
               </template>
-            </ElDropdown>
-          </ElButtonGroup>
+              <ElDropdown @command="handleCommand">
+                <ElButton type="success" plain>
+                  <Icon
+                    icon="material-symbols:more-vert"
+                    :style="{ fontSize: '20px' }"
+                  />
+                </ElButton>
+                <template #dropdown>
+                  <ElDropdownMenu>
+                    <template
+                      v-for="(option, index) in moreOptions"
+                      :key="index"
+                    >
+                      <ElDropdownItem :command="option.label">
+                        <ElTooltip :content="option.label" placement="auto">
+                          <Icon
+                            :icon="option.icon.content || ''"
+                            :style="{ fontSize: option.icon.fontSize }"
+                            v-if="option.icon.type === 'icon'"
+                          />
+                          <div
+                            v-if="option.icon.type === 'svg'"
+                            v-html="option.icon.content"
+                          ></div>
+                        </ElTooltip>
+                      </ElDropdownItem>
+                    </template>
+                  </ElDropdownMenu>
+                </template>
+              </ElDropdown>
+            </ElButtonGroup>
+          </div>
         </div>
       </div>
     </template>
@@ -439,6 +466,7 @@ import { ElTooltip } from "element-plus";
 import { ElDropdown } from "element-plus";
 import { ElDropdownMenu } from "element-plus";
 import { ElDropdownItem } from "element-plus";
+import { ElSwitch } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
 import { FullScreen } from "@element-plus/icons-vue";
@@ -464,6 +492,14 @@ import { useChatDialogStore } from "@/store/chat_dialog";
 import { ChatAction } from "./Chat";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
+import { ConversationModeEnum } from "@/types/conversation";
+import {
+  useVisibleManagerStore,
+  VisibleManagerTypeEnum,
+} from "@/store/visible_manager";
+import { LLM } from "@/lib/llm";
+
+const visibleManager = useVisibleManagerStore();
 
 const props = defineProps({
   selectedText: {
@@ -507,9 +543,15 @@ const chatDialog = useChatDialogStore();
 const userSettings = useUserSettingsStore();
 
 const optionBarShow = ref(props.show);
+const tidyDisplayOptionBarMode = ref(userSettings.getTidyDisplayOptionBarMode);
+const vitualOptionBarShow = ref(false);
+const combineOptionBarShowVisible = computed(() => {
+  return optionBarShow.value && currentVisibleManager.value;
+});
 const popoverVisible = ref(false);
 const optionBarZIndex = ref(1000000000);
 const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
+const logoRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
 const originalActiveElement: Ref<any> = ref(null as any);
@@ -524,6 +566,7 @@ const clickOutsideConfirm = ref(false);
 const clickOutsideFocus = ref(true);
 const isStreaming = ref(false);
 const toolbarShow = ref(false);
+const logoShow = ref(false);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const enabledFeatureStates: Ref<boolean[]> = ref([]);
@@ -578,48 +621,68 @@ const moreOptions: Ref<
 const blockSend = ref(false);
 const isDark = ref(userSettings.getIsDark);
 
+const llm = new LLM();
+
 let startSelectionIndex: number = 0;
 let endSelectionIndex: number = 0;
 let prevOptionBarShow = false;
 
+const currentVisibleManager = computed(() => {
+  return visibleManager.getVisible(VisibleManagerTypeEnum.POPUP_CARD);
+});
+
+let conversationId: string | null = null;
+let messageId: string | null = null;
+let childMessageId: string | null = null;
+let endTurn: Ref<boolean> = ref(true);
+
 watch(
   () => props.show,
   (newValue) => {
-    if (newValue === true && !toolbarShow.value) {
-      optionBarShow.value = newValue;
-      consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
-      const activeElement = document.activeElement as HTMLElement;
+    if (newValue === true) {
       if (
-        selectedMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
-        selectedMode.value === selectedModeEnum.EDITABLE
+        (!toolbarShow.value && !tidyDisplayOptionBarMode.value) ||
+        (!logoShow.value && tidyDisplayOptionBarMode.value)
       ) {
-        originalActiveElement.value = activeElement as HTMLInputElement;
-      }
+        visibleManager.takeVisible(VisibleManagerTypeEnum.POPUP_CARD);
+        if (!tidyDisplayOptionBarMode.value) {
+          optionBarShow.value = newValue;
+        }
+        logoShow.value = newValue;
+        consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
+        const activeElement = document.activeElement as HTMLElement;
+        if (
+          selectedMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
+          selectedMode.value === selectedModeEnum.EDITABLE
+        ) {
+          originalActiveElement.value = activeElement as HTMLInputElement;
+        }
 
-      if (
-        originalActiveElement.value &&
-        originalActiveElement.value!.value !== undefined &&
-        originalActiveElement.value!.value !== null
-      ) {
-        startSelectionIndex = originalActiveElement.value!.selectionStart;
-        endSelectionIndex = originalActiveElement.value!.selectionEnd;
-      } else if (
-        originalActiveElement.value &&
-        ((originalActiveElement.value!.innerText !== undefined &&
-          originalActiveElement.value!.innerText !== null) ||
-          (originalActiveElement.value!.textContent !== undefined &&
-            originalActiveElement.value!.textContent !== null))
-      ) {
-        var selection = window.getSelection();
-        let selectedText = selection!.toString().trim();
-        var range = selection!.getRangeAt(0).cloneRange();
-        range.selectNodeContents(activeElement);
-        range.setEnd(
-          selection!.getRangeAt(0).startContainer,
-          selection!.getRangeAt(0).startOffset
-        );
-        startSelectionIndex = range.toString().length;
-        endSelectionIndex = startSelectionIndex + selectedText.length;
+        if (
+          originalActiveElement.value &&
+          originalActiveElement.value!.value !== undefined &&
+          originalActiveElement.value!.value !== null
+        ) {
+          startSelectionIndex = originalActiveElement.value!.selectionStart;
+          endSelectionIndex = originalActiveElement.value!.selectionEnd;
+        } else if (
+          originalActiveElement.value &&
+          ((originalActiveElement.value!.innerText !== undefined &&
+            originalActiveElement.value!.innerText !== null) ||
+            (originalActiveElement.value!.textContent !== undefined &&
+              originalActiveElement.value!.textContent !== null))
+        ) {
+          var selection = window.getSelection();
+          let selectedText = selection!.toString().trim();
+          var range = selection!.getRangeAt(0).cloneRange();
+          range.selectNodeContents(activeElement);
+          range.setEnd(
+            selection!.getRangeAt(0).startContainer,
+            selection!.getRangeAt(0).startOffset
+          );
+          startSelectionIndex = range.toString().length;
+          endSelectionIndex = startSelectionIndex + selectedText.length;
+        }
       }
     } else if (newValue === false && !popoverVisible.value) {
       close();
@@ -666,6 +729,48 @@ watch(
   () => userSettings.getIsDark,
   (value) => {
     isDark.value = value;
+  }
+);
+
+watch(
+  () => userSettings.getTidyDisplayOptionBarMode,
+  (value) => {
+    tidyDisplayOptionBarMode.value = value;
+  }
+);
+
+watch(
+  () => tidyDisplayOptionBarMode.value,
+  (value) => {
+    userSettings.setTidyDisplayOptionBarMode(value);
+  }
+);
+
+watch(
+  () => combineOptionBarShowVisible.value,
+  (value) => {
+    console.log("combineOptionBarShowVisible", value);
+    if (value) {
+      vitualOptionBarShow.value = true;
+    } else {
+      setTimeout(() => {
+        vitualOptionBarShow.value = false;
+      }, 10);
+    }
+  }
+);
+
+watch(
+  () => vitualOptionBarShow.value,
+  (value) => {
+    console.log("vitualOptionBarShow", value);
+  }
+);
+
+watch(
+  () => optionBarShow.value,
+  (value) => {
+    console.log("optionBarShow", value);
   }
 );
 
@@ -717,7 +822,7 @@ const readOriginalActiveElementValue = (): string => {
 };
 
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
-  const chainBuilder = new ChainBuilder(currentFeature.value.Chains);
+  const chainBuilder = new ChainBuilder(llm, currentFeature.value.Chains);
   consoleLog(LogLevelEnum.DEBUG, variables);
   for (const key in variables) {
     const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`;
@@ -725,7 +830,12 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     await ChromeStorage.getInstance().set(storageKey, variables[key]);
   }
   await chainBuilder.buildChains(variables);
-  const result = await chainBuilder.executeChains();
+  const result = await chainBuilder.executeChains(true, {
+    conversationId: conversationId,
+    messageId: messageId,
+    conversationMode: ConversationModeEnum.NORMAL,
+    deleteConversation: true,
+  });
 
   let startPart: string;
   let endPart: string;
@@ -863,10 +973,11 @@ async function handleFeatureClick(
 function close() {
   consoleLog(LogLevelEnum.DEBUG, "Close");
   popoverVisible.value = false;
-  setTimeout(() => {
-    optionBarShow.value = false;
-    emits("close");
-  }, 0);
+  visibleManager.resetShow();
+  optionBarShow.value = false;
+  logoShow.value = false;
+
+  emits("close");
 }
 
 function handleClose() {
@@ -894,22 +1005,47 @@ function handleClose() {
 }
 
 const clickOutside = (event: MouseEvent) => {
-  if (
-    optionBarShow.value &&
-    !popoverVisible.value &&
-    optionBarRef.value &&
-    !optionBarRef.value.contains(event.target as Node)
-  ) {
-    close();
+  console.log("clickOutside");
+  console.log("tidyDisplayOptionBarMode", tidyDisplayOptionBarMode.value);
+  if (tidyDisplayOptionBarMode.value) {
+    if (
+      logoShow.value &&
+      !popoverVisible.value &&
+      logoRef.value &&
+      !logoRef.value.contains(event.target as Node) &&
+      optionBarRef.value &&
+      !optionBarRef.value.contains(event.target as Node)
+    ) {
+      close();
+    }
+  } else {
+    if (
+      logoShow.value &&
+      optionBarShow.value &&
+      !popoverVisible.value &&
+      optionBarRef.value &&
+      !optionBarRef.value.contains(event.target as Node)
+    ) {
+      close();
+    }
   }
 };
 
 const handleMousedown = (event: MouseEvent) => {
-  prevOptionBarShow = optionBarShow.value;
+  console.log("handleMousedown");
+  if (tidyDisplayOptionBarMode.value) {
+    prevOptionBarShow = logoShow.value;
+  } else {
+    prevOptionBarShow = optionBarShow.value;
+  }
 };
 
 const handleMouseup = (event: MouseEvent) => {
-  if (prevOptionBarShow && optionBarShow.value) {
+  console.log("handleMouseup");
+  if (
+    (prevOptionBarShow && logoShow.value) ||
+    (prevOptionBarShow && optionBarShow.value)
+  ) {
     clickOutside(event);
   }
 };
@@ -943,6 +1079,10 @@ const handleCloseDrawer = () => {
   close();
 };
 
+const handleClickLogo = () => {
+  optionBarShow.value = true;
+};
+
 const newChat = (value: string) => {
   let text = "";
   text += props.selectedText + "\n";
@@ -972,15 +1112,17 @@ const handleCopyToClipboard = () => {
 const handleMinimize = () => {
   toolbarShow.value = true;
   popoverVisible.value = false;
-  setTimeout(() => {
-    optionBarShow.value = false;
-  }, 0);
+  logoShow.value = false;
+  optionBarShow.value = false;
+  visibleManager.resetShow();
 };
 
 const handleGoback = () => {
+  visibleManager.takeVisible(VisibleManagerTypeEnum.POPUP_CARD);
   toolbarShow.value = false;
   optionBarShow.value = true;
   popoverVisible.value = true;
+  logoShow.value = true;
 };
 
 const handleCommand = (command: OptionCommandType) => {
@@ -1015,8 +1157,10 @@ const getFeatureEnabledState = async (
 
 onMounted(async () => {
   consoleLog(LogLevelEnum.DEBUG, "onMounted");
+  visibleManager.register(VisibleManagerTypeEnum.POPUP_CARD);
   optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
   popoverRef.value = document.querySelector(".el-popover") as HTMLDivElement;
+  logoRef.value = document.querySelector(".cremind-logo") as HTMLDivElement;
   document.addEventListener("mouseup", handleMouseup);
   document.addEventListener("mousedown", handleMousedown);
   const data: IPCMessageType = {
@@ -1044,8 +1188,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.option-bar {
+.cremind-icon-bar {
   position: absolute;
+}
+.option-bar {
+  margin-top: -6px;
+  margin-left: 16px;
+}
+
+.cremind-logo {
+  padding: 0px;
 }
 
 .scroll-content {
@@ -1073,11 +1225,5 @@ onUnmounted(() => {
   position: fixed;
   right: 14px;
   bottom: 260px;
-}
-
-.cremind-icon-bar {
-  position: absolute;
-  top: -16px;
-  right: -16px;
 }
 </style>

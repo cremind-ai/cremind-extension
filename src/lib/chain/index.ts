@@ -5,6 +5,7 @@ import { PromptTemplate } from "../prompt_template";
 import { IPCTopicEnum } from "@/types";
 import { LLM } from "../llm";
 import { consoleLog, LogLevelEnum } from "@/utils";
+import { ConversationModeEnum } from "@/types/conversation";
 
 export class ChainException extends CWException {}
 
@@ -98,6 +99,9 @@ export class Chain {
         }
 
         consoleLog(LogLevelEnum.DEBUG, "=====================");
+        if (args.conversationMode === ConversationModeEnum.CONTINUE) {
+          prompt = "Continue";
+        }
         consoleLog(LogLevelEnum.DEBUG, prompt);
         consoleLog(LogLevelEnum.DEBUG, "=====================");
 

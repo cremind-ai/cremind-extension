@@ -108,6 +108,10 @@ import { Chat } from "./Chat";
 import { LoadImg } from ".";
 import { useConversationStore } from "@/store/conversation";
 import { useChatDialogStore } from "@/store/chat_dialog";
+import {
+  useVisibleManagerStore,
+  VisibleManagerTypeEnum,
+} from "@/store/visible_manager";
 import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
 import { CWException } from "@/types/exception";
@@ -118,6 +122,7 @@ import { ConversationModeEnum } from "@/types/conversation";
 
 const conversation = useConversationStore();
 const chatDialog = useChatDialogStore();
+const visibleManager = useVisibleManagerStore();
 
 const chatRef = ref<ComponentRef<typeof Chat>>();
 const chatDialogVisible = ref(false);
@@ -130,6 +135,9 @@ let saveConversation = false;
 let currentPrompt: string | null = null;
 const isStreaming = ref(false);
 const isMinimized = ref(false);
+const currentVisibleManager = computed(() => {
+  return visibleManager.getVisible(VisibleManagerTypeEnum.CHAT_DIALOG);
+});
 const llm = new LLM();
 
 watch(
@@ -137,12 +145,22 @@ watch(
   (value) => {
     chatDialogVisible.value = value;
     const prompt = chatDialog.getInitialPrompt;
-    if (value && prompt) {
-      sendMessage(prompt!, ConversationModeEnum.NORMAL);
+    if (value) {
+      visibleManager.takeVisible(VisibleManagerTypeEnum.CHAT_DIALOG);
+      if (prompt) {
+        sendMessage(prompt!, ConversationModeEnum.NORMAL);
+      }
     }
     if (value && isMinimized.value) {
       isMinimized.value = false;
     }
+  }
+);
+
+watch(
+  () => currentVisibleManager.value,
+  (value) => {
+    chatDialogVisible.value = value;
   }
 );
 
@@ -205,7 +223,6 @@ const sendMessage = async (
   result.on("endOfChain", (data: any) => {
     consoleLog(LogLevelEnum.DEBUG, "endOfChain");
     isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, data);
     conversationId = data.conversationId;
     messageId = data.messageId;
     childMessageId = data.childMessageId;
@@ -260,7 +277,6 @@ const handleSaveConversation = () => {
 };
 
 const handleContinueGenerating = async () => {
-  // await llm.continueGenerating();
   sendMessage("", ConversationModeEnum.CONTINUE);
 };
 
@@ -273,7 +289,7 @@ const handleStopGenerating = async () => {
 const handleCloseDialog = () => {
   if (isStreaming.value) {
     ElMessageBox.confirm(
-      "The result is being streamed, do you want to exit?",
+      "The result is being streamed, do you want to stop?",
       "Warning",
       {
         confirmButtonText: "OK",
@@ -292,6 +308,7 @@ const handleCloseDialog = () => {
     isStreaming.value = false;
     deleteConversation();
     chatDialog.setChatDialogVisible(false);
+    visibleManager.resetShow();
   }
 };
 
@@ -306,9 +323,12 @@ const newChat = (value: string) => {
 const handleMinimize = () => {
   isMinimized.value = true;
   chatDialog.setChatDialogVisible(false);
+  visibleManager.resetShow();
 };
 
-onMounted(() => {});
+onMounted(() => {
+  visibleManager.register(VisibleManagerTypeEnum.CHAT_DIALOG);
+});
 </script>
 <style scoped>
 .minimize-icon {
