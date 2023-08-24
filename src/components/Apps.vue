@@ -360,7 +360,9 @@ const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const clickOutsideFocus = ref(true);
 const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
-const contentMaxHeight = ref(document.documentElement.offsetHeight);
+const contentMaxHeight = ref(
+  (90 / 100) * document.documentElement.offsetHeight
+); // 90% of the page height
 const outputContent = ref("");
 const activeIndexInput = ref(InputMode.UPLOAD);
 const insertText = ref("");

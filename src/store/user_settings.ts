@@ -10,7 +10,7 @@ export const useUserSettingsStore = defineStore({
   id: "UserSettings",
   state: (): UserSettingsState => {
     return {
-      isDark: true,
+      isDark: false,
       tidyDisplayOptionBarMode: false,
     };
   },
@@ -24,16 +24,10 @@ export const useUserSettingsStore = defineStore({
   },
   actions: {
     applyDarkModeClass(force: boolean) {
-      if (
-        (!document.documentElement.classList.contains("dark") &&
-          !document.documentElement.classList.contains("light")) ||
-        force
-      ) {
+      if (!document.documentElement.classList.contains("dark") || force) {
         if (this.isDark) {
           document.documentElement.classList.add("dark");
-          document.documentElement.classList.remove("light");
         } else {
-          document.documentElement.classList.add("light");
           document.documentElement.classList.remove("dark");
         }
       }
