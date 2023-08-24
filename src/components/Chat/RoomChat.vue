@@ -8,14 +8,14 @@
 </template>
 
 <script setup lang="ts">
-import { ConversationRoleEnum } from '@/constants'
-import { ConversationMessageType } from '@/types/conversation'
-import { BallonChat } from '../Chat'
+import { ConversationRoleEnum } from "@/constants";
+import { ConversationMessageType } from "@/types/conversation";
+import { BallonChat } from "../Chat";
 const props = defineProps({
   chats: {
     type: Array as () => ConversationMessageType[],
     required: true,
   },
-})
+});
 </script>
 <style scoped></style>

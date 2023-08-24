@@ -1,7 +1,7 @@
 <template>
   <div style="position: relative">
     <ElInput
-      class="bg-secondary w-full px-2 py-1 rounded-xl"
+      class="chat-action-w-full chat-action-px-2 chat-action-py-1 chat-action-rounded-xl"
       placeholder=""
       v-model="textField"
       :autosize="{ minRows: 2 }"
@@ -11,7 +11,7 @@
       :disabled="blockSend"
       @keydown.enter="handleEnterKey"
     />
-    <span v-if="!blockSend" class="send-icon">
+    <span v-if="!blockSend" class="chat-action-send-icon">
       <ElTooltip content="Double Enter quickly = Send" placement="top">
         <Icon
           icon="ep:promotion"
@@ -60,30 +60,4 @@ const handleEnterKey = () => {
 };
 </script>
 
-<style scoped>
-/* CSS style for the send-icon class */
-.send-icon {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  opacity: 0.4;
-}
-.send-icon:hover {
-  font-weight: bold;
-  opacity: 1;
-}
-.w-full {
-  width: 100%;
-}
-.px-2 {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-.py-1 {
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-}
-.rounded-xl {
-  border-radius: 0.75rem;
-}
-</style>
+<style scoped></style>

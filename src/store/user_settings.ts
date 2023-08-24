@@ -10,7 +10,7 @@ export const useUserSettingsStore = defineStore({
   id: "UserSettings",
   state: (): UserSettingsState => {
     return {
-      isDark: false,
+      isDark: true,
       tidyDisplayOptionBarMode: false,
     };
   },
@@ -23,30 +23,39 @@ export const useUserSettingsStore = defineStore({
     },
   },
   actions: {
-    applyDarkModeClass() {
-      if (this.isDark) {
-        document.documentElement.classList.add("dark");
-        document.documentElement.classList.remove("light");
-      } else {
-        document.documentElement.classList.add("light");
-        document.documentElement.classList.remove("dark");
+    applyDarkModeClass(force: boolean) {
+      if (
+        (!document.documentElement.classList.contains("dark") &&
+          !document.documentElement.classList.contains("light")) ||
+        force
+      ) {
+        if (this.isDark) {
+          document.documentElement.classList.add("dark");
+          document.documentElement.classList.remove("light");
+        } else {
+          document.documentElement.classList.add("light");
+          document.documentElement.classList.remove("dark");
+        }
       }
     },
     async initialize() {
       const storedSettingsJSON = await ChromeStorage.getInstance().get(
         "USER_SETTINGS"
       );
-      if (storedSettingsJSON !== undefined) {
+      if (storedSettingsJSON === undefined) {
+        await this.updateSettingsInStorage();
+        this.applyDarkModeClass(false);
+      } else {
         const storedSettings: UserSettingsState =
           JSON.parse(storedSettingsJSON);
         Object.assign(this, storedSettings);
-        this.applyDarkModeClass();
+        this.applyDarkModeClass(false);
       }
     },
     async setIsDark(isDark: boolean) {
       this.isDark = isDark;
       await this.updateSettingsInStorage();
-      this.applyDarkModeClass();
+      this.applyDarkModeClass(true);
     },
     async setTidyDisplayOptionBarMode(tidyDisplayOptionBarMode: boolean) {
       this.tidyDisplayOptionBarMode = tidyDisplayOptionBarMode;

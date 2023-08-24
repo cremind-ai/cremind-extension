@@ -11,7 +11,7 @@
     <!-- Header -->
     <template #header>
       <ElButton
-        class="minimize-icon"
+        class="chat-dialog-minimize-icon"
         type="warning"
         plain
         :icon="SemiSelect"
@@ -20,7 +20,7 @@
         circle
       ></ElButton>
       <ElButton
-        class="close-icon"
+        class="chat-dialog-close-icon"
         type="danger"
         plain
         :icon="Close"
@@ -41,7 +41,7 @@
         <div>
           CreMind AI
           <LoadImg
-            class="cremind-icon-bar"
+            class="chat-dialog-cremind-icon-bar"
             :filename="'CreMind-logo-64.png'"
             :width="25"
           />
@@ -330,23 +330,4 @@ onMounted(() => {
   visibleManager.register(VisibleManagerTypeEnum.CHAT_DIALOG);
 });
 </script>
-<style scoped>
-.minimize-icon {
-  position: absolute;
-  top: 8px;
-  right: 36px;
-  cursor: pointer;
-}
-.close-icon {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  cursor: pointer;
-}
-
-.cremind-icon {
-  position: fixed;
-  right: 5px;
-  bottom: 180px;
-}
-</style>
+<style scoped></style>

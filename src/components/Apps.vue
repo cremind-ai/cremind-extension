@@ -12,7 +12,7 @@
     <!-- Header -->
     <template #header>
       <ElButton
-        class="minimize-icon"
+        class="apps-minimize-icon"
         type="warning"
         plain
         :icon="SemiSelect"
@@ -21,7 +21,7 @@
         circle
       ></ElButton>
       <ElButton
-        class="close-icon"
+        class="apps-close-icon"
         type="danger"
         plain
         :icon="Close"
@@ -30,7 +30,7 @@
         circle
       ></ElButton>
       <ElButton
-        class="maximize-icon"
+        class="apps-maximize-icon"
         type="success"
         plain
         :icon="FullScreen"
@@ -51,7 +51,7 @@
         <div>
           CreMind AI
           <LoadImg
-            class="cremind-icon-bar"
+            class="apps-cremind-icon-bar"
             :filename="'CreMind-logo-64.png'"
             :width="25"
           />
@@ -81,7 +81,7 @@
               :on-error="onError"
               :on-progress="onProgress"
               :before-upload="beforeUpload"
-              action="http://localhost:3002/api/v1/loader/upload?chunk_size=500&chunk_overlap=0"
+              :action="`${unstructuredApiUrl}/loader/upload?chunk_size=500&chunk_overlap=0`"
             >
               <ElIcon class="el-icon--upload"><UploadFilled /></ElIcon>
               <div class="el-upload__text">
@@ -156,7 +156,7 @@
             </div>
             <div
               ref="contentRef"
-              class="scroll-content"
+              class="apps-scroll-content"
               :style="{
                 padding: '20px',
               }"
@@ -373,6 +373,7 @@ let uploadItems: string[] = [];
 let conversationId: string | null = null;
 let messageId: string | null = null;
 let continueGenerating: boolean = false;
+const unstructuredApiUrl = import.meta.env.VITE_UNSTRUCTURED_API;
 
 watch(
   () => props.modelValue,
@@ -693,9 +694,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
         break;
       }
     }
-  } catch (e) {
-    console.log(e);
-  }
+  } catch (e) {}
 };
 
 async function handleFeature(
@@ -778,40 +777,4 @@ onMounted(() => {
   });
 });
 </script>
-<style scoped>
-.maximize-icon {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  cursor: pointer;
-}
-
-.minimize-icon {
-  position: absolute;
-  top: 8px;
-  right: 36px;
-  cursor: pointer;
-}
-
-.close-icon {
-  position: absolute;
-  top: 8px;
-  right: 64px;
-  cursor: pointer;
-}
-
-.cremind-icon {
-  position: fixed;
-  right: 5px;
-  bottom: 180px;
-}
-
-.scroll-content {
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  line-height: 1.3;
-  color: var(--el-text-color-regular);
-  /* white-space: pre-wrap;
-  word-wrap: break-word; */
-}
-</style>
+<style scoped></style>

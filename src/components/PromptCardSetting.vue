@@ -1,27 +1,30 @@
 <template>
-  <ElCard class="feature-card">
+  <ElCard class="prompt-card-setting-feature-card">
     <ElPopover
       :title="title"
       placement="auto"
       :width="300"
       trigger="hover"
       :content="description"
+      :visible="false"
     >
       <template #reference>
-        <ElCard class="content-card">
-          <ElSwitch
-            class="switch-enable"
-            :style="'--el-switch-on-color: ' + switchColor"
-            v-model="enable"
-            @change="handleEnableChange(enable)"
-          />
-          <div class="title">{{ title }}</div>
-          <div class="description">{{ description }}</div>
+        <ElCard class="prompt-card-setting-content-card">
+          <ElTooltip content="Enable/Disable" placement="top">
+            <ElSwitch
+              class="prompt-card-setting-switch-enable"
+              :style="'--el-switch-on-color: ' + switchColor"
+              v-model="enable"
+              @change="handleEnableChange(enable)"
+            />
+          </ElTooltip>
+          <div class="prompt-card-setting-title">{{ title }}</div>
+          <div class="prompt-card-setting-description">{{ description }}</div>
         </ElCard>
       </template>
     </ElPopover>
 
-    <div class="icons-container">
+    <div class="prompt-card-setting-icons-container">
       <div style="font-size: 14px">SUPPORT:</div>
       <ElPopover
         v-for="mode in supportModes"
@@ -40,7 +43,7 @@
       </ElPopover>
     </div>
     <ElButton
-      class="reset-button"
+      class="prompt-card-setting-reset-button"
       :color="LOGO_COLOR"
       :plain="isDark"
       @click="handleResetVariable()"
@@ -56,6 +59,7 @@ import { ElCard } from "element-plus";
 import { ElSwitch } from "element-plus";
 import { ElButton } from "element-plus";
 import { ElPopover } from "element-plus";
+import { ElTooltip } from "element-plus";
 import { selectedModeEnum } from "@/types";
 import { LOGO_COLOR, LOGO_COLOR_DARK } from "@/constants";
 import { useUserSettingsStore } from "@/store/user_settings";
@@ -91,6 +95,21 @@ const userSettings = useUserSettingsStore();
 
 const enable = ref(props.enable);
 const isDark = ref(userSettings.getIsDark);
+
+const lineHeight = 14; // You might need to adjust this value based on your design
+
+const descriptionLineCount = computed(() => {
+  const descriptionElement = document.querySelector(".description");
+  if (descriptionElement) {
+    const descriptionHeight = descriptionElement.clientHeight;
+    return Math.floor(descriptionHeight / lineHeight);
+  }
+  return 0;
+});
+
+const showPopoverForDescription = computed(() => {
+  return descriptionLineCount.value > 6;
+});
 
 const iconColors: Record<string, string> = {
   READONLY: LOGO_COLOR,
@@ -162,60 +181,5 @@ onMounted(() => {});
 </script>
 
 <style scoped>
-.feature-card {
-  width: 250px;
-  max-height: 280px;
-  overflow: hidden;
-  border-radius: 20px;
-}
-
-.content-card {
-  height: 150px;
-  overflow: hidden;
-  position: relative;
-  border-radius: 15px;
-}
-
-.switch-enable {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-}
-
-.title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: var(--el-text-color-regular);
-  word-wrap: break-word;
-}
-
-.description {
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  color: var(--el-text-color-regular);
-  word-wrap: break-word;
-}
-
-.icons-container {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.reset-button {
-  margin-top: auto;
-  width: 100%;
-  border-radius: 20px;
-}
-
-:deep(.el-card__body) {
-  padding: 5px;
-}
+@import "@/styles/components/PromptCardSetting.scss";
 </style>

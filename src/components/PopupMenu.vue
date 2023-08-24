@@ -1,5 +1,5 @@
 <template>
-  <div v-if="toolbarShow" class="maximize">
+  <div v-if="iconMaximizeShow" class="popup-card-maximize">
     <ElTooltip
       content="Go back to the CreMind Extension dialog"
       placement="top"
@@ -14,6 +14,7 @@
     </ElTooltip>
   </div>
   <ElPopover
+    class="popup-card-popover"
     style="word-break: normal"
     placement="bottom"
     :visible="popoverVisible && currentVisibleManager"
@@ -22,19 +23,37 @@
   >
     <template #reference>
       <div
-        class="cremind-icon-bar"
+        class="popup-card-cremind-icon-bar"
         :style="{ zIndex: optionBarZIndex, top, left }"
       >
         <LoadImg
-          class="cremind-logo"
+          class="popup-card-cremind-logo"
           :filename="'CreMind-logo-white-64.png'"
           :width="20"
           v-show="logoShow"
           @click="handleClickLogo"
         ></LoadImg>
-        <div class="option-bar" v-show="vitualOptionBarShow">
+        <div class="popup-card-option-bar" v-show="vitualOptionBarShow">
           <div v-if="selectedMode === selectedModeEnum.EDITABLE">
             <ElButtonGroup>
+              <ElTooltip
+                content="Click the icon for a tidy display of the 'Options Bar'. Change mode now 👇."
+                placement="top"
+              >
+                <ElButton
+                  size="small"
+                  class="popup-card-menu-bar-button"
+                  style="padding: 2px"
+                  type="success"
+                  plain
+                >
+                  <ElSwitch
+                    size="small"
+                    style="--el-switch-on-color: #13ce66"
+                    v-model="tidyDisplayOptionBarMode"
+                  />
+                </ElButton>
+              </ElTooltip>
               <template
                 v-for="(feature, index) in filteredFeatureList"
                 :key="index"
@@ -45,6 +64,8 @@
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
                   <ElButton
+                    size="small"
+                    class="popup-card-menu-bar-button"
                     type="success"
                     plain
                     @click="
@@ -68,7 +89,12 @@
                 </ElTooltip>
               </template>
               <ElDropdown @command="handleCommand">
-                <ElButton type="success" plain>
+                <ElButton
+                  size="small"
+                  class="popup-card-menu-bar-button"
+                  type="success"
+                  plain
+                >
                   <Icon
                     icon="material-symbols:more-vert"
                     :style="{ fontSize: '20px' }"
@@ -105,8 +131,15 @@
                 content="Click the icon for a tidy display of the 'Options Bar'. Change mode now 👇."
                 placement="top"
               >
-                <ElButton style="padding: 2px" type="success" plain>
+                <ElButton
+                  size="small"
+                  class="popup-card-menu-bar-button"
+                  style="padding: 1px"
+                  type="success"
+                  plain
+                >
                   <ElSwitch
+                    size="small"
                     style="--el-switch-on-color: #13ce66"
                     v-model="tidyDisplayOptionBarMode"
                   />
@@ -123,6 +156,8 @@
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
                   <ElButton
+                    size="small"
+                    class="popup-card-menu-bar-button"
                     type="success"
                     plain
                     @click="
@@ -151,7 +186,12 @@
                 </ElTooltip>
               </template>
               <ElDropdown @command="handleCommand">
-                <ElButton type="success" plain>
+                <ElButton
+                  size="small"
+                  class="popup-card-menu-bar-button"
+                  type="success"
+                  plain
+                >
                   <Icon
                     icon="material-symbols:more-vert"
                     :style="{ fontSize: '20px' }"
@@ -196,6 +236,8 @@
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
                   <ElButton
+                    size="small"
+                    class="popup-card-menu-bar-button"
                     type="success"
                     plain
                     @click="
@@ -226,7 +268,12 @@
                 </ElTooltip>
               </template>
               <ElDropdown @command="handleCommand">
-                <ElButton type="success" plain>
+                <ElButton
+                  size="small"
+                  class="popup-card-menu-bar-button"
+                  type="success"
+                  plain
+                >
                   <Icon
                     icon="material-symbols:more-vert"
                     :style="{ fontSize: '20px' }"
@@ -271,6 +318,8 @@
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
                 >
                   <ElButton
+                    size="small"
+                    class="popup-card-menu-bar-button"
                     type="success"
                     plain
                     @click.stop="
@@ -301,7 +350,12 @@
                 </ElTooltip>
               </template>
               <ElDropdown @command="handleCommand">
-                <ElButton type="success" plain>
+                <ElButton
+                  size="small"
+                  class="popup-card-menu-bar-button"
+                  type="success"
+                  plain
+                >
                   <Icon
                     icon="material-symbols:more-vert"
                     :style="{ fontSize: '20px' }"
@@ -353,7 +407,7 @@
       </ElButtonGroup>
     </div>
     <ElButton
-      class="minimize-icon"
+      class="popup-card-minimize-icon"
       type="warning"
       plain
       :icon="SemiSelect"
@@ -362,7 +416,7 @@
       circle
     ></ElButton>
     <ElButton
-      class="close-icon"
+      class="popup-card-close-icon"
       type="danger"
       plain
       :icon="Close"
@@ -373,7 +427,7 @@
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
       <div
         ref="contentRef"
-        class="scroll-content"
+        class="popup-card-scroll-content"
         :style="{
           padding: '20px',
         }"
@@ -498,6 +552,7 @@ import {
   VisibleManagerTypeEnum,
 } from "@/store/visible_manager";
 import { LLM } from "@/lib/llm";
+// import { shadowRoot } from "@/content";
 
 const visibleManager = useVisibleManagerStore();
 
@@ -565,7 +620,7 @@ const contentMaxHeight = ref(500);
 const clickOutsideConfirm = ref(false);
 const clickOutsideFocus = ref(true);
 const isStreaming = ref(false);
-const toolbarShow = ref(false);
+const iconMaximizeShow = ref(false);
 const logoShow = ref(false);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
@@ -612,7 +667,7 @@ const moreOptions: Ref<
     label: OptionCommandType.SETTINGS,
     icon: {
       content: "solar:settings-line-duotone",
-      fontSize: "20px",
+      fontSize: "16px",
       type: "icon",
     },
   },
@@ -626,6 +681,7 @@ const llm = new LLM();
 let startSelectionIndex: number = 0;
 let endSelectionIndex: number = 0;
 let prevOptionBarShow = false;
+let shadowClickInside = false;
 
 const currentVisibleManager = computed(() => {
   return visibleManager.getVisible(VisibleManagerTypeEnum.POPUP_CARD);
@@ -633,15 +689,13 @@ const currentVisibleManager = computed(() => {
 
 let conversationId: string | null = null;
 let messageId: string | null = null;
-let childMessageId: string | null = null;
-let endTurn: Ref<boolean> = ref(true);
 
 watch(
   () => props.show,
   (newValue) => {
     if (newValue === true) {
       if (
-        (!toolbarShow.value && !tidyDisplayOptionBarMode.value) ||
+        (!iconMaximizeShow.value && !tidyDisplayOptionBarMode.value) ||
         (!logoShow.value && tidyDisplayOptionBarMode.value)
       ) {
         visibleManager.takeVisible(VisibleManagerTypeEnum.POPUP_CARD);
@@ -649,6 +703,7 @@ watch(
           optionBarShow.value = newValue;
         }
         logoShow.value = newValue;
+        iconMaximizeShow.value = false;
         consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
         const activeElement = document.activeElement as HTMLElement;
         if (
@@ -701,8 +756,8 @@ watch(
   () => outputContent.value,
   (newValue) => {
     const _width = contentRef.value.offsetWidth;
-    if (_width > 800) {
-      width.value = 800;
+    if (_width > 700) {
+      width.value = 700;
     }
   }
 );
@@ -749,7 +804,6 @@ watch(
 watch(
   () => combineOptionBarShowVisible.value,
   (value) => {
-    console.log("combineOptionBarShowVisible", value);
     if (value) {
       vitualOptionBarShow.value = true;
     } else {
@@ -757,20 +811,6 @@ watch(
         vitualOptionBarShow.value = false;
       }, 10);
     }
-  }
-);
-
-watch(
-  () => vitualOptionBarShow.value,
-  (value) => {
-    console.log("vitualOptionBarShow", value);
-  }
-);
-
-watch(
-  () => optionBarShow.value,
-  (value) => {
-    console.log("optionBarShow", value);
   }
 );
 
@@ -976,7 +1016,6 @@ function close() {
   visibleManager.resetShow();
   optionBarShow.value = false;
   logoShow.value = false;
-
   emits("close");
 }
 
@@ -1004,35 +1043,51 @@ function handleClose() {
   }
 }
 
-const clickOutside = (event: MouseEvent) => {
-  console.log("clickOutside");
-  console.log("tidyDisplayOptionBarMode", tidyDisplayOptionBarMode.value);
+const clickOutside = (event: Event) => {
   if (tidyDisplayOptionBarMode.value) {
-    if (
-      logoShow.value &&
-      !popoverVisible.value &&
-      logoRef.value &&
-      !logoRef.value.contains(event.target as Node) &&
-      optionBarRef.value &&
-      !optionBarRef.value.contains(event.target as Node)
-    ) {
+    if (logoShow.value && !popoverVisible.value && !shadowClickInside) {
       close();
     }
   } else {
-    if (
-      logoShow.value &&
-      optionBarShow.value &&
-      !popoverVisible.value &&
-      optionBarRef.value &&
-      !optionBarRef.value.contains(event.target as Node)
-    ) {
+    if (logoShow.value && !popoverVisible.value && !shadowClickInside) {
       close();
+    }
+  }
+  shadowClickInside = false;
+};
+
+const handleMousedownShadow = (event: Event) => {};
+
+const handleMouseupShadow = (event: Event) => {
+  if (
+    (prevOptionBarShow && logoShow.value) ||
+    (prevOptionBarShow && optionBarShow.value)
+  ) {
+    if (tidyDisplayOptionBarMode.value) {
+      if (
+        (logoRef.value && logoRef.value.contains(event.target as Node)) ||
+        (optionBarRef.value &&
+          optionBarRef.value.contains(event.target as Node))
+      ) {
+        shadowClickInside = true;
+      } else {
+        shadowClickInside = false;
+      }
+    } else {
+      if (
+        (logoRef.value && logoRef.value.contains(event.target as Node)) ||
+        (optionBarRef.value &&
+          optionBarRef.value.contains(event.target as Node))
+      ) {
+        shadowClickInside = true;
+      } else {
+        shadowClickInside = false;
+      }
     }
   }
 };
 
 const handleMousedown = (event: MouseEvent) => {
-  console.log("handleMousedown");
   if (tidyDisplayOptionBarMode.value) {
     prevOptionBarShow = logoShow.value;
   } else {
@@ -1041,11 +1096,16 @@ const handleMousedown = (event: MouseEvent) => {
 };
 
 const handleMouseup = (event: MouseEvent) => {
-  console.log("handleMouseup");
   if (
     (prevOptionBarShow && logoShow.value) ||
     (prevOptionBarShow && optionBarShow.value)
   ) {
+    clickOutside(event);
+  }
+};
+
+const handleKeyup = (event: KeyboardEvent) => {
+  if (logoShow.value || optionBarShow.value) {
     clickOutside(event);
   }
 };
@@ -1110,7 +1170,7 @@ const handleCopyToClipboard = () => {
 };
 
 const handleMinimize = () => {
-  toolbarShow.value = true;
+  iconMaximizeShow.value = true;
   popoverVisible.value = false;
   logoShow.value = false;
   optionBarShow.value = false;
@@ -1119,7 +1179,7 @@ const handleMinimize = () => {
 
 const handleGoback = () => {
   visibleManager.takeVisible(VisibleManagerTypeEnum.POPUP_CARD);
-  toolbarShow.value = false;
+  iconMaximizeShow.value = false;
   optionBarShow.value = true;
   popoverVisible.value = true;
   logoShow.value = true;
@@ -1157,73 +1217,64 @@ const getFeatureEnabledState = async (
 
 onMounted(async () => {
   consoleLog(LogLevelEnum.DEBUG, "onMounted");
-  visibleManager.register(VisibleManagerTypeEnum.POPUP_CARD);
-  optionBarRef.value = document.querySelector(".option-bar") as HTMLDivElement;
-  popoverRef.value = document.querySelector(".el-popover") as HTMLDivElement;
-  logoRef.value = document.querySelector(".cremind-logo") as HTMLDivElement;
   document.addEventListener("mouseup", handleMouseup);
   document.addEventListener("mousedown", handleMousedown);
-  const data: IPCMessageType = {
-    topic: IPCTopicEnum.COMMUNICATION,
-    type: CommunicationMessageTypeEnum.GET_FEATURES,
-    message: "Get JSON Features",
-  };
-  chrome.runtime.sendMessage(data, async (response) => {
-    if (response.features) {
-      featureList.value = response.features;
-      enabledFeatureStates.value = await Promise.all(
-        response.features.map((feature: any) => getFeatureEnabledState(feature))
-      );
-    } else {
-      featureList.value = [];
+  document.addEventListener("keyup", handleKeyup);
+  const shadowHost = document.querySelector("cremind-app-extension");
+  if (shadowHost) {
+    const shadowRoot = shadowHost.shadowRoot;
+    if (shadowRoot) {
+      visibleManager.register(VisibleManagerTypeEnum.POPUP_CARD);
+      optionBarRef.value = shadowRoot.querySelector(
+        ".popup-card-option-bar"
+      ) as HTMLDivElement;
+      popoverRef.value = shadowRoot.querySelector(
+        ".popup-card-popover"
+      ) as HTMLDivElement;
+      logoRef.value = shadowRoot.querySelector(
+        ".popup-card-cremind-logo"
+      ) as HTMLDivElement;
+
+      shadowRoot.addEventListener("mouseup", handleMouseupShadow);
+      shadowRoot.addEventListener("mousedown", handleMousedownShadow);
+
+      const data: IPCMessageType = {
+        topic: IPCTopicEnum.COMMUNICATION,
+        type: CommunicationMessageTypeEnum.GET_FEATURES,
+        message: "Get JSON Features",
+      };
+      chrome.runtime.sendMessage(data, async (response) => {
+        if (response.features) {
+          featureList.value = response.features;
+          enabledFeatureStates.value = await Promise.all(
+            response.features.map((feature: any) =>
+              getFeatureEnabledState(feature)
+            )
+          );
+        } else {
+          featureList.value = [];
+        }
+      });
     }
-  });
+  }
 });
 
 onUnmounted(() => {
   consoleLog(LogLevelEnum.DEBUG, "onUnmounted");
   document.removeEventListener("mouseup", handleMouseup);
   document.removeEventListener("mousedown", handleMousedown);
+  document.removeEventListener("keyup", handleKeyup);
+  const shadowHost = document.querySelector("cremind-app-extension");
+  if (shadowHost) {
+    const shadowRoot = shadowHost.shadowRoot;
+    if (shadowRoot) {
+      shadowRoot.removeEventListener("mouseup", handleMouseupShadow);
+      shadowRoot.removeEventListener("mousedown", handleMousedownShadow);
+    }
+  }
 });
 </script>
 
 <style scoped>
-.cremind-icon-bar {
-  position: absolute;
-}
-.option-bar {
-  margin-top: -6px;
-  margin-left: 16px;
-}
-
-.cremind-logo {
-  padding: 0px;
-}
-
-.scroll-content {
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  line-height: 1.3;
-  color: var(--el-text-color-regular);
-}
-
-.minimize-icon {
-  position: absolute;
-  top: 8px;
-  right: 36px;
-  cursor: pointer;
-}
-
-.close-icon {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  cursor: pointer;
-}
-
-.maximize {
-  position: fixed;
-  right: 14px;
-  bottom: 260px;
-}
+@import "@/styles/components/PopupMenu.scss";
 </style>

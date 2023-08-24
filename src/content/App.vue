@@ -1,5 +1,5 @@
 <template>
-  <div v-if="currentVisibleManager" class="cremind-features">
+  <div v-if="currentVisibleManager" class="app-cremind-features">
     <LoadImg
       :filename="'CreMind-logo-white-128.png'"
       :width="45"
@@ -12,7 +12,7 @@
       @mouseout="hideFeatures"
     >
       <ElTooltip content="Settings" placement="bottom">
-        <div class="settings">
+        <div class="app-settings">
           <Icon
             icon="solar:settings-line-duotone"
             :style="{ fontSize: '30px' }"
@@ -21,7 +21,7 @@
         </div>
       </ElTooltip>
       <ElTooltip content="Start Chat" placement="top">
-        <div class="button-chatting">
+        <div class="app-button-chatting">
           <Icon
             icon="fluent:chat-12-filled"
             :style="{ fontSize: '30px' }"
@@ -30,7 +30,7 @@
         </div>
       </ElTooltip>
       <ElTooltip content="Apps" placement="top">
-        <div class="apps">
+        <div class="app-apps">
           <Icon
             icon="icon-park-twotone:more-app"
             :style="{ fontSize: '25px' }"
@@ -40,13 +40,13 @@
       </ElTooltip>
     </div>
   </div>
-  <MainCard
+  <PopupMenu
     :selectedText="selectedText"
     :top="top"
     :left="left"
-    :show="showMainCard"
+    :show="showPopupMenu"
     :selectedMode="selectedMode"
-    @close="handleMainCardClose"
+    @close="handlePopupMenuClose"
   />
   <ChatDialog />
   <Apps v-model="appVisible" />
@@ -56,7 +56,7 @@
 import { computed, onMounted, Ref, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { ElTooltip } from "element-plus";
-import { MainCard } from "@/components";
+import { PopupMenu } from "@/components";
 import { ChatDialog } from "@/components";
 import { Apps } from "@/components";
 import { LoadImg } from "@/components";
@@ -85,7 +85,7 @@ const top = ref("");
 const left = ref("");
 const topMousedown = ref("");
 const leftMousedown = ref("");
-const showMainCard = ref(false);
+const showPopupMenu = ref(false);
 const selectedMode: Ref<selectedModeEnum> = ref(
   selectedModeEnum.EDITABLE_CONTEXT_MENU
 );
@@ -116,7 +116,7 @@ function checkVisibleState(): boolean {
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  if (!showMainCard.value) {
+  if (!showPopupMenu.value) {
     if (checkVisibleState() === false) {
       return;
     }
@@ -135,7 +135,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
     top.value = topMousedown.value;
     left.value = leftMousedown.value;
-    showMainCard.value = true;
+    showPopupMenu.value = true;
   }
 });
 
@@ -159,7 +159,7 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
   var range = selection!.getRangeAt(0);
   const rect = range.getBoundingClientRect();
   const activeElement = document.activeElement as HTMLElement;
-  if (selectionText && !mousedownSelectedText.value && !showMainCard.value) {
+  if (selectionText && !mousedownSelectedText.value && !showPopupMenu.value) {
     selectedText.value = selectionText;
     SystemVariableParser.getInstance().setSelectedText(selectionText);
     var rects = range.getClientRects();
@@ -181,7 +181,7 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
       selectedMode.value = selectedModeEnum.READONLY;
     }
     if (checkVisibleState() === true) {
-      showMainCard.value = true;
+      showPopupMenu.value = true;
     }
   }
 });
@@ -190,7 +190,7 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
   const pressedKey = event.key;
   const selectionText = window.getSelection()?.toString().trim();
   if (pressedKey === "Shift" || pressedKey === "Meta") {
-    if (selectionText && !showMainCard.value) {
+    if (selectionText && !showPopupMenu.value) {
       selectedText.value = selectionText;
       SystemVariableParser.getInstance().setSelectedText(selectionText);
       top.value = topMousedown.value;
@@ -207,18 +207,14 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
         selectedMode.value = selectedModeEnum.READONLY;
       }
       if (checkVisibleState() === true) {
-        showMainCard.value = true;
+        showPopupMenu.value = true;
       }
-    }
-  } else {
-    if (checkVisibleState() === true) {
-      showMainCard.value = false;
     }
   }
 });
 
-function handleMainCardClose() {
-  showMainCard.value = false;
+function handlePopupMenuClose() {
+  showPopupMenu.value = false;
 }
 
 const handleSettings = () => {
@@ -261,47 +257,4 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
-.cremind-features {
-  position: fixed;
-  right: 8px;
-  bottom: 160px;
-  z-index: 1000000000;
-}
-
-.settings {
-  position: absolute;
-  right: 52px;
-  bottom: 6px;
-  opacity: 0.7;
-  color: rgb(140, 140, 140);
-}
-.settings:hover {
-  font-weight: bold;
-  opacity: 1;
-}
-
-.button-chatting {
-  position: absolute;
-  right: 40px;
-  bottom: 40px;
-  opacity: 0.7;
-  color: rgb(140, 140, 140);
-}
-.button-chatting:hover {
-  font-weight: bold;
-  opacity: 1;
-}
-
-.apps {
-  position: absolute;
-  right: 10px;
-  bottom: 55px;
-  opacity: 0.7;
-  color: rgb(140, 140, 140);
-}
-.apps:hover {
-  font-weight: bold;
-  opacity: 1;
-}
-</style>
+<style scoped></style>

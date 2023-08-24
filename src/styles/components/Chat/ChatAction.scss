@@ -1,0 +1,24 @@
+.chat-action-send-icon {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  opacity: 0.4;
+}
+.chat-action-send-icon:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+.chat-action-w-full {
+  width: 100%;
+}
+.chat-action-px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.chat-action-py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.chat-action-rounded-xl {
+  border-radius: 0.75rem;
+}

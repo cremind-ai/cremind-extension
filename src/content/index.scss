@@ -1,3 +1,46 @@
 // @tailwind base;
 // @tailwind components;
 // @tailwind utilities;
+
+.app-cremind-features {
+  position: fixed;
+  right: 8px;
+  bottom: 160px;
+  z-index: 1000000000;
+}
+
+.app-settings {
+  position: absolute;
+  right: 52px;
+  bottom: 6px;
+  opacity: 0.7;
+  color: rgb(140, 140, 140);
+}
+.app-settings:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
+.app-button-chatting {
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+  opacity: 0.7;
+  color: rgb(140, 140, 140);
+}
+.app-button-chatting:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
+.app-apps {
+  position: absolute;
+  right: 10px;
+  bottom: 55px;
+  opacity: 0.7;
+  color: rgb(140, 140, 140);
+}
+.app-apps:hover {
+  font-weight: bold;
+  opacity: 1;
+}

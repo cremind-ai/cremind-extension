@@ -1,14 +1,14 @@
 <template>
-  <main class="w-full">
-    <div class="common" :class="isLeft ? '' : 'flex-row-reverse'">
+  <main class="cremind-w-full">
+    <div class="common" :class="isLeft ? '' : 'ballon-chat-flex-row-reverse'">
       <div style="display: flex" :style="{ 'max-width': bubbleMaxWidth }">
         <div
           :class="
             isLeft
-              ? 'rounded-bubble-left bg-gray-600'
-              : 'rounded-bubble-right bg-blue-800'
+              ? 'ballon-chat-rounded-bubble-left ballon-chat-bg-gray-600'
+              : 'ballon-chat-rounded-bubble-right ballon-chat-bg-blue-800'
           "
-          class="bubble chat-message-content"
+          class="bubble ballon-chat-chat-message-content"
           v-html="markedRender(props.message)"
         ></div>
       </div>
@@ -50,59 +50,4 @@ const markedRender = (text: string) => {
 };
 </script>
 
-<style scoped>
-.w-full {
-  width: 100%;
-}
-.common {
-  margin-bottom: 1.25rem;
-  display: flex;
-}
-
-.bubble {
-  max-width: var(--bubble-max-width, calc(100% - 2.25rem));
-  /* Adjust the padding and other styles accordingly */
-  --tw-text-opacity: 1;
-  color: rgb(243 244 246 / var(--tw-text-opacity));
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  /* padding-top: 1rem;
-  padding-bottom: 1rem; */
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  flex: 1 1 0%;
-}
-
-.flex-row-reverse {
-  flex-direction: row-reverse;
-}
-
-.bg-gray-600 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(75 85 99 / var(--tw-bg-opacity));
-}
-
-.bg-blue-800 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(30 64 175 / var(--tw-bg-opacity));
-}
-
-.rounded-bubble-left {
-  border-top-right-radius: 1.5rem;
-  border-bottom-right-radius: 1.5rem;
-  border-top-left-radius: 1.5rem;
-}
-
-.rounded-bubble-right {
-  border-top-left-radius: 1.5rem;
-  border-bottom-left-radius: 1.5rem;
-  border-top-right-radius: 1.5rem;
-}
-
-.chat-message-content {
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  line-height: 1.3;
-  color: rgb(227, 227, 227);
-}
-</style>
+<style scoped></style>

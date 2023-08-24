@@ -2,9 +2,6 @@ import { defineConfig, loadEnv } from "vite";
 import { crx } from "@crxjs/vite-plugin";
 import vue from "@vitejs/plugin-vue";
 import zipPack from "vite-plugin-zip-pack";
-import builtins from "rollup-plugin-node-builtins";
-import globals from "rollup-plugin-node-globals";
-import nodePolyfills from "rollup-plugin-polyfill-node";
 import manifest from "./src/manifest";
 import { resolve } from "path";
 
@@ -43,7 +40,7 @@ export default defineConfig(({ command, mode }) => {
       emptyOutDir: true,
       outDir: "build",
       rollupOptions: {
-        plugins: [nodePolyfills(), builtins(), globals()],
+        plugins: [],
         output: {
           chunkFileNames: "assets/chunk-[hash].js",
         },

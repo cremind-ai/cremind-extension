@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
 
-const crx = ref('create-chrome-ext')
+const crx = ref("create-chrome-ext");
 </script>
 
 <template>
@@ -10,11 +10,13 @@ const crx = ref('create-chrome-ext')
 
     <h6>v 0.0.0</h6>
 
-    <a href="https://www.npmjs.com/package/create-chrome-ext" target="_blank">Power by {{ crx }}</a>
+    <a href="https://www.npmjs.com/package/create-chrome-ext" target="_blank"
+      >Power by {{ crx }}</a
+    >
   </main>
 </template>
 
-<style>
+<style scoped>
 main {
   text-align: center;
   padding: 1em;

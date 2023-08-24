@@ -1,0 +1,35 @@
+.apps-maximize-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+}
+
+.apps-minimize-icon {
+  position: absolute;
+  top: 8px;
+  right: 36px;
+  cursor: pointer;
+}
+
+.apps-close-icon {
+  position: absolute;
+  top: 8px;
+  right: 64px;
+  cursor: pointer;
+}
+
+.apps-cremind-icon {
+  position: fixed;
+  right: 5px;
+  bottom: 180px;
+}
+
+.apps-scroll-content {
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--el-text-color-regular);
+  /* white-space: pre-wrap;
+  word-wrap: break-word; */
+}

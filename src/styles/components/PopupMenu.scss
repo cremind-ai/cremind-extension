@@ -1,0 +1,42 @@
+.popup-card-cremind-icon-bar {
+  position: absolute;
+}
+.popup-card-option-bar {
+  margin-top: -6px;
+  margin-left: 16px;
+}
+
+.popup-card-cremind-logo {
+  padding: 1px;
+}
+
+.popup-card-menu-bar-button {
+  padding: 2px;
+}
+
+.popup-card-scroll-content {
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--el-text-color-regular);
+}
+
+.popup-card-minimize-icon {
+  position: absolute;
+  top: 8px;
+  right: 36px;
+  cursor: pointer;
+}
+
+.popup-card-close-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+}
+
+.popup-card-maximize {
+  position: fixed;
+  right: 14px;
+  bottom: 260px;
+}
