@@ -19,7 +19,7 @@
     placement="bottom"
     :visible="popoverVisible && currentVisibleManager"
     :width="width"
-    popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(188, 112, 164, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%);"
+    popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(255, 78, 199, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%); border-radius: 14px;"
   >
     <template #reference>
       <div
@@ -1105,8 +1105,12 @@ const handleMouseup = (event: MouseEvent) => {
 };
 
 const handleKeyup = (event: KeyboardEvent) => {
-  if (logoShow.value || optionBarShow.value) {
-    clickOutside(event);
+  const pressedKey = event.key;
+  console.log("handleKeyup", pressedKey);
+  if (pressedKey !== "Shift" && pressedKey !== "Meta") {
+    if (logoShow.value || optionBarShow.value) {
+      clickOutside(event);
+    }
   }
 };
 
