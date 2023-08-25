@@ -2,6 +2,7 @@ import { ResPayloadType } from "@/types";
 import { consoleLog, LogLevelEnum } from "./log";
 import { Status } from "@/constants/status";
 import { CWException } from "@/types/exception";
+import { OperatingSystemEnum } from "@/constants";
 
 function uuid() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -96,12 +97,65 @@ function textSplit(content: string): Promise<string[]> {
   });
 }
 
+function crawlWebsite(url: string): Promise<string[]> {
+  return new Promise<string[]>((resolve, reject) => {
+    console.log("crawlWebsite", url);
+    fetch(`${import.meta.env.VITE_UNSTRUCTURED_API!}/loader/crawl`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: url,
+        chunk_size: 500,
+        chunk_overlap: 0,
+        js: true,
+        depth: 1,
+        max_pages: 100,
+        max_time: 60,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new CWException(
+            Status.BACKEND_REQUEST_UNKNOWN_ERROR,
+            "Request unknown error"
+          );
+        }
+        return response.json();
+      })
+      .then((resData: ResPayloadType) => {
+        if (resData.status === Status.SUCCESS && resData.payload) {
+          resolve(resData.payload.items);
+        }
+      })
+      .catch((error) => {
+        reject(
+          new CWException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
+        );
+      });
+  });
+}
+
+function detectOperatingSystem(): OperatingSystemEnum {
+  if (navigator.userAgent.indexOf("Win") != -1)
+    return OperatingSystemEnum.WINDOWS;
+  if (navigator.userAgent.indexOf("Mac") != -1)
+    return OperatingSystemEnum.MACOS;
+  if (navigator.userAgent.indexOf("X11") != -1) return OperatingSystemEnum.UNIX;
+  if (navigator.userAgent.indexOf("Linux") != -1)
+    return OperatingSystemEnum.LINUX;
+  return OperatingSystemEnum.WINDOWS;
+}
+
 export {
   uuid,
   streamAsyncIterable,
   sleep,
   tokenConcat,
   textSplit,
+  crawlWebsite,
+  detectOperatingSystem,
   consoleLog,
   LogLevelEnum,
 };

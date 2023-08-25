@@ -10,6 +10,13 @@ export enum ConversationRoleEnum {
   ASSISTANT = 1,
 }
 
+export enum OperatingSystemEnum {
+  WINDOWS = "WINDOWS",
+  MACOS = "MACOS",
+  UNIX = "UNIX",
+  LINUX = "LINUX",
+}
+
 export const APP_RETRY_TIME = 10000;
 export const APP_MAX_RETRIES = 20;
 export const APP_MAX_CHUNKSIZE = 5000;

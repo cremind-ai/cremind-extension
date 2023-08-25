@@ -1,55 +1,60 @@
 <template>
-  <div v-if="currentVisibleManager" class="app-cremind-features">
-    <LoadImg
-      :filename="'CreMind-logo-white-128.png'"
-      :width="45"
-      @mouseover="showFeatures"
-      @mouseout="hideFeatures"
-    />
-    <div
-      v-if="featureVisible"
-      @mouseover="showFeatures"
-      @mouseout="hideFeatures"
-    >
-      <ElTooltip content="Settings" placement="bottom">
-        <div class="app-settings">
-          <Icon
-            icon="solar:settings-line-duotone"
-            :style="{ fontSize: '30px' }"
-            @click="handleSettings"
-          />
-        </div>
+  <div v-show="logoShow">
+    <div v-if="currentVisibleManager" class="app-cremind-features">
+      <ElTooltip content="Ctrl+Shift+Z: hide it" placement="bottom">
+        <LoadImg
+          :filename="'CreMind-logo-white-128.png'"
+          :width="45"
+          @mouseover="showFeatures"
+          @mouseout="hideFeatures"
+        />
       </ElTooltip>
-      <ElTooltip content="Start Chat" placement="top">
-        <div class="app-button-chatting">
-          <Icon
-            icon="fluent:chat-12-filled"
-            :style="{ fontSize: '30px' }"
-            @click="handleStartChat"
-          />
-        </div>
-      </ElTooltip>
-      <ElTooltip content="Apps" placement="top">
-        <div class="app-apps">
-          <Icon
-            icon="icon-park-twotone:more-app"
-            :style="{ fontSize: '25px' }"
-            @click="handleApps"
-          />
-        </div>
-      </ElTooltip>
+
+      <div
+        v-if="featureVisible"
+        @mouseover="showFeatures"
+        @mouseout="hideFeatures"
+      >
+        <ElTooltip content="Settings" placement="bottom">
+          <div class="app-settings">
+            <Icon
+              icon="solar:settings-line-duotone"
+              :style="{ fontSize: '30px' }"
+              @click="handleSettings"
+            />
+          </div>
+        </ElTooltip>
+        <ElTooltip content="Start Chat" placement="top">
+          <div class="app-button-chatting">
+            <Icon
+              icon="fluent:chat-12-filled"
+              :style="{ fontSize: '30px' }"
+              @click="handleStartChat"
+            />
+          </div>
+        </ElTooltip>
+        <ElTooltip content="Apps" placement="top">
+          <div class="app-apps">
+            <Icon
+              icon="icon-park-twotone:more-app"
+              :style="{ fontSize: '25px' }"
+              @click="handleApps"
+            />
+          </div>
+        </ElTooltip>
+      </div>
     </div>
+    <PopupMenu
+      :selectedText="selectedText"
+      :top="top"
+      :left="left"
+      :show="showPopupMenu"
+      :selectedMode="selectedMode"
+      @close="handlePopupMenuClose"
+    />
+    <ChatDialog />
+    <Apps v-model="appVisible" />
   </div>
-  <PopupMenu
-    :selectedText="selectedText"
-    :top="top"
-    :left="left"
-    :show="showPopupMenu"
-    :selectedMode="selectedMode"
-    @close="handlePopupMenuClose"
-  />
-  <ChatDialog />
-  <Apps v-model="appVisible" />
 </template>
 
 <script setup lang="ts">
@@ -67,18 +72,20 @@ import {
   IPCTopicEnum,
   selectedModeEnum,
 } from "@/types";
-import { consoleLog, LogLevelEnum } from "@/utils";
+import { consoleLog, detectOperatingSystem, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { useChatDialogStore } from "@/store/chat_dialog";
 import {
   useVisibleManagerStore,
   VisibleManagerTypeEnum,
 } from "@/store/visible_manager";
+import { OperatingSystemEnum } from "@/constants";
 
 const userSettings = useUserSettingsStore();
 const chatDialog = useChatDialogStore();
 const visibleManager = useVisibleManagerStore();
 
+const logoShow = ref(true);
 const selectedText = ref("");
 const mousedownSelectedText = ref(false);
 const top = ref("");
@@ -183,6 +190,28 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
     if (checkVisibleState() === true) {
       showPopupMenu.value = true;
     }
+  }
+});
+
+document.addEventListener("keydown", function (event: KeyboardEvent) {
+  if (
+    (event.ctrlKey &&
+      event.shiftKey &&
+      event.key === "z" &&
+      detectOperatingSystem() !== OperatingSystemEnum.MACOS) ||
+    (event.metaKey &&
+      event.shiftKey &&
+      event.key === "z" &&
+      detectOperatingSystem() === OperatingSystemEnum.MACOS)
+  ) {
+    if (checkVisibleState() === true) {
+      if (logoShow.value) {
+        logoShow.value = false;
+      } else {
+        logoShow.value = true;
+      }
+    }
+    event.preventDefault();
   }
 });
 

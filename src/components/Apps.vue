@@ -72,6 +72,7 @@
             >
               <ElMenuItem index="0">UPLOAD</ElMenuItem>
               <ElMenuItem index="1">INSERT TEXT</ElMenuItem>
+              <ElMenuItem index="2">URL</ElMenuItem>
             </ElMenu>
             <ElUpload
               v-if="activeIndexInput === InputMode.UPLOAD"
@@ -103,6 +104,11 @@
               placeholder="Please insert text here"
               :autosize="{ minRows: 9, maxRows: 20 }"
               type="textarea"
+            />
+            <ElInput
+              v-if="activeIndexInput === InputMode.URL"
+              v-model="url"
+              placeholder="https://example.com"
             />
           </ElCard>
         </ElTimelineItem>
@@ -282,6 +288,7 @@ import {
   sleep,
   tokenConcat,
   textSplit,
+  crawlWebsite,
 } from "@/utils";
 import { Status } from "@/constants/status";
 import {
@@ -305,6 +312,7 @@ import {
 enum InputMode {
   UPLOAD = "0",
   INSERT_TEXT = "1",
+  URL = "2",
 }
 
 const visibleManager = useVisibleManagerStore();
@@ -366,6 +374,7 @@ const contentMaxHeight = ref(
 const outputContent = ref("");
 const activeIndexInput = ref(InputMode.UPLOAD);
 const insertText = ref("");
+const url = ref("");
 const fileList = ref<UploadUserFile[]>([]);
 const currentVisibleManager = computed(() => {
   return visibleManager.getVisible(VisibleManagerTypeEnum.APP_DIALOG);
@@ -573,10 +582,18 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
         return;
       }
       uploadItems = await textSplit(insertText.value);
+    } else if (activeIndexInput.value === InputMode.URL) {
+      if (url.value.trim() === "") {
+        return;
+      }
+      uploadItems = await crawlWebsite(url.value);
     }
     if (uploadItems.length === 0) {
       return;
     }
+
+    console.log(uploadItems);
+
     const chunkSize: number = currentFeature.value.Segmentation
       ? currentFeature.value.ChunkSize!
       : APP_MAX_CHUNKSIZE;

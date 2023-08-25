@@ -1106,7 +1106,6 @@ const handleMouseup = (event: MouseEvent) => {
 
 const handleKeyup = (event: KeyboardEvent) => {
   const pressedKey = event.key;
-  console.log("handleKeyup", pressedKey);
   if (pressedKey !== "Shift" && pressedKey !== "Meta") {
     if (logoShow.value || optionBarShow.value) {
       clickOutside(event);
