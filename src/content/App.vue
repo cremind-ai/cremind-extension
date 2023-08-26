@@ -1,7 +1,7 @@
 <template>
   <div v-show="logoShow">
     <div v-if="currentVisibleManager" class="app-cremind-features">
-      <ElTooltip content="Ctrl+Shift+Z: hide it" placement="bottom">
+      <ElTooltip content="Ctrl+Shift+Z: hide me" placement="bottom">
         <LoadImg
           :filename="'CreMind-logo-white-128.png'"
           :width="45"

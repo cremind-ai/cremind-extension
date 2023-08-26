@@ -592,12 +592,11 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
       return;
     }
 
-    console.log(uploadItems);
-
     const chunkSize: number = currentFeature.value.Segmentation
       ? currentFeature.value.ChunkSize!
       : APP_MAX_CHUNKSIZE;
     const items = await tokenConcat(uploadItems, chunkSize);
+    console.log(items);
     if (!currentFeature.value.Segmentation && items.length > 1) {
       ElMessage.error(
         "This feature exceeds the number of input tokens allowed! Please upload the file or insert the text with a smaller."

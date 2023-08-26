@@ -99,7 +99,6 @@ function textSplit(content: string): Promise<string[]> {
 
 function crawlWebsite(url: string): Promise<string[]> {
   return new Promise<string[]>((resolve, reject) => {
-    console.log("crawlWebsite", url);
     fetch(`${import.meta.env.VITE_UNSTRUCTURED_API!}/loader/crawl`, {
       method: "POST",
       headers: {
