@@ -1,7 +1,7 @@
 <template>
   <div v-show="logoShow">
     <div v-if="currentVisibleManager" class="app-cremind-features">
-      <ElTooltip content="Ctrl+Shift+Z: hide me" placement="bottom">
+      <ElTooltip :content="hideMeLabel" placement="bottom">
         <LoadImg
           :filename="'CreMind-logo-white-128.png'"
           :width="45"
@@ -103,6 +103,13 @@ const currentVisibleManager = computed(() => {
   return visibleManager.getVisible(VisibleManagerTypeEnum.LOGO);
 });
 const visibleStates = computed(() => visibleManager.getVisibles);
+const hideMeLabel = computed(() => {
+  if (detectOperatingSystem() === OperatingSystemEnum.MACOS) {
+    return "Cmd+Shift+Z: hide me";
+  } else {
+    return "Ctrl+Shift+Z: hide me";
+  }
+});
 let showFeaturesTimeout: any;
 
 watch(
@@ -197,11 +204,11 @@ document.addEventListener("keydown", function (event: KeyboardEvent) {
   if (
     (event.ctrlKey &&
       event.shiftKey &&
-      event.key === "z" &&
+      event.key.toLowerCase() === "z" &&
       detectOperatingSystem() !== OperatingSystemEnum.MACOS) ||
     (event.metaKey &&
       event.shiftKey &&
-      event.key === "z" &&
+      event.key.toLowerCase() === "z" &&
       detectOperatingSystem() === OperatingSystemEnum.MACOS)
   ) {
     if (checkVisibleState() === true) {
