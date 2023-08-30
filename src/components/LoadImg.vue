@@ -12,8 +12,4 @@ const url = computed(() => chrome.runtime.getURL(`/img/${props.filename}`));
 const dynamicWidth = computed(() => props.width + "px");
 </script>
 
-<style scoped>
-.load-img {
-  filter: none;
-}
-</style>
+<style scoped></style>

@@ -389,59 +389,70 @@
         </div>
       </div>
     </template>
-    <div style="display: flex; justify-content: flex-end; margin-right: 50px">
-      <ElButtonGroup>
-        <ElTooltip content="Regenerate response" placement="top">
-          <ElButton plain @click="handleRegenerate">
-            <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
-          </ElButton>
-        </ElTooltip>
-        <ElTooltip content="Copy to clipboard" placement="top">
-          <ElButton plain @click="handleCopyToClipboard">
-            <Icon
-              icon="solar:copy-line-duotone"
-              :style="{ fontSize: '20px' }"
-            />
-          </ElButton>
-        </ElTooltip>
-      </ElButtonGroup>
-    </div>
-    <ElButton
-      class="popup-card-minimize-icon"
-      type="warning"
-      plain
-      :icon="SemiSelect"
-      @click="handleMinimize"
-      size="small"
-      circle
-    ></ElButton>
-    <ElButton
-      class="popup-card-close-icon"
-      type="danger"
-      plain
-      :icon="Close"
-      @click="handleClose"
-      size="small"
-      circle
-    ></ElButton>
-    <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <div
-        ref="contentRef"
-        class="popup-card-scroll-content"
+
+    <div class="popup-card-popover-main">
+      <Icon
+        class="popup-card-loading"
+        icon="line-md:loading-twotone-loop"
         :style="{
-          padding: '20px',
+          visibility: isStreaming ? 'visible' : 'hidden',
         }"
-      >
-        <div v-if="selectedMode !== selectedModeEnum.EDITABLE_CONTEXT_MENU">
-          <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
+      />
+
+      <div style="display: flex; justify-content: flex-end; margin-right: 60px">
+        <ElButtonGroup>
+          <ElTooltip content="Regenerate response" placement="top">
+            <ElButton plain @click="handleRegenerate">
+              <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+            </ElButton>
+          </ElTooltip>
+          <ElTooltip content="Copy to clipboard" placement="top">
+            <ElButton plain @click="handleCopyToClipboard">
+              <Icon
+                icon="solar:copy-line-duotone"
+                :style="{ fontSize: '20px' }"
+              />
+            </ElButton>
+          </ElTooltip>
+        </ElButtonGroup>
+      </div>
+      <ElButton
+        class="popup-card-minimize-icon"
+        type="warning"
+        plain
+        :icon="SemiSelect"
+        @click="handleMinimize"
+        size="small"
+        circle
+      ></ElButton>
+      <ElButton
+        class="popup-card-close-icon"
+        type="danger"
+        plain
+        :icon="Close"
+        @click="handleClose"
+        size="small"
+        circle
+      ></ElButton>
+      <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
+        <div
+          ref="contentRef"
+          class="popup-card-scroll-content"
+          :style="{
+            padding: '20px',
+          }"
+        >
+          <div v-if="selectedMode !== selectedModeEnum.EDITABLE_CONTEXT_MENU">
+            <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
             selectedText
           }}</pre>
           <ElDivider></ElDivider> -->
+          </div>
+          <div v-html="markedRender(outputContent)"></div>
         </div>
-        <div v-html="markedRender(outputContent)"></div>
-      </div>
-    </ElScrollbar>
-    <ChatAction @new-chat="newChat" v-model:blockSend="blockSend" />
+      </ElScrollbar>
+      <ChatAction @new-chat="newChat" v-model:blockSend="blockSend" />
+    </div>
   </ElPopover>
   <ElDrawer
     v-model="drawer"
@@ -502,7 +513,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, Ref, computed } from "vue";
+import {
+  ref,
+  watch,
+  onMounted,
+  onUnmounted,
+  Ref,
+  computed,
+  nextTick,
+} from "vue";
 import { ElPopover } from "element-plus";
 import { ElButton } from "element-plus";
 import { ElButtonGroup } from "element-plus";
@@ -552,6 +571,12 @@ import {
   VisibleManagerTypeEnum,
 } from "@/store/visible_manager";
 import { LLM } from "@/lib/llm";
+import {
+  AIMode,
+  AI_SYSTEM_RESPONSE_END_BLOCK,
+  AI_SYSTEM_RESPONSE_START_BLOCK,
+} from "@/constants";
+import { ResponseParser } from "@/lib/response_parser";
 // import { shadowRoot } from "@/content";
 
 const visibleManager = useVisibleManagerStore();
@@ -597,6 +622,16 @@ const emits = defineEmits(["close"]);
 const chatDialog = useChatDialogStore();
 const userSettings = useUserSettingsStore();
 
+const aiProvider = computed(() => userSettings.getAiProvider);
+const aiProviderKey = computed(() => {
+  if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
+    return "ChatGPT";
+  } else if (userSettings.getAiProvider === AIMode.BARD) {
+    return "Bard";
+  }
+  return "ChatGPT";
+});
+
 const optionBarShow = ref(props.show);
 const tidyDisplayOptionBarMode = ref(userSettings.getTidyDisplayOptionBarMode);
 const vitualOptionBarShow = ref(false);
@@ -636,16 +671,25 @@ const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
     const { READONLY, EDITABLE, READONLY_CONTEXT_MENU, EDITABLE_CONTEXT_MENU } =
       feature;
-
     switch (selectedMode.value) {
       case selectedModeEnum.READONLY:
-        return READONLY !== undefined;
+        return (
+          READONLY !== undefined && READONLY![aiProviderKey.value] !== null
+        );
       case selectedModeEnum.EDITABLE:
-        return EDITABLE !== undefined;
+        return (
+          EDITABLE !== undefined && EDITABLE![aiProviderKey.value] !== null
+        );
       case selectedModeEnum.READONLY_CONTEXT_MENU:
-        return READONLY_CONTEXT_MENU !== undefined;
+        return (
+          READONLY_CONTEXT_MENU !== undefined &&
+          READONLY_CONTEXT_MENU![aiProviderKey.value] !== null
+        );
       case selectedModeEnum.EDITABLE_CONTEXT_MENU:
-        return EDITABLE_CONTEXT_MENU !== undefined;
+        return (
+          EDITABLE_CONTEXT_MENU !== undefined &&
+          EDITABLE_CONTEXT_MENU![aiProviderKey.value] !== null
+        );
       default:
         return false;
     }
@@ -674,7 +718,7 @@ const moreOptions: Ref<
 ]);
 
 const blockSend = ref(false);
-const isDark = ref(userSettings.getIsDark);
+const isDark = computed(() => userSettings.getIsDark);
 
 const llm = new LLM();
 
@@ -781,13 +825,6 @@ watch(
 );
 
 watch(
-  () => userSettings.getIsDark,
-  (value) => {
-    isDark.value = value;
-  }
-);
-
-watch(
   () => userSettings.getTidyDisplayOptionBarMode,
   (value) => {
     tidyDisplayOptionBarMode.value = value;
@@ -807,9 +844,9 @@ watch(
     if (value) {
       vitualOptionBarShow.value = true;
     } else {
-      setTimeout(() => {
+      nextTick(() => {
         vitualOptionBarShow.value = false;
-      }, 10);
+      });
     }
   }
 );
@@ -862,7 +899,11 @@ const readOriginalActiveElementValue = (): string => {
 };
 
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
-  const chainBuilder = new ChainBuilder(llm, currentFeature.value.Chains);
+  isStreaming.value = true;
+  const chainBuilder = new ChainBuilder(
+    llm,
+    currentFeature.value[aiProviderKey.value]!.Chains
+  );
   consoleLog(LogLevelEnum.DEBUG, variables);
   for (const key in variables) {
     const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`;
@@ -871,8 +912,9 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   }
   await chainBuilder.buildChains(variables);
   const result = await chainBuilder.executeChains(true, {
-    conversationId: conversationId,
-    messageId: messageId,
+    aiProvider: aiProvider.value,
+    conversationId: conversationId!,
+    messageId: messageId!,
     conversationMode: ConversationModeEnum.NORMAL,
     deleteConversation: true,
   });
@@ -882,8 +924,8 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   if (
     (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
       currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
-    currentFeature.value.WriteResponse &&
-    currentFeature.value.WriteResponse === true
+    currentFeature.value[aiProviderKey.value]!.WriteResponse &&
+    currentFeature.value[aiProviderKey.value]!.WriteResponse === true
   ) {
     // Remove selected text
     let text = readOriginalActiveElementValue();
@@ -898,8 +940,8 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     if (
       (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
         currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
-      currentFeature.value.WriteResponse &&
-      currentFeature.value.WriteResponse === true
+      currentFeature.value[aiProviderKey.value]!.WriteResponse &&
+      currentFeature.value[aiProviderKey.value]!.WriteResponse === true
     ) {
       responses += data;
       writeOriginalActiveElementValue(startPart + responses + endPart);
@@ -915,6 +957,28 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
     isStreaming.value = false;
     consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
+    let extractText = ResponseParser.getInstance().extractTextFromBlock(
+      AI_SYSTEM_RESPONSE_START_BLOCK,
+      AI_SYSTEM_RESPONSE_END_BLOCK,
+      data.message
+    );
+    if (extractText) {
+      outputContent.value = extractText;
+    } else {
+      outputContent.value = data.message;
+    }
+    if (
+      (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
+        currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
+      currentFeature.value[aiProviderKey.value]!.WriteResponse &&
+      currentFeature.value[aiProviderKey.value]!.WriteResponse === true
+    ) {
+      writeOriginalActiveElementValue(
+        startPart + outputContent.value + endPart
+      );
+    }
+    scrollToBottom();
+    width.value = 700;
   });
   result.on("error", (error: CWException) => {
     isStreaming.value = false;
@@ -942,7 +1006,6 @@ async function handleFeature(
 ) {
   const variables: { [key: string]: string } = {};
   let checkShowDrawer: boolean = false;
-  isStreaming.value = true;
   currentFeature.value = feature;
   currentFeatureId.value = id;
   currentFeatureMode.value = type;
@@ -1219,7 +1282,6 @@ const getFeatureEnabledState = async (
 };
 
 onMounted(async () => {
-  consoleLog(LogLevelEnum.DEBUG, "onMounted");
   document.addEventListener("mouseup", handleMouseup);
   document.addEventListener("mousedown", handleMousedown);
   document.addEventListener("keyup", handleKeyup);
@@ -1263,7 +1325,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "onUnmounted");
   document.removeEventListener("mouseup", handleMouseup);
   document.removeEventListener("mousedown", handleMousedown);
   document.removeEventListener("keyup", handleKeyup);
@@ -1279,5 +1340,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@import "@/styles/components/PopupMenu.scss";
+/* @import "@/styles/components/PopupMenu.scss"; */
 </style>

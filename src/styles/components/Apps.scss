@@ -26,10 +26,19 @@
 }
 
 .apps-scroll-content {
+  position: relative;
   font-family: "Roboto", sans-serif;
   font-size: 14px;
   line-height: 1.3;
   color: var(--el-text-color-regular);
   /* white-space: pre-wrap;
   word-wrap: break-word; */
+}
+
+.apps-scroll-content-loading {
+  font-size: 25px;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }

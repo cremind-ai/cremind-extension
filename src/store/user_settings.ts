@@ -1,8 +1,10 @@
 import { defineStore } from "pinia";
 import { ChromeStorage } from "@/hooks/chrome_storage";
+import { AIMode } from "@/constants";
 
 interface UserSettingsState {
   isDark: boolean;
+  aiProvider: AIMode;
   tidyDisplayOptionBarMode: boolean;
 }
 
@@ -11,12 +13,16 @@ export const useUserSettingsStore = defineStore({
   state: (): UserSettingsState => {
     return {
       isDark: false,
+      aiProvider: AIMode.CHAT_GPT,
       tidyDisplayOptionBarMode: false,
     };
   },
   getters: {
     getIsDark(): boolean {
       return this.isDark;
+    },
+    getAiProvider(): AIMode {
+      return this.aiProvider;
     },
     getTidyDisplayOptionBarMode(): boolean {
       return this.tidyDisplayOptionBarMode;
@@ -51,6 +57,10 @@ export const useUserSettingsStore = defineStore({
       await this.updateSettingsInStorage();
       this.applyDarkModeClass(true);
     },
+    async setAIProvider(aiProvider: AIMode) {
+      this.aiProvider = aiProvider;
+      await this.updateSettingsInStorage();
+    },
     async setTidyDisplayOptionBarMode(tidyDisplayOptionBarMode: boolean) {
       this.tidyDisplayOptionBarMode = tidyDisplayOptionBarMode;
       await this.updateSettingsInStorage();
@@ -58,6 +68,7 @@ export const useUserSettingsStore = defineStore({
     async updateSettingsInStorage() {
       const settingsToStore: UserSettingsState = {
         isDark: this.isDark,
+        aiProvider: this.aiProvider,
         tidyDisplayOptionBarMode: this.tidyDisplayOptionBarMode,
       };
       await ChromeStorage.getInstance().set(

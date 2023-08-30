@@ -31,14 +31,18 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function tokenConcat(texts: string[], chunkSize: number): Promise<string[]> {
+function textConcat(
+  mode: boolean,
+  texts: string[],
+  chunkSize: number
+): Promise<string[]> {
   return new Promise<string[]>((resolve, reject) => {
-    fetch(`${import.meta.env.VITE_UNSTRUCTURED_API!}/loader/token_concat`, {
+    fetch(`${import.meta.env.VITE_UNSTRUCTURED_API!}/loader/text_concat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ texts: texts, chunk_size: chunkSize }),
+      body: JSON.stringify({ mode: mode, texts: texts, chunk_size: chunkSize }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -151,7 +155,7 @@ export {
   uuid,
   streamAsyncIterable,
   sleep,
-  tokenConcat,
+  textConcat,
   textSplit,
   crawlWebsite,
   detectOperatingSystem,

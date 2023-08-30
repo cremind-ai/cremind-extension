@@ -4,7 +4,7 @@ export default defineManifest({
   name: "CreMind GPT Extension",
   description:
     "Unlocking the Potential of AI GPT Technology: Empowering Productivity with this Feature-Packed Extension",
-  version: "2.0.2",
+  version: "2.1.0",
   manifest_version: 3,
   icons: {
     "16": "img/CreMind-logo-16.png",
@@ -21,6 +21,10 @@ export default defineManifest({
     // default_popup: "popup.html",
   },
   options_page: "options.html",
+  options_ui: {
+    page: "options.html",
+    open_in_tab: true,
+  },
   background: {
     service_worker: "src/background/index.ts",
     type: "module",
@@ -29,6 +33,7 @@ export default defineManifest({
     {
       matches: ["http://*/*", "https://*/*"],
       js: ["src/content/index.ts"],
+      run_at: "document_start",
     },
   ],
   web_accessible_resources: [
@@ -37,5 +42,6 @@ export default defineManifest({
       matches: ["http://*/*", "https://*/*"],
     },
   ],
+  host_permissions: ["<all_urls>"],
   permissions: ["storage", "contextMenus"],
 });

@@ -65,7 +65,6 @@
           <ElCard>
             <ElMenu
               :default-active="InputMode.UPLOAD"
-              class="ElMenu-demo"
               mode="horizontal"
               :ellipsis="false"
               @select="handleSelectInput"
@@ -167,6 +166,13 @@
                 padding: '20px',
               }"
             >
+              <Icon
+                class="apps-scroll-content-loading"
+                icon="line-md:loading-twotone-loop"
+                :style="{
+                  visibility: isStreaming ? 'visible' : 'hidden',
+                }"
+              />
               <div v-html="markedRender(outputContent)"></div>
               <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
                 outputContent
@@ -271,10 +277,13 @@ import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import {
+  AIMode,
   APP_MAX_CHUNKSIZE,
   APP_MAX_RETRIES,
   APP_RETRY_TIME,
   ConversationRoleEnum,
+  AI_SYSTEM_RESPONSE_END_BLOCK,
+  AI_SYSTEM_RESPONSE_START_BLOCK,
 } from "@/constants";
 import { Chat } from "./Chat";
 import { LoadImg } from ".";
@@ -286,7 +295,7 @@ import {
   consoleLog,
   LogLevelEnum,
   sleep,
-  tokenConcat,
+  textConcat,
   textSplit,
   crawlWebsite,
 } from "@/utils";
@@ -308,6 +317,8 @@ import {
   useVisibleManagerStore,
   VisibleManagerTypeEnum,
 } from "@/store/visible_manager";
+import { useUserSettingsStore } from "@/store/user_settings";
+import { ResponseParser } from "@/lib/response_parser";
 
 enum InputMode {
   UPLOAD = "0",
@@ -316,6 +327,7 @@ enum InputMode {
 }
 
 const visibleManager = useVisibleManagerStore();
+const userSettings = useUserSettingsStore();
 
 const props = defineProps({
   modelValue: {
@@ -338,6 +350,16 @@ marked.use({ silent: true, breaks: true });
 
 const emits = defineEmits(["update:modelValue"]);
 
+const aiProvider = computed(() => userSettings.getAiProvider);
+const aiProviderKey = computed(() => {
+  if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
+    return "ChatGPT";
+  } else if (userSettings.getAiProvider === AIMode.BARD) {
+    return "Bard";
+  }
+  return "ChatGPT";
+});
+
 const appDialogVisible = ref(props.modelValue);
 const isStreaming = ref(false);
 const isMinimized = ref(false);
@@ -355,7 +377,7 @@ const filteredFeatureList = computed(() => {
 
     switch (selectedMode.value) {
       case selectedModeEnum.APP:
-        return APP !== undefined;
+        return APP !== undefined && APP![aiProviderKey.value] !== null;
       default:
         return false;
     }
@@ -383,6 +405,7 @@ const currentVisibleManager = computed(() => {
 let uploadItems: string[] = [];
 let conversationId: string | null = null;
 let messageId: string | null = null;
+let contextIds: string[][] = [];
 let continueGenerating: boolean = false;
 const unstructuredApiUrl = import.meta.env.VITE_UNSTRUCTURED_API;
 
@@ -511,8 +534,8 @@ const onProgress = (
 ) => {};
 
 const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
-  if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error("File size can not exceed 2MB!");
+  if (rawFile.size / 1024 / 1024 > 4) {
+    ElMessage.error("File size can not exceed 4MB!");
     return false;
   }
   return true;
@@ -526,6 +549,7 @@ const deleteConversation = () => {
   consoleLog(LogLevelEnum.DEBUG, "onDeleteConversation", conversationId);
   if (conversationId) {
     llm.deleteConversation({
+      aiProvider: aiProvider.value,
       conversationId: conversationId!,
     });
   }
@@ -592,12 +616,20 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
       return;
     }
 
-    const chunkSize: number = currentFeature.value.Segmentation
-      ? currentFeature.value.ChunkSize!
+    const chunkSize: number = currentFeature.value[aiProviderKey.value]!
+      .Segmentation
+      ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
       : APP_MAX_CHUNKSIZE;
-    const items = await tokenConcat(uploadItems, chunkSize);
-    console.log(items);
-    if (!currentFeature.value.Segmentation && items.length > 1) {
+    let items: string[] = [];
+    if (aiProvider.value === AIMode.CHAT_GPT) {
+      items = await textConcat(true, uploadItems, chunkSize);
+    } else if (aiProvider.value === AIMode.BARD) {
+      items = await textConcat(false, uploadItems, chunkSize);
+    }
+    if (
+      !currentFeature.value[aiProviderKey.value]!.Segmentation &&
+      items.length > 1
+    ) {
       ElMessage.error(
         "This feature exceeds the number of input tokens allowed! Please upload the file or insert the text with a smaller."
       );
@@ -616,6 +648,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     conversationId = null;
     messageId = null;
 
+    isStreaming.value = true;
     for (let item of items) {
       let retryCount = 0;
       try {
@@ -623,12 +656,14 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
           SystemVariableParser.getInstance().setUploadedText(item);
           const chainBuilder = new ChainBuilder(
             llm,
-            currentFeature.value.Chains
+            currentFeature.value[aiProviderKey.value]!.Chains
           );
           await chainBuilder.buildChains(variables);
           const result = await chainBuilder.executeChains(true, {
-            conversationId: conversationId,
-            messageId: messageId,
+            aiProvider: aiProvider.value,
+            conversationId: conversationId!,
+            messageId: messageId!,
+            contextIds: contextIds,
             conversationMode: continueGenerating
               ? ConversationModeEnum.CONTINUE
               : ConversationModeEnum.NORMAL,
@@ -636,7 +671,9 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
           });
           result.on("data", (data) => {
             outputContent.value += data;
-            scrollToBottom();
+            nextTick(() => {
+              scrollToBottom();
+            });
           });
           let resStt: ResPayloadType = await new Promise<ResPayloadType>(
             (resolve) => {
@@ -647,24 +684,35 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
               });
               result.on("endOfChain", (data) => {
                 consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
-                completeContent += data.message;
+                const extractText =
+                  ResponseParser.getInstance().extractTextFromBlock(
+                    AI_SYSTEM_RESPONSE_START_BLOCK,
+                    AI_SYSTEM_RESPONSE_END_BLOCK,
+                    data.message
+                  );
+                if (extractText) {
+                  completeContent += extractText;
+                } else {
+                  completeContent += data.message;
+                }
                 conversationId = data.conversationId;
                 messageId = data.messageId;
                 continueGenerating = data.endTurn ? false : true;
-                isStreaming.value = false;
+                contextIds = data.contextIds ? data.contextIds : null;
                 consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
                 if (!continueGenerating) {
                   completeContent += "\n\n";
                 }
                 outputContent.value = completeContent;
-
+                nextTick(() => {
+                  scrollToBottom();
+                });
                 resolve({
                   status: Status.SUCCESS,
                   msg: "Successfully generated",
                 });
               });
               result.on("error", (error) => {
-                isStreaming.value = false;
                 consoleLog(LogLevelEnum.DEBUG, error);
                 if (error.code === Status.CHATGPT_UNAUTHORIZED) {
                   ElMessage.error(
@@ -696,8 +744,15 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
             }
             await sleep(APP_RETRY_TIME);
           } else {
+            nextTick(() => {
+              scrollToBottom();
+            });
             retryCount = 0;
-            await sleep(5000);
+            if (aiProvider.value === AIMode.CHAT_GPT) {
+              await sleep(5000);
+            } else if (aiProvider.value === AIMode.BARD) {
+              await sleep(1000);
+            }
           }
           consoleLog(
             LogLevelEnum.DEBUG,
@@ -706,13 +761,19 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
             retryCount
           );
         } while (continueGenerating || retryCount > 0);
-        deleteConversation();
       } catch (error) {
         consoleLog(LogLevelEnum.DEBUG, error);
+        isStreaming.value = false;
+        deleteConversation();
         break;
       }
     }
-  } catch (e) {}
+    isStreaming.value = false;
+    deleteConversation();
+  } catch (e) {
+    isStreaming.value = false;
+    deleteConversation();
+  }
 };
 
 async function handleFeature(
@@ -722,7 +783,6 @@ async function handleFeature(
 ) {
   const variables: { [key: string]: string } = {};
   let checkShowDrawer: boolean = false;
-  isStreaming.value = true;
   currentFeature.value = feature;
   currentFeatureId.value = id;
   currentFeatureMode.value = type;

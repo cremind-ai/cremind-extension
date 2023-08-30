@@ -1,9 +1,23 @@
 .popup-card-cremind-icon-bar {
   position: absolute;
 }
+
 .popup-card-option-bar {
   margin-top: -6px;
   margin-left: 16px;
+}
+
+.popup-card-popover-main {
+  position: relative;
+}
+
+.popup-card-loading {
+  font-size: 25px;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3000;
 }
 
 .popup-card-cremind-logo {
@@ -23,15 +37,15 @@
 
 .popup-card-minimize-icon {
   position: absolute;
-  top: 8px;
-  right: 36px;
+  top: 0px;
+  right: 26px;
   cursor: pointer;
 }
 
 .popup-card-close-icon {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 0px;
+  right: 0px;
   cursor: pointer;
 }
 

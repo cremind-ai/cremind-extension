@@ -6,6 +6,7 @@ import { IPCTopicEnum } from "@/types";
 import { LLM } from "../llm";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { ConversationModeEnum } from "@/types/conversation";
+import { AIPayloadType } from "@/types/provider";
 
 export class ChainException extends CWException {}
 
@@ -58,7 +59,10 @@ export class Chain {
     this.streamOutput = streamOutput;
   }
 
-  public async execute(isStream: boolean, args: any): Promise<EventEmitter> {
+  public async execute(
+    isStream: boolean,
+    args: AIPayloadType
+  ): Promise<EventEmitter> {
     return new Promise(async (resolve, reject) => {
       const emitter = new EventEmitter();
       resolve(emitter);

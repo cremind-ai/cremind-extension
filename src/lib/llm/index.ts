@@ -2,6 +2,7 @@ import { CWException } from "@/types/exception";
 import { IPCClient } from "@/lib/ipc_client";
 import { EventEmitter } from "@/utils/event_emitter";
 import { IPCTopicEnum, LLMMODE } from "@/types";
+import { AIPayloadType } from "@/types/provider";
 
 export class LLMException extends CWException {}
 
@@ -11,7 +12,7 @@ export class LLM {
     this.ipcClient = IPCClient.getInstance();
   }
 
-  public async deleteConversation(args: any) {
+  public async deleteConversation(args: AIPayloadType) {
     this.ipcClient.request(
       IPCTopicEnum.CONVERSATION,
       false,
@@ -35,12 +36,13 @@ export class LLM {
     return resData;
   }
 
-  public async continueGenerating(): Promise<any> {
+  public async authentication(args: AIPayloadType): Promise<any> {
     const resData = await this.ipcClient.request(
       IPCTopicEnum.CONVERSATION,
       false,
       {
-        mode: LLMMODE.CONTINUE_GENERATING,
+        ...args,
+        mode: LLMMODE.AUTHENTICATION,
       },
       10000
     );
@@ -50,7 +52,7 @@ export class LLM {
   public request(
     prompt: string,
     isStream: boolean,
-    args: any
+    args: AIPayloadType
   ): Promise<EventEmitter> {
     return new Promise(async (resolve, reject) => {
       const emitter = new EventEmitter();

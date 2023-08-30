@@ -94,7 +94,7 @@ const emits = defineEmits(["reset-variable", "enable-change"]);
 const userSettings = useUserSettingsStore();
 
 const enable = ref(props.enable);
-const isDark = ref(userSettings.getIsDark);
+const isDark = computed(() => userSettings.getIsDark);
 
 const lineHeight = 14; // You might need to adjust this value based on your design
 

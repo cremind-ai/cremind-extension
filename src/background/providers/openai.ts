@@ -12,6 +12,7 @@ export class OpenAIAPI extends AIProvider {
   }
 
   public closeStream = () => {};
+  public authentication = async () => {};
   public deleteConversation(conversationId: string): void {}
 
   async conversation(

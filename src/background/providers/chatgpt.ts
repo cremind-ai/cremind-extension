@@ -34,6 +34,19 @@ export class ChatGPT extends AIProvider {
     return this;
   }
 
+  public authentication = async () => {
+    try {
+      await this.getChatGPTAccessToken();
+    } catch (err) {
+      if (err instanceof AIProviderException) {
+        throw new AIProviderException(
+          Status.CHATGPT_UNAUTHORIZED,
+          "ChatGPT Unauthorized error. Please try again later."
+        );
+      }
+    }
+  };
+
   private async getChatGPTAccessToken(): Promise<string> {
     if (this.cache.get(this.KEY_ACCESS_TOKEN)) {
       return this.cache.get(this.KEY_ACCESS_TOKEN);
@@ -88,7 +101,7 @@ export class ChatGPT extends AIProvider {
       const models = await this.fetchModels(token);
       return models[0].slug;
     } catch (err) {
-      console.error(err);
+      consoleLog(LogLevelEnum.DEBUG, err);
       return "text-davinci-002-render";
     }
   }
@@ -168,7 +181,7 @@ export class ChatGPT extends AIProvider {
       (resolve, reject) => {
         this.conversationId = conversationId ? conversationId : null;
         if (this.isProcessing) {
-          reject(new AIProviderException(Status.CHATGPT_BUSY, "Busy"));
+          reject(new AIProviderException(Status.CHATGPT_BUSY, "ChatGPT Busy"));
           return;
         }
         this.isProcessing = true;
@@ -275,7 +288,10 @@ export class ChatGPT extends AIProvider {
             const error = await resp.json().catch(() => ({}));
             callback({
               type: AIResponseTypeEnum.ERROR,
-              message: error.detail,
+              message:
+                error.detail && error.detail.message
+                  ? error.detail.message
+                  : error.detail,
               code: Status.CHATGPT_RESPONSE_ERROR,
             });
             if (this.conversationId) {

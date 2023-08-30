@@ -9,7 +9,7 @@ import {
 } from "@/types";
 import { IPCHost } from "@/lib/ipc_host";
 import { AIProvider } from "./providers/base";
-import { AIProviderFactory } from "./providers";
+import { AIProviderException, AIProviderFactory } from "./providers";
 import { AIMode } from "@/constants";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { CWException } from "@/types/exception";
@@ -64,16 +64,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 let aiProvider: AIProvider;
-const aiMode = AIMode.CHAT_GPT as AIMode;
-if (aiMode === AIMode.CHAT_GPT) {
-  aiProvider = AIProviderFactory.createChatGPT();
-} else if (aiMode === AIMode.OPENAI_API) {
-  aiProvider = AIProviderFactory.createOpenAI("");
-} else if (aiMode === AIMode.BARD) {
-  aiProvider = AIProviderFactory.createBard("");
-}
+const aiProviderChatGPT = AIProviderFactory.createChatGPT();
+const aiProviderBard = AIProviderFactory.createBard();
+const aiProviderOpenAI = AIProviderFactory.createOpenAI("");
 
-chrome.runtime.onInstalled.addListener(function () {
+chrome.runtime.onInstalled.addListener(function (details) {
+  if (details.reason === "install") {
+    chrome.runtime.openOptionsPage();
+  }
+
   chrome.contextMenus.create({
     id: "menu",
     title: "CreMind",
@@ -95,8 +94,19 @@ const ipcHost = IPCHost.getInstance().initConnection();
 ipcHost.register(
   IPCTopicEnum.CONVERSATION,
   async (data: IPCMessageType, sendResponse) => {
+    const aiMode: AIMode = data.payload.aiProvider;
+    if (aiMode === AIMode.CHAT_GPT) {
+      aiProvider = aiProviderChatGPT;
+    } else if (aiMode === AIMode.BARD) {
+      aiProvider = aiProviderBard;
+    } else if (aiMode === AIMode.OPENAI_API) {
+      aiProvider = aiProviderOpenAI;
+    }
+
+    consoleLog(LogLevelEnum.DEBUG, aiMode);
     consoleLog(LogLevelEnum.DEBUG, data);
     consoleLog(LogLevelEnum.DEBUG, "isProcessing " + aiProvider.isProcessing);
+
     if (
       data &&
       data.type === ConversationMessageTypeEnum.STREAM &&
@@ -112,9 +122,7 @@ ipcHost.register(
           data.payload.message,
           true,
           {
-            deleteConversation: data.payload.deleteConversation,
-            conversationMode: data.payload.conversationMode,
-            childMessageId: data.payload.childMessageId,
+            ...data.payload,
           }
         )
         .then(async (callback) => {
@@ -134,6 +142,7 @@ ipcHost.register(
                   messageId: resData.payload!.messageId,
                   childMessageId: resData.payload!.childMessageId,
                   endTurn: resData.payload!.endTurn,
+                  contextIds: resData.payload!.contextIds,
                 }),
               };
               sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
@@ -161,11 +170,7 @@ ipcHost.register(
           data.payload.message,
           true,
           {
-            deleteConversation: data.payload.deleteConversation,
-            conversationMode: data.payload.conversationMode,
-            ...(data.payload.childMessageId && {
-              childMessageId: data.payload.childMessageId,
-            }),
+            ...data.payload,
           }
         )
         .then(async (callback) => {
@@ -180,10 +185,9 @@ ipcHost.register(
                 ...(!data.payload.deleteConversation && {
                   conversationId: resData.payload!.conversationId,
                   messageId: resData.payload!.messageId,
+                  childMessageId: resData.payload!.childMessageId,
                   endTurn: resData.payload!.endTurn,
-                  ...(data.payload.childMessageId && {
-                    childMessageId: data.payload.childMessageId,
-                  }),
+                  contextIds: resData.payload!.contextIds,
                 }),
               };
               sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
@@ -223,14 +227,24 @@ ipcHost.register(
     } else if (
       data &&
       data.type === ConversationMessageTypeEnum.MESSAGE &&
-      data.payload.mode === LLMMODE.CONTINUE_GENERATING
+      data.payload.mode === LLMMODE.AUTHENTICATION
     ) {
-      // aiProvider.closeStream();
-      const payload = {
-        message: "continued generating",
-        // conversationId: aiProvider.conversationId,
-      };
-      sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
+      try {
+        await aiProvider.authentication();
+        const payload = {
+          status: Status.SUCCESS,
+          message: "Authentication Successful",
+        };
+        sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
+      } catch (err) {
+        if (err instanceof AIProviderException) {
+          sendResponse(ConversationMessageTypeEnum.ERROR, {
+            status: Status.ERROR,
+            code: err.code,
+            message: err.message,
+          });
+        }
+      }
     }
   }
 );

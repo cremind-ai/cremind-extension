@@ -27,7 +27,7 @@
 import { Icon } from "@iconify/vue";
 import { ElInput } from "element-plus";
 import { ElTooltip } from "element-plus";
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 
 const props = defineProps({
   blockSend: {
@@ -44,9 +44,9 @@ let lastEnterTime = 0;
 const newChat = () => {
   if (!props.blockSend && textField.value.trim().length > 0) {
     emits("new-chat", textField.value.trim());
-    setTimeout(() => {
+    nextTick(() => {
       textField.value = "";
-    }, 0);
+    });
   }
 };
 

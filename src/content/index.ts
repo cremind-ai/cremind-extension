@@ -6,6 +6,7 @@ import ElementIndexStyle from "element-plus/dist/index.css";
 import CssVarsStyle from "element-plus/theme-chalk/dark/css-vars.css";
 import CustomElementIndexStyle from "@/styles/element/index.scss";
 import GithubDarkStyle from "@/styles/highlight.js/github-dark.css";
+import GlobalIndexStyle from "@/styles/index.scss";
 import IndexStyle from "./index.scss";
 
 import BallonChatStyle from "@/styles/components/Chat/BallonChat.scss";
@@ -35,6 +36,7 @@ if (el) {
   style.appendChild(document.createTextNode(CssVarsStyle));
   style.appendChild(document.createTextNode(CustomElementIndexStyle));
   style.appendChild(document.createTextNode(GithubDarkStyle));
+  style.appendChild(document.createTextNode(GlobalIndexStyle));
   style.appendChild(document.createTextNode(IndexStyle));
   style.appendChild(document.createTextNode(BallonChatStyle));
   style.appendChild(document.createTextNode(ChatStyle));

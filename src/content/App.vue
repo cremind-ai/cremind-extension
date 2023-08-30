@@ -98,7 +98,7 @@ const selectedMode: Ref<selectedModeEnum> = ref(
 );
 const featureVisible = ref(false);
 const appVisible = ref(false);
-const isDark = ref(userSettings.getIsDark);
+const isDark = computed(() => userSettings.getIsDark);
 const currentVisibleManager = computed(() => {
   return visibleManager.getVisible(VisibleManagerTypeEnum.LOGO);
 });
@@ -111,13 +111,6 @@ const hideMeLabel = computed(() => {
   }
 });
 let showFeaturesTimeout: any;
-
-watch(
-  () => userSettings.getIsDark,
-  (value) => {
-    isDark.value = value;
-  }
-);
 
 function checkVisibleState(): boolean {
   return Object.keys(visibleStates.value).every((key) => {

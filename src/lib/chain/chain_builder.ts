@@ -4,6 +4,7 @@ import { CWException } from "@/types/exception";
 import { SystemVariableParser } from "../system_variable_parser";
 import { EventEmitter } from "@/utils/event_emitter";
 import { LLM } from "../llm";
+import { AIPayloadType } from "@/types/provider";
 
 export type ChainConfig = {
   name: string;
@@ -52,7 +53,7 @@ export class ChainBuilder {
 
   public async executeChains(
     isStream: boolean,
-    args: any
+    args: AIPayloadType
   ): Promise<EventEmitter> {
     return new Promise(async (resolve, reject) => {
       const emitter = new EventEmitter();
