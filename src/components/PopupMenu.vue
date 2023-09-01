@@ -16,7 +16,7 @@
   <ElPopover
     class="popup-card-popover"
     style="word-break: normal"
-    placement="auto"
+    placement="bottom"
     :visible="popoverVisible && currentVisibleManager"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(255, 78, 199, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%); border-radius: 14px;"
@@ -1224,6 +1224,21 @@ const handleAutoFillSample = () => {
 const handleStartGenerateResponse = () => {
   clickOutsideFocus.value = true;
   drawer.value = false;
+  for (const key in currentFeature.value.variableSchema) {
+    if (!formDataVariableSchema.value[key]) {
+      if (currentFeature.value.variableSchema[key].options) {
+        formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+          key
+        ].options![
+          currentFeature.value.variableSchema[key].default as number
+        ] as string;
+      } else {
+        formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+          key
+        ].default as string;
+      }
+    }
+  }
   startGenerateResponse(formDataVariableSchema.value);
 };
 

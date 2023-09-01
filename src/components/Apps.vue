@@ -582,6 +582,21 @@ const handleAutoFillSample = () => {
 const handleStartGenerateResponse = () => {
   clickOutsideFocus.value = true;
   drawer.value = false;
+  for (const key in currentFeature.value.variableSchema) {
+    if (!formDataVariableSchema.value[key]) {
+      if (currentFeature.value.variableSchema[key].options) {
+        formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+          key
+        ].options![
+          currentFeature.value.variableSchema[key].default as number
+        ] as string;
+      } else {
+        formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+          key
+        ].default as string;
+      }
+    }
+  }
   startGenerateResponse(formDataVariableSchema.value);
 };
 

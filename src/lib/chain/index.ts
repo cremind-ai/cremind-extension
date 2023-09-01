@@ -27,6 +27,7 @@ export type ChainVariableSchema = {
     description: string;
     storage: boolean;
     sample: string | number;
+    default: string | number;
   };
 };
 
