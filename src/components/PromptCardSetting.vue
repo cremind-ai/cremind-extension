@@ -162,13 +162,6 @@ watch(
   }
 );
 
-watch(
-  () => userSettings.getIsDark,
-  (value) => {
-    isDark.value = value;
-  }
-);
-
 const handleEnableChange = (value: boolean) => {
   emits("enable-change", props.id, value);
 };

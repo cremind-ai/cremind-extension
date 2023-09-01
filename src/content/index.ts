@@ -21,8 +21,8 @@ import PopupMenuStyle from "@/styles/components/PopupMenu.scss";
 import PromptCardSettingStyle from "@/styles/components/PromptCardSetting.scss";
 
 export let shadowRoot: ShadowRoot;
-const el = document.querySelector("body");
-if (el) {
+
+function initExtension() {
   const shadowHost = document.createElement("cremind-app-extension");
   document.body.appendChild(shadowHost);
   shadowRoot = shadowHost.attachShadow({ mode: "open" });
@@ -52,4 +52,13 @@ if (el) {
   const app = createApp(App).use(createPinia());
   app.use(ElementPlus);
   app.mount(appContainer);
+}
+
+const el = document.querySelector("body");
+if (el) {
+  initExtension();
+} else {
+  document.addEventListener("DOMContentLoaded", function () {
+    initExtension();
+  });
 }

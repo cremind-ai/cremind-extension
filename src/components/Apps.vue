@@ -278,7 +278,8 @@ import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import {
   AIMode,
-  APP_MAX_CHUNKSIZE,
+  APP_CHAT_GPT_MAX_CHUNKSIZE,
+  APP_BARD_MAX_CHUNKSIZE,
   APP_MAX_RETRIES,
   APP_RETRY_TIME,
   ConversationRoleEnum,
@@ -616,14 +617,18 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
       return;
     }
 
-    const chunkSize: number = currentFeature.value[aiProviderKey.value]!
-      .Segmentation
-      ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
-      : APP_MAX_CHUNKSIZE;
     let items: string[] = [];
     if (aiProvider.value === AIMode.CHAT_GPT) {
+      const chunkSize: number = currentFeature.value[aiProviderKey.value]!
+        .Segmentation
+        ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
+        : APP_CHAT_GPT_MAX_CHUNKSIZE;
       items = await textConcat(true, uploadItems, chunkSize);
     } else if (aiProvider.value === AIMode.BARD) {
+      const chunkSize: number = currentFeature.value[aiProviderKey.value]!
+        .Segmentation
+        ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
+        : APP_BARD_MAX_CHUNKSIZE;
       items = await textConcat(false, uploadItems, chunkSize);
     }
     if (

@@ -16,7 +16,7 @@
   <ElPopover
     class="popup-card-popover"
     style="word-break: normal"
-    placement="bottom"
+    placement="auto"
     :visible="popoverVisible && currentVisibleManager"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(255, 78, 199, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%); border-radius: 14px;"
@@ -24,7 +24,11 @@
     <template #reference>
       <div
         class="popup-card-cremind-icon-bar"
-        :style="{ zIndex: optionBarZIndex, top, left }"
+        :style="{
+          zIndex: optionBarZIndex,
+          top: optionBarTop,
+          left: optionBarLeft,
+        }"
       >
         <LoadImg
           class="popup-card-cremind-logo"
@@ -33,7 +37,14 @@
           v-show="logoShow"
           @click="handleClickLogo"
         ></LoadImg>
-        <div class="popup-card-option-bar" v-show="vitualOptionBarShow">
+        <div
+          class="popup-card-option-bar"
+          v-show="vitualOptionBarShow"
+          :style="{
+            marginTop: optionBarMarginTop,
+            marginLeft: optionBarMarginLeft,
+          }"
+        >
           <div v-if="selectedMode === selectedModeEnum.EDITABLE">
             <ElButtonGroup>
               <ElTooltip
@@ -640,7 +651,11 @@ const combineOptionBarShowVisible = computed(() => {
 });
 const popoverVisible = ref(false);
 const optionBarZIndex = ref(1000000000);
+const optionBarTop = ref(props.top);
+const optionBarLeft = ref(props.left);
 const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
+const optionBarMarginTop = ref("-6px");
+const optionBarMarginLeft = ref("16px");
 const logoRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
@@ -737,6 +752,8 @@ let messageId: string | null = null;
 watch(
   () => props.show,
   (newValue) => {
+    optionBarTop.value = props.top;
+    optionBarLeft.value = props.left;
     if (newValue === true) {
       if (
         (!iconMaximizeShow.value && !tidyDisplayOptionBarMode.value) ||
@@ -749,6 +766,18 @@ watch(
         logoShow.value = newValue;
         iconMaximizeShow.value = false;
         consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
+
+        const screenHeight = window.innerHeight + window.scrollY;
+        const top = parseInt(props.top);
+        if (screenHeight < top + 40) {
+          optionBarTop.value = `${top - 60}px`;
+          optionBarMarginTop.value = "-31px";
+          optionBarMarginLeft.value = "24px";
+        } else {
+          optionBarMarginTop.value = "-6px";
+          optionBarMarginLeft.value = "16px";
+        }
+
         const activeElement = document.activeElement as HTMLElement;
         if (
           selectedMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
