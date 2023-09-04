@@ -1,7 +1,7 @@
 <template>
   <div v-show="logoShow">
     <div v-if="currentVisibleManager" class="app-cremind-features">
-      <ElTooltip :content="hideMeLabel" placement="bottom">
+      <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
         <LoadImg
           :filename="'CreMind-logo-white-128.png'"
           :width="45"
@@ -15,7 +15,7 @@
         @mouseover="showFeatures"
         @mouseout="hideFeatures"
       >
-        <ElTooltip content="Settings" placement="bottom">
+        <ElTooltip :hide-after="0" content="Settings" placement="bottom">
           <div class="app-settings">
             <Icon
               icon="solar:settings-line-duotone"
@@ -24,7 +24,7 @@
             />
           </div>
         </ElTooltip>
-        <ElTooltip content="Start Chat" placement="top">
+        <ElTooltip :hide-after="0" content="Start Chat" placement="top">
           <div class="app-button-chatting">
             <Icon
               icon="fluent:chat-12-filled"
@@ -33,7 +33,7 @@
             />
           </div>
         </ElTooltip>
-        <ElTooltip content="Apps" placement="top">
+        <ElTooltip :hide-after="0" content="Apps" placement="top">
           <div class="app-apps">
             <Icon
               icon="icon-park-twotone:more-app"

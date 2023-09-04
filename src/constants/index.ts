@@ -31,5 +31,8 @@ export const TIDY_DISPLAY_OPTION_IMG_2 = "settings/display_mode2.gif";
 export const BARD_LOGO = "3rd_logo/Bard-logo-200.png";
 export const CHAT_GPT_LOGO = "3rd_logo/ChatGPT-logo-64.png";
 
+export const SIDEBAR_IMG = "settings/sidebar-r-200.png";
+export const WINDOWS_DIALOG_IMG = "settings/window-200.png";
+
 export const AI_SYSTEM_RESPONSE_START_BLOCK = "AI_SYSTEM_RESPONSE_START_BLOCK";
 export const AI_SYSTEM_RESPONSE_END_BLOCK = "AI_SYSTEM_RESPONSE_END_BLOCK";

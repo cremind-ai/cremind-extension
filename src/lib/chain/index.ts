@@ -20,15 +20,17 @@ export class ChainException extends CWException {}
     },
   };
 */
+export type VariableSchema = {
+  options?: Array<string | number>;
+  systemOptions?: string;
+  description: string;
+  storage: boolean;
+  sample: string | number;
+  default: string | number;
+};
+
 export type ChainVariableSchema = {
-  [key: string]: {
-    options?: Array<string | number>;
-    systemOptions?: string;
-    description: string;
-    storage: boolean;
-    sample: string | number;
-    default: string | number;
-  };
+  [key: string]: VariableSchema;
 };
 
 export class Chain {

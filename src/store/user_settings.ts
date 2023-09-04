@@ -4,6 +4,7 @@ import { AIMode } from "@/constants";
 
 interface UserSettingsState {
   isDark: boolean;
+  sidebar: boolean;
   aiProvider: AIMode;
   tidyDisplayOptionBarMode: boolean;
 }
@@ -13,6 +14,7 @@ export const useUserSettingsStore = defineStore({
   state: (): UserSettingsState => {
     return {
       isDark: false,
+      sidebar: true,
       aiProvider: AIMode.CHAT_GPT,
       tidyDisplayOptionBarMode: false,
     };
@@ -20,6 +22,9 @@ export const useUserSettingsStore = defineStore({
   getters: {
     getIsDark(): boolean {
       return this.isDark;
+    },
+    getSidebar(): boolean {
+      return this.sidebar;
     },
     getAiProvider(): AIMode {
       return this.aiProvider;
@@ -57,6 +62,10 @@ export const useUserSettingsStore = defineStore({
       await this.updateSettingsInStorage();
       this.applyDarkModeClass(true);
     },
+    async setSidebar(sidebar: boolean) {
+      this.sidebar = sidebar;
+      await this.updateSettingsInStorage();
+    },
     async setAIProvider(aiProvider: AIMode) {
       this.aiProvider = aiProvider;
       await this.updateSettingsInStorage();
@@ -68,6 +77,7 @@ export const useUserSettingsStore = defineStore({
     async updateSettingsInStorage() {
       const settingsToStore: UserSettingsState = {
         isDark: this.isDark,
+        sidebar: this.sidebar,
         aiProvider: this.aiProvider,
         tidyDisplayOptionBarMode: this.tidyDisplayOptionBarMode,
       };

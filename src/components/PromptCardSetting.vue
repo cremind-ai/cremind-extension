@@ -1,8 +1,9 @@
 <template>
   <ElCard class="prompt-card-setting-feature-card">
     <ElPopover
+      :hide-after="0"
       :title="title"
-      placement="auto"
+      placement="top"
       :width="300"
       trigger="hover"
       :content="description"
@@ -10,7 +11,7 @@
     >
       <template #reference>
         <ElCard class="prompt-card-setting-content-card">
-          <ElTooltip content="Enable/Disable" placement="top">
+          <ElTooltip :hide-after="0" content="Enable/Disable" placement="top">
             <ElSwitch
               class="prompt-card-setting-switch-enable"
               :style="'--el-switch-on-color: ' + switchColor"
@@ -27,9 +28,10 @@
     <div class="prompt-card-setting-icons-container">
       <div style="font-size: 14px">SUPPORT:</div>
       <ElPopover
+        :hide-after="0"
         v-for="mode in supportModes"
         :key="mode"
-        placement="auto"
+        placement="top"
         :width="200"
         trigger="hover"
         :content="getIconForMode(mode).info"

@@ -119,6 +119,7 @@
                 :key="index"
               >
                 <ElTooltip
+                  :hide-after="0"
                   :content="feature.APP?.title"
                   placement="top"
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
@@ -149,7 +150,11 @@
           <ElCard>
             <div style="display: flex; justify-content: flex-end">
               <ElButtonGroup>
-                <ElTooltip content="Copy to clipboard" placement="top">
+                <ElTooltip
+                  :hide-after="0"
+                  content="Copy to clipboard"
+                  placement="top"
+                >
                   <ElButton plain @click="handleCopyToClipboard">
                     <Icon
                       icon="solar:copy-line-duotone"
@@ -216,6 +221,7 @@
             v-model="formDataVariableSchema[key]"
             placeholder="Select"
             filterable
+            allow-create
           >
             <ElOption
               v-for="option in schema.options"

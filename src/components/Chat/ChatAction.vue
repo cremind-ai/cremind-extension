@@ -12,7 +12,11 @@
       @keydown.enter="handleEnterKey"
     />
     <span v-if="!blockSend" class="chat-action-send-icon">
-      <ElTooltip content="Double Enter quickly = Send" placement="top">
+      <ElTooltip
+        :hide-after="0"
+        content="Double Enter quickly = Send"
+        placement="top"
+      >
         <Icon
           icon="ep:promotion"
           :style="{ fontSize: '25px' }"

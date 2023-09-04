@@ -48,12 +48,20 @@
         </div>
         <div style="margin-left: auto; margin-right: 26px">
           <ElButtonGroup>
-            <ElTooltip content="Regenerate response" placement="top">
+            <ElTooltip
+              :hide-after="0"
+              content="Regenerate response"
+              placement="top"
+            >
               <ElButton plain @click="handleRegenerateConversation">
                 <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
               </ElButton>
             </ElTooltip>
-            <ElTooltip content="Save this conversation" placement="top">
+            <ElTooltip
+              :hide-after="0"
+              content="Save this conversation"
+              placement="top"
+            >
               <ElButton plain @click="handleSaveConversation">
                 <Icon
                   icon="fluent:save-28-regular"
@@ -62,6 +70,7 @@
               </ElButton>
             </ElTooltip>
             <ElTooltip
+              :hide-after="0"
               v-if="endTurn === false"
               content="Continue generating"
               placement="top"
@@ -73,7 +82,7 @@
                 />
               </ElButton>
             </ElTooltip>
-            <!-- <ElTooltip content="Stop generating" placement="top">
+            <!-- <ElTooltip :hide-after="0" content="Stop generating" placement="top">
                 <ElButton plain @click="handleStopGenerating">
                   <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
                 </ElButton>

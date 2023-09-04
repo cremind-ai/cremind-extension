@@ -71,6 +71,45 @@
     </div>
   </ContentWrap>
 
+  <ContentWrap title="Sidebar" class="general-child-card">
+    <div class="card-horizontal-container">
+      <ElCard
+        shadow="hover"
+        @click="handleGeneralSettingsClick(GeneralSettings.SIDEBARD_OPTION, 0)"
+        :class="{
+          'card-selected': generalState[GeneralSettings.SIDEBARD_OPTION][0],
+        }"
+      >
+        <ImageDetailCard
+          :filename="SIDEBAR_IMG"
+          position="left"
+          title="Sidebar mode"
+          image-height="100px"
+          image-width="100px"
+          width="300px"
+        >
+        </ImageDetailCard>
+      </ElCard>
+      <ElCard
+        shadow="hover"
+        @click="handleGeneralSettingsClick(GeneralSettings.SIDEBARD_OPTION, 1)"
+        :class="{
+          'card-selected': generalState[GeneralSettings.SIDEBARD_OPTION][1],
+        }"
+      >
+        <ImageDetailCard
+          :filename="WINDOWS_DIALOG_IMG"
+          position="left"
+          title="Windows dialog mode"
+          image-height="100px"
+          image-width="100px"
+          width="300px"
+        >
+        </ImageDetailCard>
+      </ElCard>
+    </div>
+  </ContentWrap>
+
   <ContentWrap title="MenuBar Display Mode" class="general-child-card">
     <div class="card-horizontal-container">
       <ElCard
@@ -87,7 +126,7 @@
           content="Upon text selection, instantly access and utilize relevant features for swift and efficient task execution. Streamlined interface enhances productivity by eliminating unnecessary clicks."
           :filename="TIDY_DISPLAY_OPTION_IMG_1"
           position="bottom"
-          width="510px"
+          width="470px"
           height="320px"
         >
         </ImageDetailCard>
@@ -107,7 +146,7 @@
           content="In this mode, a single representative logo replaces the feature menu when text is selected. Clicking the logo unveils the feature list. This streamlined approach offers a clean interface, ideal for users who prefer occasional feature access post text-selection, enhancing overall user comfort."
           :filename="TIDY_DISPLAY_OPTION_IMG_2"
           position="bottom"
-          width="510px"
+          width="470px"
           height="320px"
         ></ImageDetailCard>
       </ElCard>
@@ -126,6 +165,8 @@ import { useUserSettingsStore } from "@/store/user_settings";
 import {
   TIDY_DISPLAY_OPTION_IMG_1,
   TIDY_DISPLAY_OPTION_IMG_2,
+  SIDEBAR_IMG,
+  WINDOWS_DIALOG_IMG,
   BARD_LOGO,
   CHAT_GPT_LOGO,
   AIMode,
@@ -135,6 +176,7 @@ import { Status } from "@/constants/status";
 
 enum GeneralSettings {
   AI_PROVIDER_OPTION = "AI_PROVIDER_OPTION",
+  SIDEBARD_OPTION = "SIDEBARD_OPTION",
   TIDY_DISPLAY_OPTION = "TIDY_DISPLAY_OPTION",
 }
 
@@ -146,6 +188,10 @@ const generalState = reactive({
   [GeneralSettings.AI_PROVIDER_OPTION]: [
     userSettings.getAiProvider === AIMode.CHAT_GPT,
     userSettings.getAiProvider === AIMode.BARD,
+  ],
+  [GeneralSettings.SIDEBARD_OPTION]: [
+    userSettings.getSidebar === true,
+    userSettings.getSidebar === false,
   ],
   [GeneralSettings.TIDY_DISPLAY_OPTION]: [
     userSettings.getTidyDisplayOptionBarMode === false,
@@ -207,6 +253,13 @@ const handleGeneralSettingsClick = async (
         userSettings.setAIProvider(AIMode.CHAT_GPT);
       } else {
         userSettings.setAIProvider(AIMode.BARD);
+      }
+      break;
+    case GeneralSettings.SIDEBARD_OPTION:
+      if (option === 0) {
+        userSettings.setSidebar(true);
+      } else {
+        userSettings.setSidebar(false);
       }
       break;
     case GeneralSettings.TIDY_DISPLAY_OPTION:

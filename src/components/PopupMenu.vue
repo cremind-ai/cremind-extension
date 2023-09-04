@@ -1,6 +1,7 @@
 <template>
   <div v-if="iconMaximizeShow" class="popup-card-maximize">
     <ElTooltip
+      :hide-after="0"
       content="Go back to the CreMind Extension dialog"
       placement="top"
     >
@@ -14,6 +15,7 @@
     </ElTooltip>
   </div>
   <ElPopover
+    :hide-after="0"
     class="popup-card-popover"
     style="word-break: normal"
     placement="bottom"
@@ -48,6 +50,7 @@
           <div v-if="selectedMode === selectedModeEnum.EDITABLE">
             <ElButtonGroup>
               <ElTooltip
+                :hide-after="0"
                 content="Click the icon for a tidy display of the 'Options Bar'. Change mode now 👇."
                 placement="top"
               >
@@ -70,6 +73,7 @@
                 :key="index"
               >
                 <ElTooltip
+                  :hide-after="0"
                   :content="feature.EDITABLE?.title"
                   placement="top"
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
@@ -118,7 +122,11 @@
                       :key="index"
                     >
                       <ElDropdownItem :command="option.label">
-                        <ElTooltip :content="option.label" placement="auto">
+                        <ElTooltip
+                          :hide-after="0"
+                          :content="option.label"
+                          placement="auto"
+                        >
                           <Icon
                             :icon="option.icon.content || ''"
                             :style="{ fontSize: option.icon.fontSize }"
@@ -139,6 +147,7 @@
           <div v-else-if="selectedMode === selectedModeEnum.READONLY">
             <ElButtonGroup>
               <ElTooltip
+                :hide-after="0"
                 content="Click the icon for a tidy display of the 'Options Bar'. Change mode now 👇."
                 placement="top"
               >
@@ -162,6 +171,7 @@
                 :key="index"
               >
                 <ElTooltip
+                  :hide-after="0"
                   :content="feature.READONLY?.title"
                   placement="top"
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
@@ -215,7 +225,11 @@
                       :key="index"
                     >
                       <ElDropdownItem :command="option.label">
-                        <ElTooltip :content="option.label" placement="auto">
+                        <ElTooltip
+                          :hide-after="0"
+                          :content="option.label"
+                          placement="auto"
+                        >
                           <Icon
                             :icon="option.icon.content || ''"
                             :style="{ fontSize: option.icon.fontSize }"
@@ -242,6 +256,7 @@
                 :key="index"
               >
                 <ElTooltip
+                  :hide-after="0"
                   :content="feature.READONLY_CONTEXT_MENU?.title"
                   placement="top"
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
@@ -297,7 +312,11 @@
                       :key="index"
                     >
                       <ElDropdownItem :command="option.label">
-                        <ElTooltip :content="option.label" placement="auto">
+                        <ElTooltip
+                          :hide-after="0"
+                          :content="option.label"
+                          placement="auto"
+                        >
                           <Icon
                             :icon="option.icon.content || ''"
                             :style="{ fontSize: option.icon.fontSize }"
@@ -324,6 +343,7 @@
                 :key="index"
               >
                 <ElTooltip
+                  :hide-after="0"
                   :content="feature.EDITABLE_CONTEXT_MENU?.title"
                   placement="top"
                   v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
@@ -379,7 +399,11 @@
                       :key="index"
                     >
                       <ElDropdownItem :command="option.label">
-                        <ElTooltip :content="option.label" placement="auto">
+                        <ElTooltip
+                          :hide-after="0"
+                          :content="option.label"
+                          placement="auto"
+                        >
                           <Icon
                             :icon="option.icon.content || ''"
                             :style="{ fontSize: option.icon.fontSize }"
@@ -412,12 +436,20 @@
 
       <div style="display: flex; justify-content: flex-end; margin-right: 60px">
         <ElButtonGroup>
-          <ElTooltip content="Regenerate response" placement="top">
+          <ElTooltip
+            :hide-after="0"
+            content="Regenerate response"
+            placement="top"
+          >
             <ElButton plain @click="handleRegenerate">
               <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
             </ElButton>
           </ElTooltip>
-          <ElTooltip content="Copy to clipboard" placement="top">
+          <ElTooltip
+            :hide-after="0"
+            content="Copy to clipboard"
+            placement="top"
+          >
             <ElButton plain @click="handleCopyToClipboard">
               <Icon
                 icon="solar:copy-line-duotone"
@@ -504,6 +536,55 @@
               :value="option"
             ></ElOption>
           </ElSelect>
+          <ElPopover
+            :hide-after="0"
+            placement="bottom"
+            title="Add custom option"
+            :width="200"
+            :visible="addCustomOptionVariableSchema[key].visible"
+          >
+            <template #reference>
+              <ElButton
+                plain
+                type="primary"
+                :icon="Plus"
+                style="margin-left: 10px"
+                @click="addCustomOptionVariableSchema[key].visible = true"
+              />
+            </template>
+            <ElInput
+              v-model="addCustomOptionVariableSchema[key].input"
+              placeholder=""
+            />
+            <div style="text-align: right; margin-top: 8px">
+              <ElButton
+                size="small"
+                text
+                @click="addCustomOptionVariableSchema[key].visible = false"
+                >cancel</ElButton
+              >
+              <ElButton
+                size="small"
+                type="primary"
+                @click="handleAddCustomOption(key)"
+                style="margin-left: 8px"
+                >confirm</ElButton
+              >
+            </div>
+          </ElPopover>
+          <ElTooltip
+            :hide-after="0"
+            content="Remove custom option"
+            placement="top"
+          >
+            <ElButton
+              plain
+              type="danger"
+              :icon="Minus"
+              style="margin-left: 10px"
+              @click="handleRemoveCustomOption(key)"
+            />
+          </ElTooltip>
         </template>
         <template v-else>
           <ElInput
@@ -554,8 +635,11 @@ import { ElSwitch } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
 import { FullScreen } from "@element-plus/icons-vue";
+import { Plus } from "@element-plus/icons-vue";
+import { Minus } from "@element-plus/icons-vue";
 import { Icon } from "@iconify/vue";
 import { Marked } from "marked";
+import { concat, findIndex, includes, pull } from "lodash-es";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import { LoadImg } from ".";
@@ -588,6 +672,7 @@ import {
   AI_SYSTEM_RESPONSE_START_BLOCK,
 } from "@/constants";
 import { ResponseParser } from "@/lib/response_parser";
+import { VariableSchema } from "@/lib/chain";
 // import { shadowRoot } from "@/content";
 
 const visibleManager = useVisibleManagerStore();
@@ -674,6 +759,9 @@ const iconMaximizeShow = ref(false);
 const logoShow = ref(false);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
+const addCustomOptionVariableSchema = ref<{
+  [key: string]: { input: string; visible: boolean };
+}>({});
 const enabledFeatureStates: Ref<boolean[]> = ref([]);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
@@ -789,16 +877,21 @@ watch(
         if (
           originalActiveElement.value &&
           originalActiveElement.value!.value !== undefined &&
-          originalActiveElement.value!.value !== null
+          originalActiveElement.value!.value !== null &&
+          selectedMode.value !== selectedModeEnum.READONLY_CONTEXT_MENU &&
+          selectedMode.value !== selectedModeEnum.EDITABLE_CONTEXT_MENU
         ) {
           startSelectionIndex = originalActiveElement.value!.selectionStart;
           endSelectionIndex = originalActiveElement.value!.selectionEnd;
         } else if (
+          /* prettier-ignore */
           originalActiveElement.value &&
           ((originalActiveElement.value!.innerText !== undefined &&
             originalActiveElement.value!.innerText !== null) ||
             (originalActiveElement.value!.textContent !== undefined &&
-              originalActiveElement.value!.textContent !== null))
+              originalActiveElement.value!.textContent !== null)) && 
+              selectedMode.value !== selectedModeEnum.READONLY_CONTEXT_MENU &&
+              selectedMode.value !== selectedModeEnum.EDITABLE_CONTEXT_MENU
         ) {
           var selection = window.getSelection();
           let selectedText = selection!.toString().trim();
@@ -951,8 +1044,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   let startPart: string;
   let endPart: string;
   if (
-    (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
-      currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
+    currentFeatureMode.value === selectedModeEnum.EDITABLE &&
     currentFeature.value[aiProviderKey.value]!.WriteResponse &&
     currentFeature.value[aiProviderKey.value]!.WriteResponse === true
   ) {
@@ -967,8 +1059,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   result.on("data", (data: string) => {
     outputContent.value += data;
     if (
-      (currentFeatureMode.value === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
-        currentFeatureMode.value === selectedModeEnum.EDITABLE) &&
+      currentFeatureMode.value === selectedModeEnum.EDITABLE &&
       currentFeature.value[aiProviderKey.value]!.WriteResponse &&
       currentFeature.value[aiProviderKey.value]!.WriteResponse === true
     ) {
@@ -1043,6 +1134,7 @@ async function handleFeature(
 
   formDataVariableSchema.value = {};
   for (const key in feature.variableSchema) {
+    addCustomOptionVariableSchema.value[key] = { visible: false, input: "" };
     if (!feature.variableSchema[key].storage) {
       checkShowDrawer = true;
       continue;
@@ -1243,6 +1335,9 @@ const handleStartGenerateResponse = () => {
 };
 
 const handleCloseDrawer = () => {
+  for (const key in addCustomOptionVariableSchema.value) {
+    addCustomOptionVariableSchema.value[key].visible = false;
+  }
   clickOutsideFocus.value = true;
   drawer.value = false;
   isStreaming.value = false;
@@ -1309,6 +1404,60 @@ const handleCommand = (command: OptionCommandType) => {
   }
 };
 
+const handleAddCustomOption = async (key: string | number) => {
+  const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:custom_options:${key}`;
+  const value = await ChromeStorage.getInstance().get(storageKey);
+  let arrList: string[] = [];
+  if (value) {
+    arrList = JSON.parse(value);
+  }
+  arrList.push(addCustomOptionVariableSchema.value[key].input);
+  await ChromeStorage.getInstance().set(storageKey, JSON.stringify(arrList));
+  await getJsonFeatures();
+  const featureIndex = findIndex(featureList.value, {
+    id: currentFeatureId.value,
+  });
+  currentFeature.value =
+    featureList.value[featureIndex][currentFeatureMode.value]!;
+  addCustomOptionVariableSchema.value[key].visible = false;
+};
+
+const handleRemoveCustomOption = async (key: string | number) => {
+  const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:custom_options:${key}`;
+  const value = await ChromeStorage.getInstance().get(storageKey);
+  let arrList: string[] = [];
+  if (value) {
+    arrList = JSON.parse(value);
+  }
+  if (
+    formDataVariableSchema.value[key] &&
+    includes(arrList, formDataVariableSchema.value[key])
+  ) {
+    pull(arrList, formDataVariableSchema.value[key]);
+    await ChromeStorage.getInstance().set(storageKey, JSON.stringify(arrList));
+    await getJsonFeatures();
+    const featureIndex = findIndex(featureList.value, {
+      id: currentFeatureId.value,
+    });
+    currentFeature.value =
+      featureList.value[featureIndex][currentFeatureMode.value]!;
+
+    // Fill default value
+    if (currentFeature.value.variableSchema[key].options) {
+      formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
+        key
+      ].options![
+        currentFeature.value.variableSchema[key].default as number
+      ] as string;
+    }
+  } else if (
+    formDataVariableSchema.value[key] &&
+    !includes(arrList, formDataVariableSchema.value[key])
+  ) {
+    ElMessage.error("System option cannot be deleted");
+  }
+};
+
 const getFeatureEnabledState = async (
   feature: FeatureSchema
 ): Promise<boolean> => {
@@ -1323,6 +1472,57 @@ const getFeatureEnabledState = async (
   } else {
     return true;
   }
+};
+
+const getJsonFeatures = async (): Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    const data: IPCMessageType = {
+      topic: IPCTopicEnum.COMMUNICATION,
+      type: CommunicationMessageTypeEnum.GET_FEATURES,
+      message: "Get JSON Features",
+    };
+    chrome.runtime.sendMessage(data, async (response) => {
+      if (response.features) {
+        enabledFeatureStates.value = await Promise.all(
+          response.features.map((feature: any) =>
+            getFeatureEnabledState(feature)
+          )
+        );
+
+        for (let feature of response.features) {
+          for (let key in feature) {
+            if (
+              feature.READONLY === feature[key] ||
+              feature.EDITABLE === feature[key] ||
+              feature.READONLY_CONTEXT_MENU === feature[key] ||
+              feature.EDITABLE_CONTEXT_MENU === feature[key] ||
+              feature.APP === feature[key]
+            ) {
+              for (let keyVar in feature[key].variableSchema) {
+                if (feature[key].variableSchema[keyVar].options) {
+                  const storageKey = `FEATURE:${feature.id}:${key}:custom_options:${keyVar}`;
+                  const value = await ChromeStorage.getInstance().get(
+                    storageKey
+                  );
+                  if (value) {
+                    const arrList: string[] = JSON.parse(value);
+                    feature[key].variableSchema[keyVar].options = concat(
+                      feature[key].variableSchema[keyVar].options,
+                      arrList
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+        featureList.value = response.features;
+      } else {
+        featureList.value = [];
+      }
+      resolve();
+    });
+  });
 };
 
 onMounted(async () => {
@@ -1346,24 +1546,7 @@ onMounted(async () => {
 
       shadowRoot.addEventListener("mouseup", handleMouseupShadow);
       shadowRoot.addEventListener("mousedown", handleMousedownShadow);
-
-      const data: IPCMessageType = {
-        topic: IPCTopicEnum.COMMUNICATION,
-        type: CommunicationMessageTypeEnum.GET_FEATURES,
-        message: "Get JSON Features",
-      };
-      chrome.runtime.sendMessage(data, async (response) => {
-        if (response.features) {
-          featureList.value = response.features;
-          enabledFeatureStates.value = await Promise.all(
-            response.features.map((feature: any) =>
-              getFeatureEnabledState(feature)
-            )
-          );
-        } else {
-          featureList.value = [];
-        }
-      });
+      await getJsonFeatures();
     }
   }
 });
