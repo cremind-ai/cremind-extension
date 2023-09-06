@@ -19,6 +19,8 @@ import ChatDialogStyle from "@/styles/components/ChatDialog.scss";
 import LoadImgStyle from "@/styles/components/LoadImg.scss";
 import PopupMenuStyle from "@/styles/components/PopupMenu.scss";
 import PromptCardSettingStyle from "@/styles/components/PromptCardSetting.scss";
+import MenuBarStyle from "@/styles/components/MenuBar.scss";
+import QuickFeatureCardStyle from "@/styles/components/QuickFeatureCard.scss";
 
 export let shadowRoot: ShadowRoot;
 
@@ -47,6 +49,8 @@ function initExtension() {
   style.appendChild(document.createTextNode(LoadImgStyle));
   style.appendChild(document.createTextNode(PopupMenuStyle));
   style.appendChild(document.createTextNode(PromptCardSettingStyle));
+  style.appendChild(document.createTextNode(MenuBarStyle));
+  style.appendChild(document.createTextNode(QuickFeatureCardStyle));
   shadowRoot.appendChild(style);
 
   const app = createApp(App).use(createPinia());

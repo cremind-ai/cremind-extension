@@ -20,9 +20,17 @@ export class SystemVariableParser {
     return this;
   }
 
+  public getSelectedText(): string {
+    return this.selectedText!;
+  }
+
   public setUploadedText(text: string): SystemVariableParser {
     this.uploadedText = text;
     return this;
+  }
+
+  public getUploadedText(): string {
+    return this.uploadedText!;
   }
 
   private async getLanguage(): Promise<string> {

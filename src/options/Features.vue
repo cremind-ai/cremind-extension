@@ -53,7 +53,7 @@ import {
   CommunicationMessageTypeEnum,
   IPCTopicEnum,
   IPCMessageType,
-  selectedModeEnum,
+  featureModeEnum,
 } from "@/types";
 import { FeatureSchema, Icon as IconType } from "@/lib/features";
 import { PromptCardSetting } from "@/components";
@@ -64,7 +64,7 @@ const userSettings = useUserSettingsStore();
 
 const featureList: Ref<FeatureSchema[]> = ref([]);
 const switchStates: Ref<boolean[]> = ref([]);
-const supportModes: Ref<selectedModeEnum[][]> = ref([]);
+const supportModes: Ref<featureModeEnum[][]> = ref([]);
 const isDark = computed(() => userSettings.getIsDark);
 
 const getFeatureEnabledState = async (
@@ -98,11 +98,11 @@ const handleEnableChange = async (index: number, value: boolean) => {
 const handleResetVariable = (index: number) => {
   for (let key in featureList.value[index]) {
     if (
-      key === selectedModeEnum.EDITABLE ||
-      key === selectedModeEnum.READONLY ||
-      key === selectedModeEnum.EDITABLE_CONTEXT_MENU ||
-      key === selectedModeEnum.READONLY_CONTEXT_MENU ||
-      key === selectedModeEnum.APP
+      key === featureModeEnum.EDITABLE ||
+      key === featureModeEnum.READONLY ||
+      key === featureModeEnum.EDITABLE_CONTEXT_MENU ||
+      key === featureModeEnum.READONLY_CONTEXT_MENU ||
+      key === featureModeEnum.APP
     ) {
       ChromeStorage.getInstance().removeWithWildcard(
         `FEATURE:${featureList.value[index].id}:${key}:variable`
@@ -132,19 +132,19 @@ async function initialize() {
       for (let i = 0; i < featureList.value.length; i++) {
         supportModes.value[i] = [];
         if (featureList.value[i].READONLY) {
-          supportModes.value[i].push(selectedModeEnum.READONLY);
+          supportModes.value[i].push(featureModeEnum.READONLY);
         }
         if (featureList.value[i].EDITABLE) {
-          supportModes.value[i].push(selectedModeEnum.EDITABLE);
+          supportModes.value[i].push(featureModeEnum.EDITABLE);
         }
         if (featureList.value[i].READONLY_CONTEXT_MENU) {
-          supportModes.value[i].push(selectedModeEnum.READONLY_CONTEXT_MENU);
+          supportModes.value[i].push(featureModeEnum.READONLY_CONTEXT_MENU);
         }
         if (featureList.value[i].EDITABLE_CONTEXT_MENU) {
-          supportModes.value[i].push(selectedModeEnum.EDITABLE_CONTEXT_MENU);
+          supportModes.value[i].push(featureModeEnum.EDITABLE_CONTEXT_MENU);
         }
         if (featureList.value[i].APP) {
-          supportModes.value[i].push(selectedModeEnum.APP);
+          supportModes.value[i].push(featureModeEnum.APP);
         }
       }
     } else {

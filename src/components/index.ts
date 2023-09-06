@@ -5,6 +5,9 @@ import Apps from "./Apps.vue";
 import PromptCardSetting from "./PromptCardSetting.vue";
 import ImageDetailCard from "./ImageDetailCard.vue";
 import ContentWrap from "./ContentWrap.vue";
+import DrawerPromptInitialize from "./DrawerPromptInitialize.vue";
+import MenuBar from "./MenuBar.vue";
+import QuickFeatureCard from "./QuickFeatureCard.vue";
 
 export {
   PopupMenu,
@@ -14,4 +17,7 @@ export {
   PromptCardSetting,
   ImageDetailCard,
   ContentWrap,
+  DrawerPromptInitialize,
+  MenuBar,
+  QuickFeatureCard,
 };

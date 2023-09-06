@@ -49,7 +49,7 @@
       :top="top"
       :left="left"
       :show="showPopupMenu"
-      :selectedMode="selectedMode"
+      :featureMode="featureMode"
       @close="handlePopupMenuClose"
     />
     <ChatDialog />
@@ -70,7 +70,7 @@ import {
   CommunicationMessageTypeEnum,
   IPCMessageType,
   IPCTopicEnum,
-  selectedModeEnum,
+  featureModeEnum,
 } from "@/types";
 import { consoleLog, detectOperatingSystem, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
@@ -93,8 +93,8 @@ const left = ref("");
 const topMousedown = ref("");
 const leftMousedown = ref("");
 const showPopupMenu = ref(false);
-const selectedMode: Ref<selectedModeEnum> = ref(
-  selectedModeEnum.EDITABLE_CONTEXT_MENU
+const featureMode: Ref<featureModeEnum> = ref(
+  featureModeEnum.EDITABLE_CONTEXT_MENU
 );
 const featureVisible = ref(false);
 const appVisible = ref(false);
@@ -135,10 +135,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
       selectedText.value = window.getSelection()!.toString().trim();
-      selectedMode.value = selectedModeEnum.EDITABLE_CONTEXT_MENU;
+      featureMode.value = featureModeEnum.EDITABLE_CONTEXT_MENU;
     } else {
       selectedText.value = "";
-      selectedMode.value = selectedModeEnum.READONLY_CONTEXT_MENU;
+      featureMode.value = featureModeEnum.READONLY_CONTEXT_MENU;
     }
     top.value = topMousedown.value;
     left.value = leftMousedown.value;
@@ -183,9 +183,9 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
         activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
         activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
-      selectedMode.value = selectedModeEnum.EDITABLE;
+      featureMode.value = featureModeEnum.EDITABLE;
     } else {
-      selectedMode.value = selectedModeEnum.READONLY;
+      featureMode.value = featureModeEnum.READONLY;
     }
     if (checkVisibleState() === true) {
       showPopupMenu.value = true;
@@ -231,9 +231,9 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
           activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
           activeElement.nodeName.toUpperCase() === "INPUT")
       ) {
-        selectedMode.value = selectedModeEnum.EDITABLE;
+        featureMode.value = featureModeEnum.EDITABLE;
       } else {
-        selectedMode.value = selectedModeEnum.READONLY;
+        featureMode.value = featureModeEnum.READONLY;
       }
       if (checkVisibleState() === true) {
         showPopupMenu.value = true;

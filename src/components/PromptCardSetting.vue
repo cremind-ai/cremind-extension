@@ -62,7 +62,7 @@ import { ElSwitch } from "element-plus";
 import { ElButton } from "element-plus";
 import { ElPopover } from "element-plus";
 import { ElTooltip } from "element-plus";
-import { selectedModeEnum } from "@/types";
+import { featureModeEnum } from "@/types";
 import { LOGO_COLOR, LOGO_COLOR_DARK } from "@/constants";
 import { useUserSettingsStore } from "@/store/user_settings";
 
@@ -85,7 +85,7 @@ const props = defineProps({
     required: true,
   },
   supportModes: {
-    type: Array as PropType<selectedModeEnum[]>,
+    type: Array as PropType<featureModeEnum[]>,
     required: true,
     default: [],
   },
@@ -144,7 +144,7 @@ const iconsInfos = {
     "Right-click to select this mode in the context menu and allow writing results into the input field, e.g. like writing into a post composition box on a social media page.",
   APP: "This mode is located within the feature menu on the application page.",
 };
-const getIconForMode = (mode: selectedModeEnum) => {
+const getIconForMode = (mode: featureModeEnum) => {
   const iconName = iconsForModes[mode] || "";
   const iconColor = isDark.value
     ? iconColors[mode + "_DARK"] || "white"

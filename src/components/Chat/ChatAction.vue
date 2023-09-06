@@ -36,7 +36,8 @@ import { nextTick, ref } from "vue";
 const props = defineProps({
   blockSend: {
     type: Boolean,
-    required: true,
+    required: false,
+    default: false,
   },
 });
 

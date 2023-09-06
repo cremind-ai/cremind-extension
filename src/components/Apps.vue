@@ -128,7 +128,7 @@
                     type="success"
                     plain
                     @click="
-                      handleFeatureClick(feature, index, selectedModeEnum.APP)
+                      handleFeatureClick(feature, index, featureModeEnum.APP)
                     "
                   >
                     <Icon
@@ -190,63 +190,15 @@
     <!-- <template #footer>hello footer</template> -->
   </ElDialog>
 
-  <ElDrawer
-    v-model="drawer"
-    title="Initialize your prompt"
-    direction="ltr"
-    :before-close="handleCloseDrawer"
-  >
-    <ElForm :model="formDataVariableSchema" label-position="top">
-      <ElFormItem
-        v-for="(schema, key) in currentFeature.variableSchema"
-        :key="key"
-        :label="schema.description"
-      >
-        <template v-if="schema.systemOptions">
-          <ElSelect
-            v-model="formDataVariableSchema[key]"
-            placeholder="Select"
-            filterable
-          >
-            <ElOption
-              v-for="option in SystemOptions[`${schema.systemOptions}`]"
-              :key="option"
-              :label="option"
-              :value="option"
-            ></ElOption>
-          </ElSelect>
-        </template>
-        <template v-else-if="schema.options">
-          <ElSelect
-            v-model="formDataVariableSchema[key]"
-            placeholder="Select"
-            filterable
-            allow-create
-          >
-            <ElOption
-              v-for="option in schema.options"
-              :key="option"
-              :label="option"
-              :value="option"
-            ></ElOption>
-          </ElSelect>
-        </template>
-        <template v-else>
-          <ElInput
-            v-model="formDataVariableSchema[key]"
-            autosize
-            type="textarea"
-            placeholder="Enter text"
-          ></ElInput>
-        </template>
-      </ElFormItem>
-      <br />
-      <ElFormItem>
-        <ElButton @click="handleAutoFillSample">Auto Fill Sample</ElButton>
-        <ElButton @click="handleStartGenerateResponse">Run</ElButton>
-      </ElFormItem>
-    </ElForm>
-  </ElDrawer>
+  <DrawerPromptInitialize
+    v-model:feature="currentFeature"
+    v-model:visible="drawer"
+    :form-data="formDataVariableSchema"
+    :feature-id="currentFeatureId"
+    :feature-mode="currentFeatureMode"
+    @run="handleStartGenerateResponse"
+    @close="handleCloseDrawer"
+  ></DrawerPromptInitialize>
 </template>
 
 <script setup lang="ts">
@@ -271,11 +223,8 @@ import { ElMessage } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import { ElUpload } from "element-plus";
 import { ElIcon } from "element-plus";
-import { ElTimeline, ElTimelineItem } from "element-plus";
-import { ElDrawer } from "element-plus";
-import { ElForm, ElFormItem } from "element-plus";
-import { ElOption } from "element-plus";
-import { ElSelect } from "element-plus";
+import { ElTimeline } from "element-plus";
+import { ElTimelineItem } from "element-plus";
 import { ElScrollbar } from "element-plus";
 import { ElMenu } from "element-plus";
 import { ElMenuItem } from "element-plus";
@@ -292,7 +241,7 @@ import {
   AI_SYSTEM_RESPONSE_END_BLOCK,
   AI_SYSTEM_RESPONSE_START_BLOCK,
 } from "@/constants";
-import { Chat } from "./Chat";
+import { DrawerPromptInitialize } from "@/components";
 import { LoadImg } from ".";
 import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
@@ -312,7 +261,7 @@ import {
   IPCMessageType,
   IPCTopicEnum,
   ResPayloadType,
-  selectedModeEnum,
+  featureModeEnum,
 } from "@/types";
 import { FeatureSchema, FeatureType } from "@/lib/features";
 import { ChromeStorage } from "@/hooks/chrome_storage";
@@ -372,18 +321,18 @@ const isStreaming = ref(false);
 const isMinimized = ref(false);
 const isMaximized = ref(false);
 const llm = new LLM();
-const selectedMode: Ref<selectedModeEnum> = ref(selectedModeEnum.APP);
+const featureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
-const currentFeatureMode: Ref<selectedModeEnum> = ref(selectedModeEnum.APP);
+const currentFeatureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
 const featureList: Ref<FeatureSchema[]> = ref([]);
 
 const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
     const { APP } = feature;
 
-    switch (selectedMode.value) {
-      case selectedModeEnum.APP:
+    switch (featureMode.value) {
+      case featureModeEnum.APP:
         return APP !== undefined && APP![aiProviderKey.value] !== null;
       default:
         return false;
@@ -585,30 +534,15 @@ const handleAutoFillSample = () => {
   }
 };
 
-const handleStartGenerateResponse = () => {
+const handleStartGenerateResponse = (formDataVariableSchema: {
+  [key: string]: string;
+}) => {
   clickOutsideFocus.value = true;
-  drawer.value = false;
-  for (const key in currentFeature.value.variableSchema) {
-    if (!formDataVariableSchema.value[key]) {
-      if (currentFeature.value.variableSchema[key].options) {
-        formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
-          key
-        ].options![
-          currentFeature.value.variableSchema[key].default as number
-        ] as string;
-      } else {
-        formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
-          key
-        ].default as string;
-      }
-    }
-  }
-  startGenerateResponse(formDataVariableSchema.value);
+  startGenerateResponse(formDataVariableSchema);
 };
 
 const handleCloseDrawer = () => {
   clickOutsideFocus.value = true;
-  drawer.value = false;
   isStreaming.value = false;
   close();
 };
@@ -805,7 +739,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
 async function handleFeature(
   id: string,
   feature: FeatureType,
-  type: selectedModeEnum
+  type: featureModeEnum
 ) {
   const variables: { [key: string]: string } = {};
   let checkShowDrawer: boolean = false;
@@ -845,7 +779,7 @@ async function handleFeature(
 async function handleFeatureClick(
   featureSchema: FeatureSchema,
   index: number,
-  type: selectedModeEnum
+  type: featureModeEnum
 ) {
   const id: string = featureSchema.id;
   if (isStreaming.value) {

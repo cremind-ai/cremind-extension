@@ -34,7 +34,7 @@ export type IPCMessageType = {
   code?: number;
 };
 
-export enum selectedModeEnum {
+export enum featureModeEnum {
   READONLY = "READONLY",
   EDITABLE = "EDITABLE",
   READONLY_CONTEXT_MENU = "READONLY_CONTEXT_MENU",
