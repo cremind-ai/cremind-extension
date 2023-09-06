@@ -466,7 +466,6 @@ async function handleFeatureClick(_featureSchema: FeatureSchema) {
 }
 
 function close() {
-  consoleLog(LogLevelEnum.DEBUG, "Close");
   popoverVisible.value = false;
   visibleManager.resetShow();
   optionBarShow.value = false;

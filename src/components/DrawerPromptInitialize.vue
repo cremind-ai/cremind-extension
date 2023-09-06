@@ -268,7 +268,6 @@ const handleAutoFillSample = () => {
 };
 
 const handleRun = () => {
-  console.log("handleRun");
   visible.value = false;
   for (const key in props.feature.variableSchema) {
     if (!formDataVariableSchema.value[key]) {

@@ -34,13 +34,7 @@
         </ElButtonGroup>
       </div>
       <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-        <div
-          ref="contentRef"
-          class="popup-card-scroll-content"
-          :style="{
-            padding: '20px',
-          }"
-        >
+        <div ref="contentRef" class="quick-feature-card-scroll-content">
           <div v-html="markedRender(outputContent)"></div>
         </div>
       </ElScrollbar>

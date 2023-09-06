@@ -40,10 +40,20 @@
   border-top-left-radius: 1.5rem;
 }
 
+.ballon-chat-rounded-bubble-left code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .ballon-chat-rounded-bubble-right {
   border-top-left-radius: 1.5rem;
   border-bottom-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
+}
+
+.ballon-chat-rounded-bubble-right code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .ballon-chat-chat-message-content {
