@@ -1,6 +1,6 @@
 <template>
-  <div v-show="logoShow">
-    <div v-if="currentVisibleManager" class="app-cremind-features">
+  <div v-show="appEnable">
+    <div v-if="appMenuVisible" class="app-cremind-features">
       <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
         <LoadImg
           :filename="'CreMind-logo-white-128.png'"
@@ -33,7 +33,7 @@
             />
           </div>
         </ElTooltip>
-        <ElTooltip :hide-after="0" content="Apps" placement="top">
+        <ElTooltip :hide-after="0" content="AppsDialog" placement="top">
           <div class="app-apps">
             <Icon
               icon="icon-park-twotone:more-app"
@@ -52,8 +52,8 @@
       :featureMode="featureMode"
       @close="handlePopupMenuClose"
     />
-    <ChatDialog />
-    <Apps v-model="appVisible" />
+    <ChatDialog @close="handleChatDialogClose" />
+    <AppsDialog v-model="appVisible" @close="handleAppClose" />
   </div>
 </template>
 
@@ -63,7 +63,7 @@ import { Icon } from "@iconify/vue";
 import { ElTooltip } from "element-plus";
 import { PopupMenu } from "@/components";
 import { ChatDialog } from "@/components";
-import { Apps } from "@/components";
+import { AppsDialog } from "@/components";
 import { LoadImg } from "@/components";
 import { SystemVariableParser } from "@/lib";
 import {
@@ -83,9 +83,10 @@ import { OperatingSystemEnum } from "@/constants";
 
 const userSettings = useUserSettingsStore();
 const chatDialog = useChatDialogStore();
-const visibleManager = useVisibleManagerStore();
+// const visibleManager = useVisibleManagerStore();
 
-const logoShow = ref(true);
+const appMenuVisible = ref(true);
+const appEnable = ref(true);
 const selectedText = ref("");
 const mousedownSelectedText = ref(false);
 const top = ref("");
@@ -99,10 +100,10 @@ const featureMode: Ref<featureModeEnum> = ref(
 const featureVisible = ref(false);
 const appVisible = ref(false);
 const isDark = computed(() => userSettings.getIsDark);
-const currentVisibleManager = computed(() => {
-  return visibleManager.getVisible(VisibleManagerTypeEnum.LOGO);
-});
-const visibleStates = computed(() => visibleManager.getVisibles);
+// const currentVisibleManager = computed(() => {
+//   return visibleManager.getVisible(VisibleManagerTypeEnum.LOGO);
+// });
+// const visibleStates = computed(() => visibleManager.getVisibles);
 const hideMeLabel = computed(() => {
   if (detectOperatingSystem() === OperatingSystemEnum.MACOS) {
     return "Cmd+Shift+Z: hide me";
@@ -112,21 +113,8 @@ const hideMeLabel = computed(() => {
 });
 let showFeaturesTimeout: any;
 
-function checkVisibleState(): boolean {
-  return Object.keys(visibleStates.value).every((key) => {
-    if (key === VisibleManagerTypeEnum.LOGO) {
-      return visibleStates.value[key] === true;
-    } else {
-      return visibleStates.value[key] === false;
-    }
-  });
-}
-
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  if (!showPopupMenu.value) {
-    if (checkVisibleState() === false) {
-      return;
-    }
+  if (!showPopupMenu.value && appMenuVisible.value) {
     const activeElement = document.activeElement as HTMLElement;
     if (
       activeElement &&
@@ -142,7 +130,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
     top.value = topMousedown.value;
     left.value = leftMousedown.value;
-    showPopupMenu.value = true;
+    handleShowPopupMenu();
   }
 });
 
@@ -158,73 +146,26 @@ document.addEventListener("mousedown", function (event: MouseEvent) {
 });
 
 document.addEventListener("mouseup", function (event: MouseEvent) {
-  var selection = window.getSelection();
-  let selectionText = selection!.toString().trim();
-  if (selection!.rangeCount <= 0) {
-    return;
-  }
-  var range = selection!.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-  const activeElement = document.activeElement as HTMLElement;
-  if (selectionText && !mousedownSelectedText.value && !showPopupMenu.value) {
-    selectedText.value = selectionText;
-    SystemVariableParser.getInstance().setSelectedText(selectionText);
-    var rects = range.getClientRects();
-    if (rects.length > 0) {
-      top.value = `${rect.bottom + window.scrollY + 10}px`;
-      left.value = `${rect.left + window.scrollX}px`;
-    } else {
-      top.value = `${event.clientY + window.scrollY + 15}px`;
-      left.value = `${event.clientX + window.scrollX}px`;
+  if (!showPopupMenu.value && appMenuVisible.value) {
+    var selection = window.getSelection();
+    let selectionText = selection!.toString().trim();
+    if (selection!.rangeCount <= 0) {
+      return;
     }
-    if (
-      activeElement &&
-      (activeElement.isContentEditable ||
-        activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
-        activeElement.nodeName.toUpperCase() === "INPUT")
-    ) {
-      featureMode.value = featureModeEnum.EDITABLE;
-    } else {
-      featureMode.value = featureModeEnum.READONLY;
-    }
-    if (checkVisibleState() === true) {
-      showPopupMenu.value = true;
-    }
-  }
-});
-
-document.addEventListener("keydown", function (event: KeyboardEvent) {
-  if (
-    (event.ctrlKey &&
-      event.shiftKey &&
-      event.key.toLowerCase() === "z" &&
-      detectOperatingSystem() !== OperatingSystemEnum.MACOS) ||
-    (event.metaKey &&
-      event.shiftKey &&
-      event.key.toLowerCase() === "z" &&
-      detectOperatingSystem() === OperatingSystemEnum.MACOS)
-  ) {
-    if (checkVisibleState() === true) {
-      if (logoShow.value) {
-        logoShow.value = false;
-      } else {
-        logoShow.value = true;
-      }
-    }
-    event.preventDefault();
-  }
-});
-
-document.addEventListener("keyup", function (event: KeyboardEvent) {
-  const pressedKey = event.key;
-  const selectionText = window.getSelection()?.toString().trim();
-  if (pressedKey === "Shift" || pressedKey === "Meta") {
-    if (selectionText && !showPopupMenu.value) {
+    var range = selection!.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const activeElement = document.activeElement as HTMLElement;
+    if (selectionText && !mousedownSelectedText.value) {
       selectedText.value = selectionText;
       SystemVariableParser.getInstance().setSelectedText(selectionText);
-      top.value = topMousedown.value;
-      left.value = leftMousedown.value;
-      const activeElement = document.activeElement as HTMLElement;
+      var rects = range.getClientRects();
+      if (rects.length > 0) {
+        top.value = `${rect.bottom + window.scrollY + 10}px`;
+        left.value = `${rect.left + window.scrollX}px`;
+      } else {
+        top.value = `${event.clientY + window.scrollY + 15}px`;
+        left.value = `${event.clientX + window.scrollX}px`;
+      }
       if (
         activeElement &&
         (activeElement.isContentEditable ||
@@ -235,15 +176,88 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
       } else {
         featureMode.value = featureModeEnum.READONLY;
       }
-      if (checkVisibleState() === true) {
-        showPopupMenu.value = true;
+      handleShowPopupMenu();
+    }
+  }
+});
+
+document.addEventListener("keydown", function (event: KeyboardEvent) {
+  if (appMenuVisible.value) {
+    if (
+      (event.ctrlKey &&
+        event.shiftKey &&
+        event.key.toLowerCase() === "z" &&
+        detectOperatingSystem() !== OperatingSystemEnum.MACOS) ||
+      (event.metaKey &&
+        event.shiftKey &&
+        event.key.toLowerCase() === "z" &&
+        detectOperatingSystem() === OperatingSystemEnum.MACOS)
+    ) {
+      if (appEnable.value) {
+        appEnable.value = false;
+      } else {
+        appEnable.value = true;
+      }
+      event.preventDefault();
+    }
+  }
+});
+
+document.addEventListener("keyup", function (event: KeyboardEvent) {
+  if (!showPopupMenu.value && appMenuVisible.value) {
+    const pressedKey = event.key;
+    const selectionText = window.getSelection()?.toString().trim();
+    if (pressedKey === "Shift" || pressedKey === "Meta") {
+      if (selectionText && !showPopupMenu.value) {
+        selectedText.value = selectionText;
+        SystemVariableParser.getInstance().setSelectedText(selectionText);
+        top.value = topMousedown.value;
+        left.value = leftMousedown.value;
+        const activeElement = document.activeElement as HTMLElement;
+        if (
+          activeElement &&
+          (activeElement.isContentEditable ||
+            activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
+            activeElement.nodeName.toUpperCase() === "INPUT")
+        ) {
+          featureMode.value = featureModeEnum.EDITABLE;
+        } else {
+          featureMode.value = featureModeEnum.READONLY;
+        }
+        handleShowPopupMenu();
       }
     }
   }
 });
 
+function handleShowPopupMenu() {
+  showPopupMenu.value = true;
+  appMenuVisible.value = false;
+}
+
+const handleStartChat = () => {
+  chatDialog.setChatDialogVisible(true);
+  appMenuVisible.value = false;
+};
+
+const handleApps = () => {
+  appVisible.value = true;
+  appMenuVisible.value = false;
+};
+
 function handlePopupMenuClose() {
   showPopupMenu.value = false;
+  appMenuVisible.value = true;
+}
+
+function handleChatDialogClose() {
+  chatDialog.setChatDialogVisible(false);
+  appMenuVisible.value = true;
+}
+
+function handleAppClose() {
+  appVisible.value = false;
+  appMenuVisible.value = true;
 }
 
 const handleSettings = () => {
@@ -254,18 +268,6 @@ const handleSettings = () => {
   };
   consoleLog(LogLevelEnum.DEBUG, data);
   chrome.runtime.sendMessage(data, () => {});
-};
-
-const handleStartChat = () => {
-  chatDialog.setChatDialogVisible(true);
-};
-
-const handleApps = () => {
-  if (appVisible.value) {
-    appVisible.value = false;
-  } else {
-    appVisible.value = true;
-  }
 };
 
 function showFeatures() {
@@ -280,8 +282,8 @@ function hideFeatures() {
 }
 
 onMounted(async () => {
-  visibleManager.register(VisibleManagerTypeEnum.LOGO);
-  visibleManager.resetShow();
+  // visibleManager.register(VisibleManagerTypeEnum.LOGO);
+  // visibleManager.resetShow();
   await userSettings.initialize();
 });
 </script>

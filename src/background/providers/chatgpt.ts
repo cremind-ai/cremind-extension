@@ -291,7 +291,7 @@ export class ChatGPT extends AIProvider {
               message:
                 error.detail && error.detail.message
                   ? error.detail.message
-                  : error.detail,
+                  : error.detail.message,
               code: Status.CHATGPT_RESPONSE_ERROR,
             });
             if (this.conversationId) {

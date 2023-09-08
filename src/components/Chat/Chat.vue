@@ -4,7 +4,12 @@
       <RoomChat :chats="props.chats" />
     </div>
   </ElScrollbar>
-  <ChatAction @new-chat="newChat" v-model:blockSend="blockSend" />
+
+  <ChatAction
+    style="margin-top: 10px"
+    @new-chat="newChat"
+    v-model:blockSend="blockSend"
+  />
 </template>
 
 <script setup lang="ts">

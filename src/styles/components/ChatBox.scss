@@ -1,0 +1,24 @@
+.chatbox-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.chatbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: var(--cremind-logo-color-dark);
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.chatbox-chat {
+  padding: 10px;
+}
+
+.chatbox-chat .el-scrollbar {
+  min-height: 200px;
+}

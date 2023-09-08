@@ -14,8 +14,10 @@ import ChatStyle from "@/styles/components/Chat/Chat.scss";
 import ChatActionStyle from "@/styles/components/Chat/ChatAction.scss";
 import RoomChatStyle from "@/styles/components/Chat/RoomChat.scss";
 
+import AppsDialogStyle from "@/styles/components/AppsDialog.scss";
 import AppsStyle from "@/styles/components/Apps.scss";
 import ChatDialogStyle from "@/styles/components/ChatDialog.scss";
+import ChatBoxStyle from "@/styles/components/ChatBox.scss";
 import LoadImgStyle from "@/styles/components/LoadImg.scss";
 import PopupMenuStyle from "@/styles/components/PopupMenu.scss";
 import PromptCardSettingStyle from "@/styles/components/PromptCardSetting.scss";
@@ -44,8 +46,10 @@ function initExtension() {
   style.appendChild(document.createTextNode(ChatStyle));
   style.appendChild(document.createTextNode(ChatActionStyle));
   style.appendChild(document.createTextNode(RoomChatStyle));
+  style.appendChild(document.createTextNode(AppsDialogStyle));
   style.appendChild(document.createTextNode(AppsStyle));
   style.appendChild(document.createTextNode(ChatDialogStyle));
+  style.appendChild(document.createTextNode(ChatBoxStyle));
   style.appendChild(document.createTextNode(LoadImgStyle));
   style.appendChild(document.createTextNode(PopupMenuStyle));
   style.appendChild(document.createTextNode(PromptCardSettingStyle));

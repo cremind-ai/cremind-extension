@@ -1,64 +1,5 @@
 <template>
-  <!-- Chat Dialog -->
-  <ElDialog
-    v-model="appDialogVisible"
-    :show-close="false"
-    :file-list="fileList"
-    :close-on-click-modal="false"
-    :width="`80%`"
-    :fullscreen="isMaximized"
-    :before-close="handleCloseDialog"
-  >
-    <!-- Header -->
-    <template #header>
-      <ElButton
-        class="apps-minimize-icon"
-        type="warning"
-        plain
-        :icon="SemiSelect"
-        @click="handleMinimize"
-        size="small"
-        circle
-      ></ElButton>
-      <ElButton
-        class="apps-close-icon"
-        type="danger"
-        plain
-        :icon="Close"
-        @click="handleCloseDialog"
-        size="small"
-        circle
-      ></ElButton>
-      <ElButton
-        class="apps-maximize-icon"
-        type="success"
-        plain
-        :icon="FullScreen"
-        @click="handleMaximize"
-        size="small"
-        circle
-      ></ElButton>
-      <div
-        style="
-          white-space: nowrap;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          font-size: 14px;
-          line-height: 1.3;
-        "
-      >
-        <div>
-          CreMind AI
-          <LoadImg
-            class="apps-cremind-icon-bar"
-            :filename="'CreMind-logo-64.png'"
-            :width="25"
-          />
-        </div>
-      </div>
-    </template>
-
+  <slot name="main">
     <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
       <ElTimeline>
         <ElTimelineItem timestamp="Input" placement="top">
@@ -77,6 +18,7 @@
               v-if="activeIndexInput === InputMode.UPLOAD"
               class="upload-demo"
               drag
+              :file-list="fileList"
               :on-success="onSuccess"
               :on-error="onError"
               :on-progress="onProgress"
@@ -187,18 +129,19 @@
         </ElTimelineItem>
       </ElTimeline>
     </ElScrollbar>
-    <!-- <template #footer>hello footer</template> -->
-  </ElDialog>
+  </slot>
 
-  <DrawerPromptInitialize
-    v-model:feature="currentFeature"
-    v-model:visible="drawer"
-    :form-data="formDataVariableSchema"
-    :feature-id="currentFeatureId"
-    :feature-mode="currentFeatureMode"
-    @run="handleStartGenerateResponse"
-    @close="handleCloseDrawer"
-  ></DrawerPromptInitialize>
+  <slot name="drawer">
+    <DrawerPromptInitialize
+      v-model:feature="currentFeature"
+      v-model:visible="drawer"
+      :form-data="formDataVariableSchema"
+      :feature-id="currentFeatureId"
+      :feature-mode="currentFeatureMode"
+      @run="handleStartGenerateResponse"
+      @close="handleCloseDrawer"
+    ></DrawerPromptInitialize>
+  </slot>
 </template>
 
 <script setup lang="ts">
@@ -211,14 +154,10 @@ import {
   UploadProps,
   UploadUserFile,
 } from "element-plus";
-import { Close } from "@element-plus/icons-vue";
-import { FullScreen } from "@element-plus/icons-vue";
 import { UploadFilled } from "@element-plus/icons-vue";
-import { SemiSelect } from "@element-plus/icons-vue";
 import { ElButton } from "element-plus";
 import { ElTooltip } from "element-plus";
 import { ElButtonGroup } from "element-plus";
-import { ElDialog } from "element-plus";
 import { ElMessage } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import { ElUpload } from "element-plus";
@@ -237,7 +176,6 @@ import {
   APP_BARD_MAX_CHUNKSIZE,
   APP_MAX_RETRIES,
   APP_RETRY_TIME,
-  ConversationRoleEnum,
   AI_SYSTEM_RESPONSE_END_BLOCK,
   AI_SYSTEM_RESPONSE_START_BLOCK,
 } from "@/constants";
@@ -265,14 +203,9 @@ import {
 } from "@/types";
 import { FeatureSchema, FeatureType } from "@/lib/features";
 import { ChromeStorage } from "@/hooks/chrome_storage";
-import { SystemOptions } from "@/constants/system_variables";
 import { SystemVariableParser } from "@/lib";
 import { ChainBuilder } from "@/lib/chain/chain_builder";
 import { ConversationModeEnum } from "@/types/conversation";
-import {
-  useVisibleManagerStore,
-  VisibleManagerTypeEnum,
-} from "@/store/visible_manager";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { ResponseParser } from "@/lib/response_parser";
 
@@ -282,16 +215,7 @@ enum InputMode {
   URL = "2",
 }
 
-const visibleManager = useVisibleManagerStore();
 const userSettings = useUserSettingsStore();
-
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-});
 
 const marked = new Marked(
   markedHighlight({
@@ -304,7 +228,20 @@ const marked = new Marked(
 );
 marked.use({ silent: true, breaks: true });
 
-const emits = defineEmits(["update:modelValue"]);
+const props = defineProps({
+  start: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  isStreaming: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+});
+
+const emits = defineEmits(["update:isStreaming", "complete"]);
 
 const aiProvider = computed(() => userSettings.getAiProvider);
 const aiProviderKey = computed(() => {
@@ -316,10 +253,7 @@ const aiProviderKey = computed(() => {
   return "ChatGPT";
 });
 
-const appDialogVisible = ref(props.modelValue);
 const isStreaming = ref(false);
-const isMinimized = ref(false);
-const isMaximized = ref(false);
 const llm = new LLM();
 const featureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
@@ -354,9 +288,6 @@ const activeIndexInput = ref(InputMode.UPLOAD);
 const insertText = ref("");
 const url = ref("");
 const fileList = ref<UploadUserFile[]>([]);
-const currentVisibleManager = computed(() => {
-  return visibleManager.getVisible(VisibleManagerTypeEnum.APP_DIALOG);
-});
 
 let uploadItems: string[] = [];
 let conversationId: string | null = null;
@@ -366,26 +297,9 @@ let continueGenerating: boolean = false;
 const unstructuredApiUrl = import.meta.env.VITE_UNSTRUCTURED_API;
 
 watch(
-  () => props.modelValue,
+  () => isStreaming.value,
   (value) => {
-    if (value) {
-      visibleManager.takeVisible(VisibleManagerTypeEnum.APP_DIALOG);
-    }
-    appDialogVisible.value = value;
-  }
-);
-
-watch(
-  () => appDialogVisible.value,
-  (value) => {
-    emits("update:modelValue", value);
-  }
-);
-
-watch(
-  () => currentVisibleManager.value,
-  (value) => {
-    appDialogVisible.value = value;
+    emits("update:isStreaming", value);
   }
 );
 
@@ -418,44 +332,15 @@ const getFeatureEnabledState = async (
   }
 };
 
-const handleCloseDialog = () => {
-  if (isStreaming.value) {
-    ElMessageBox.confirm(
-      "The result is being streamed, do you want to stop?",
-      "Warning",
-      {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning",
-      }
-    )
-      .then(async () => {
-        isStreaming.value = false;
-      })
-      .catch(() => {});
-  } else {
-    deleteConversation();
-    outputContent.value = "";
-    isStreaming.value = false;
-    appDialogVisible.value = false;
-    fileList.value = [];
-    uploadItems = [];
-    visibleManager.resetShow();
-  }
-};
-
-const handleMinimize = () => {
-  appDialogVisible.value = false;
-  visibleManager.resetShow();
-};
-
-const handleMaximize = () => {
-  if (isMaximized.value) {
-    isMaximized.value = false;
-  } else {
-    isMaximized.value = true;
-  }
-};
+function close() {
+  deleteConversation();
+  outputContent.value = "";
+  isStreaming.value = false;
+  fileList.value = [];
+  uploadItems = [];
+  insertText.value = "";
+  url.value = "";
+}
 
 const handleSelectInput = (key: string, keyPath: string[]) => {
   const inputModeEnum: InputMode = key as InputMode;
@@ -509,29 +394,13 @@ const deleteConversation = () => {
       conversationId: conversationId!,
     });
   }
-
   conversationId = null;
   messageId = null;
+  emits("complete");
 };
 
 const scrollToBottom = () => {
   scrollContentRef.value!.setScrollTop(contentRef.value!.clientHeight);
-};
-
-const handleAutoFillSample = () => {
-  for (const key in currentFeature.value.variableSchema) {
-    if (currentFeature.value.variableSchema[key].options) {
-      formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
-        key
-      ].options![
-        currentFeature.value.variableSchema[key].sample as number
-      ] as string;
-    } else {
-      formDataVariableSchema.value[key] = currentFeature.value.variableSchema[
-        key
-      ].sample as string;
-    }
-  }
 };
 
 const handleStartGenerateResponse = (formDataVariableSchema: {
@@ -544,7 +413,6 @@ const handleStartGenerateResponse = (formDataVariableSchema: {
 const handleCloseDrawer = () => {
   clickOutsideFocus.value = true;
   isStreaming.value = false;
-  close();
 };
 
 const handleCopyToClipboard = () => {
@@ -797,7 +665,6 @@ async function handleFeatureClick(
 }
 
 onMounted(() => {
-  visibleManager.register(VisibleManagerTypeEnum.APP_DIALOG);
   const data: IPCMessageType = {
     topic: IPCTopicEnum.COMMUNICATION,
     type: CommunicationMessageTypeEnum.GET_FEATURES,
@@ -814,5 +681,10 @@ onMounted(() => {
     }
   });
 });
+
+defineExpose({
+  close,
+});
 </script>
+
 <style scoped></style>

@@ -19,7 +19,7 @@
     class="popup-card-popover"
     style="word-break: normal"
     placement="bottom"
-    :visible="popoverVisible && currentVisibleManager"
+    :visible="popoverVisible"
     :width="width"
     popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(255, 78, 199, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%); border-radius: 14px;"
   >
@@ -41,7 +41,7 @@
         ></LoadImg>
         <div
           class="popup-card-option-bar"
-          v-show="vitualOptionBarShow"
+          v-show="optionBarShow"
           :style="{
             marginTop: optionBarMarginTop,
             marginLeft: optionBarMarginLeft,
@@ -128,14 +128,8 @@ import { QuickFeatureCard } from "@/components";
 import { MenuBar } from "@/components";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
-import {
-  useVisibleManagerStore,
-  VisibleManagerTypeEnum,
-} from "@/store/visible_manager";
 import { AIMode } from "@/constants";
 import { getJsonFeatures } from "@/lib/common";
-
-const visibleManager = useVisibleManagerStore();
 
 const props = defineProps({
   selectedText: {
@@ -188,10 +182,6 @@ const aiProviderKey = computed(() => {
 
 const optionBarShow = ref(props.show);
 const tidyDisplayOptionBarMode = ref(userSettings.getTidyDisplayOptionBarMode);
-const vitualOptionBarShow = ref(false);
-const combineOptionBarShowVisible = computed(() => {
-  return optionBarShow.value && currentVisibleManager.value;
-});
 const popoverVisible = ref(false);
 const optionBarZIndex = ref(1000000000);
 const optionBarTop = ref(props.top);
@@ -245,10 +235,6 @@ const filteredFeatureList = computed(() => {
   return _filteredFeatureList;
 });
 
-const currentVisibleManager = computed(() => {
-  return visibleManager.getVisible(VisibleManagerTypeEnum.POPUP_CARD);
-});
-
 let startPart: string | null = null;
 let endPart: string | null = null;
 
@@ -265,7 +251,6 @@ watch(
         (!iconMaximizeShow.value && !tidyDisplayOptionBarMode.value) ||
         (!logoShow.value && tidyDisplayOptionBarMode.value)
       ) {
-        visibleManager.takeVisible(VisibleManagerTypeEnum.POPUP_CARD);
         if (!tidyDisplayOptionBarMode.value) {
           optionBarShow.value = newValue;
         }
@@ -365,19 +350,6 @@ watch(
   }
 );
 
-watch(
-  () => combineOptionBarShowVisible.value,
-  (value) => {
-    if (value) {
-      vitualOptionBarShow.value = true;
-    } else {
-      nextTick(() => {
-        vitualOptionBarShow.value = false;
-      });
-    }
-  }
-);
-
 const writeOriginalActiveElementValue = (text: string) => {
   if (
     originalActiveElement.value!.value !== undefined &&
@@ -467,7 +439,6 @@ async function handleFeatureClick(_featureSchema: FeatureSchema) {
 
 function close() {
   popoverVisible.value = false;
-  visibleManager.resetShow();
   optionBarShow.value = false;
   logoShow.value = false;
   emits("close");
@@ -576,11 +547,9 @@ const handleMinimize = () => {
   popoverVisible.value = false;
   logoShow.value = false;
   optionBarShow.value = false;
-  visibleManager.resetShow();
 };
 
 const handleGoback = () => {
-  visibleManager.takeVisible(VisibleManagerTypeEnum.POPUP_CARD);
   iconMaximizeShow.value = false;
   optionBarShow.value = true;
   popoverVisible.value = true;
@@ -625,7 +594,6 @@ onMounted(async () => {
   if (shadowHost) {
     const shadowRoot = shadowHost.shadowRoot;
     if (shadowRoot) {
-      visibleManager.register(VisibleManagerTypeEnum.POPUP_CARD);
       optionBarRef.value = shadowRoot.querySelector(
         ".popup-card-option-bar"
       ) as HTMLDivElement;

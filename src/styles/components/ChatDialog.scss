@@ -1,3 +1,7 @@
+.chat-dialog-main {
+  border-radius: 15px;
+}
+
 .chat-dialog-minimize-icon {
   position: absolute;
   top: 8px;
@@ -15,4 +19,13 @@
   position: fixed;
   right: 5px;
   bottom: 180px;
+}
+
+.el-dialog__header {
+  margin: 0px;
+  padding: 0px;
+}
+
+.el-dialog__body {
+  padding: 0px;
 }
