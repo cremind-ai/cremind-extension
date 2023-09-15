@@ -18,3 +18,23 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.apps-main {
+  padding: 10px;
+}
+.apps-main ul {
+  padding-inline-start: 0px;
+}
+
+.apps-main .apps-item-menu {
+  padding: 10px;
+}
+
+.apps-menu-card-loading {
+  font-size: 25px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}

@@ -9,7 +9,7 @@
               : 'ballon-chat-rounded-bubble-right ballon-chat-bg-blue-800'
           "
           class="bubble ballon-chat-chat-message-content"
-          v-html="markedRender(props.message)"
+          v-html="outputContentRender"
         ></div>
       </div>
     </div>
@@ -20,6 +20,7 @@
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
+import { computed } from "vue";
 
 const marked = new Marked(
   markedHighlight({
@@ -30,7 +31,7 @@ const marked = new Marked(
     },
   })
 );
-marked.use({ silent: true, breaks: true });
+marked.use({ silent: true, mangle: false, breaks: true });
 
 const props = defineProps({
   message: {
@@ -43,11 +44,11 @@ const props = defineProps({
   },
 });
 
-const bubbleMaxWidth = "calc(100% - 2.25rem)"; // Adjust the padding accordingly
+const outputContentRender = computed(() => {
+  return marked.parse(props.message);
+});
 
-const markedRender = (text: string) => {
-  return marked.parse(text);
-};
+const bubbleMaxWidth = "calc(100% - 2.25rem)"; // Adjust the padding accordingly
 </script>
 
 <style scoped></style>

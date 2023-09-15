@@ -1,7 +1,7 @@
 .chat-action-send-icon {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
+  bottom: 10px;
+  right: 10px;
   opacity: 0.4;
 }
 .chat-action-send-icon:hover {
@@ -21,4 +21,12 @@
 }
 .chat-action-rounded-xl {
   border-radius: 0.75rem;
+}
+.chat-action-input-loading {
+  font-size: 25px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
 }

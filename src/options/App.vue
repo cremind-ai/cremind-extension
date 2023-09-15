@@ -70,7 +70,7 @@ const handleOpen = (key: string, keyPath: string[]) => {
 };
 
 onMounted(async () => {
-  await userSettings.initialize();
+  await userSettings.initialize(true);
 });
 </script>
 
@@ -90,8 +90,10 @@ onMounted(async () => {
 .layout-container .el-menu {
   border-right: none;
 }
-.layout-container .ElMain {
+.layout-container .el-main {
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 .layout-container .toolbar {
   display: inline-flex;

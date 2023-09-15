@@ -29,13 +29,16 @@
         size="small"
         circle
       ></ElButton>
+      <div class="chat-dialog-header"></div>
+    </template>
+    <div :style="{ height: dialogHeight }">
       <ChatBox
         ref="chatBoxRef"
         v-model:is-streaming="isStreaming"
         :is-send="isSend"
         :prompt="prompt"
       ></ChatBox>
-    </template>
+    </div>
   </ElDialog>
 </template>
 
@@ -48,45 +51,41 @@ import { ElButton } from "element-plus";
 import { ElDialog } from "element-plus";
 import { ElMessage } from "element-plus";
 import { ElMessageBox } from "element-plus";
-import { useChatDialogStore } from "@/store/chat_dialog";
 import { ChatBox } from "@/components";
+
+const props = defineProps({
+  show: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  prompt: {
+    type: String,
+    required: false,
+    default: "",
+  },
+});
 
 const emits = defineEmits(["close"]);
 
-const chatDialog = useChatDialogStore();
-
 const chatBoxRef = ref<ComponentRef<typeof ChatBox>>();
-const chatDialogVisible = ref(false);
+const chatDialogVisible = ref(props.show);
 
 const isStreaming = ref(false);
 const isMinimized = ref(false);
+
 const isSend = ref(false);
-const prompt = ref("");
+
+const dialogHeight = ref(`${(70 / 100) * window.innerHeight}px`);
 
 watch(
-  () => chatDialog.getChatDialogVisible,
-  (value) => {
-    chatDialogVisible.value = value;
-    if (value) {
-      const _prompt = chatDialog.getInitialPrompt;
-      if (_prompt) {
-        prompt.value = _prompt;
-        nextTick(() => {
-          isSend.value = true;
-        });
-      }
-    }
-    if (value && isMinimized.value) {
-      isMinimized.value = false;
-    }
-  }
-);
-
-watch(
-  () => isStreaming.value,
-  (value) => {
-    if (!value) {
-      chatDialog.setInitialPrompt(null);
+  () => props.show,
+  (newValue) => {
+    chatDialogVisible.value = newValue;
+    if (newValue && props.prompt !== "") {
+      nextTick(() => {
+        isSend.value = true;
+      });
     }
   }
 );
@@ -103,20 +102,23 @@ const handleCloseDialog = () => {
       }
     )
       .then(async () => {
-        chatDialog.setChatDialogVisible(true);
+        chatDialogVisible.value = true;
         isStreaming.value = false;
       })
       .catch(() => {});
   } else {
-    chatDialog.setChatDialogVisible(false);
+    chatDialogVisible.value = false;
     chatBoxRef.value!.close();
-    emits("close");
+    isSend.value = false;
+    setTimeout(() => {
+      emits("close");
+    }, 0);
   }
 };
 
 const handleMinimize = () => {
   isMinimized.value = true;
-  chatDialog.setChatDialogVisible(false);
+  chatDialogVisible.value = false;
   emits("close");
 };
 

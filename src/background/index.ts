@@ -20,41 +20,53 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const data: IPCMessageType = request;
   if (data && data.topic === IPCTopicEnum.COMMUNICATION) {
     if (data.type === CommunicationMessageTypeEnum.GET_FEATURES) {
-      fetch(`${import.meta.env.VITE_CREMIND_API!}/prompt/features`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new CWException(
-              Status.BACKEND_REQUEST_UNKNOWN_ERROR,
-              "Request unknown error"
-            );
-          }
-          return response.json();
+      if (data.payload && data.payload.cache) {
+        ChromeStorage.getInstance()
+          .get("FEATURES_JSON")
+          .then((value) => {
+            if (value) {
+              sendResponse({ features: JSON.parse(value) });
+            } else {
+              sendResponse({ features: null });
+            }
+          });
+      } else {
+        fetch(`${import.meta.env.VITE_CREMIND_API!}/prompt/features`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         })
-        .then((resData: ResPayloadType) => {
-          sendResponse({ features: resData.payload.features });
-          if (resData.status === Status.SUCCESS && resData.payload.features) {
-            ChromeStorage.getInstance().set(
-              "FEATURES_JSON",
-              JSON.stringify(resData.payload.features)
-            );
-          }
-        })
-        .catch((error) => {
-          ChromeStorage.getInstance()
-            .get("FEATURES_JSON")
-            .then((value) => {
-              if (value) {
-                sendResponse({ features: JSON.parse(value) });
-              } else {
-                sendResponse({ features: null });
-              }
-            });
-        });
+          .then((response) => {
+            if (!response.ok) {
+              throw new CWException(
+                Status.BACKEND_REQUEST_UNKNOWN_ERROR,
+                "Request unknown error"
+              );
+            }
+            return response.json();
+          })
+          .then((resData: ResPayloadType) => {
+            sendResponse({ features: resData.payload.features });
+            if (resData.status === Status.SUCCESS && resData.payload.features) {
+              ChromeStorage.getInstance().set(
+                "FEATURES_JSON",
+                JSON.stringify(resData.payload.features)
+              );
+            }
+          })
+          .catch((error) => {
+            ChromeStorage.getInstance()
+              .get("FEATURES_JSON")
+              .then((value) => {
+                if (value) {
+                  sendResponse({ features: JSON.parse(value) });
+                } else {
+                  sendResponse({ features: null });
+                }
+              });
+          });
+      }
     } else if (data.type === CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE) {
       chrome.runtime.openOptionsPage();
       sendResponse({});
@@ -71,6 +83,9 @@ const aiProviderOpenAI = AIProviderFactory.createOpenAI("");
 chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason === "install") {
     chrome.runtime.openOptionsPage();
+    chrome.tabs.create({
+      url: import.meta.env.VITE_CREMIND_GETTING_STARTED_URL!,
+    });
   }
 
   chrome.contextMenus.create({

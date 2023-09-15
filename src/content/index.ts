@@ -58,7 +58,7 @@ function initExtension() {
   shadowRoot.appendChild(style);
 
   const app = createApp(App).use(createPinia());
-  app.use(ElementPlus);
+  app.use(ElementPlus, { zIndex: 2147483647 });
   app.mount(appContainer);
 }
 

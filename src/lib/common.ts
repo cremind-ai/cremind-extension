@@ -7,11 +7,12 @@ import {
 import { FeatureSchema } from "./features";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 
-const getJsonFeatures = async (): Promise<FeatureSchema[]> => {
+const getJsonFeatures = async (cache: boolean): Promise<FeatureSchema[]> => {
   return new Promise<FeatureSchema[]>((resolve, reject) => {
     const data: IPCMessageType = {
       topic: IPCTopicEnum.COMMUNICATION,
       type: CommunicationMessageTypeEnum.GET_FEATURES,
+      payload: { cache: cache },
       message: "Get JSON Features",
     };
     let featureList = [];

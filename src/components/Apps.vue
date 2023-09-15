@@ -1,134 +1,165 @@
 <template>
   <slot name="main">
-    <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-      <ElTimeline>
-        <ElTimelineItem timestamp="Input" placement="top">
-          <ElCard>
-            <ElMenu
-              :default-active="InputMode.UPLOAD"
-              mode="horizontal"
-              :ellipsis="false"
-              @select="handleSelectInput"
-            >
-              <ElMenuItem index="0">UPLOAD</ElMenuItem>
-              <ElMenuItem index="1">INSERT TEXT</ElMenuItem>
-              <ElMenuItem index="2">URL</ElMenuItem>
-            </ElMenu>
-            <ElUpload
-              v-if="activeIndexInput === InputMode.UPLOAD"
-              class="upload-demo"
-              drag
-              :file-list="fileList"
-              :on-success="onSuccess"
-              :on-error="onError"
-              :on-progress="onProgress"
-              :before-upload="beforeUpload"
-              :action="`${unstructuredApiUrl}/loader/upload?chunk_size=500&chunk_overlap=0`"
-            >
-              <ElIcon class="el-icon--upload"><UploadFilled /></ElIcon>
-              <div class="el-upload__text">
-                Drop file here or <em>click to upload</em>
-              </div>
-
-              <template #tip>
-                <div class="el-upload__tip">
-                  .txt .pdf .doc .docx .rtf .ppt .pptx .xls .xlsx .csv .json
-                  .xml .html .css .cpp .js .py .java ... and many other text
-                  formats
-                </div>
-              </template>
-            </ElUpload>
-
-            <ElInput
-              v-if="activeIndexInput === InputMode.INSERT_TEXT"
-              v-model="insertText"
-              placeholder="Please insert text here"
-              :autosize="{ minRows: 9, maxRows: 20 }"
-              type="textarea"
-            />
-            <ElInput
-              v-if="activeIndexInput === InputMode.URL"
-              v-model="url"
-              placeholder="https://example.com"
-            />
-          </ElCard>
-        </ElTimelineItem>
-        <ElTimelineItem timestamp="Menu" placement="top">
-          <ElCard>
-            <ElButtonGroup class="el-upload__tip" style="margin-left: auto">
-              <template
-                v-for="(feature, index) in filteredFeatureList"
-                :key="index"
+    <div class="apps-main">
+      <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
+        <ElTimeline>
+          <ElTimelineItem timestamp="Input" placement="top">
+            <ElCard>
+              <ElMenu
+                :default-active="InputMode.UPLOAD"
+                mode="horizontal"
+                :ellipsis="false"
+                @select="handleSelectInput"
               >
-                <ElTooltip
-                  :hide-after="0"
-                  :content="feature.APP?.title"
-                  placement="top"
-                  v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
-                >
-                  <ElButton
-                    type="success"
-                    plain
-                    @click="
-                      handleFeatureClick(feature, index, featureModeEnum.APP)
-                    "
-                  >
-                    <Icon
-                      :icon="feature.APP?.Icon.content || ''"
-                      :style="{ fontSize: feature.APP?.Icon.fontSize }"
-                      v-if="feature.APP?.Icon.type === 'icon'"
-                    />
-                    <div
-                      v-if="feature.APP?.Icon.type === 'svg'"
-                      v-html="feature.APP?.Icon.content"
-                    ></div>
-                  </ElButton>
-                </ElTooltip>
-              </template>
-            </ElButtonGroup>
-          </ElCard>
-        </ElTimelineItem>
-        <ElTimelineItem timestamp="Output" placement="top">
-          <ElCard>
-            <div style="display: flex; justify-content: flex-end">
-              <ElButtonGroup>
-                <ElTooltip
-                  :hide-after="0"
-                  content="Copy to clipboard"
-                  placement="top"
-                >
-                  <ElButton plain @click="handleCopyToClipboard">
-                    <Icon
-                      icon="solar:copy-line-duotone"
-                      :style="{ fontSize: '20px' }"
-                    />
-                  </ElButton>
-                </ElTooltip>
-              </ElButtonGroup>
-            </div>
-            <div
-              ref="contentRef"
-              class="apps-scroll-content"
-              :style="{
-                padding: '20px',
-              }"
-            >
+                <ElMenuItem index="0">UPLOAD</ElMenuItem>
+                <ElMenuItem index="1">INSERT TEXT</ElMenuItem>
+                <ElMenuItem index="2">URL</ElMenuItem>
+              </ElMenu>
+              <ElUpload
+                v-if="activeIndexInput === InputMode.UPLOAD"
+                class="apps-item-menu"
+                drag
+                :file-list="fileList"
+                :on-success="onSuccess"
+                :on-error="onError"
+                :on-progress="onProgress"
+                :before-upload="beforeUpload"
+                :action="`${unstructuredApiUrl}/loader/upload?chunk_size=500&chunk_overlap=0`"
+              >
+                <ElIcon class="el-icon--upload"><UploadFilled /></ElIcon>
+                <div class="el-upload__text">
+                  Drop file here or <em>click to upload</em>
+                </div>
+
+                <template #tip>
+                  <div class="el-upload__tip">
+                    .txt .pdf .doc .docx .rtf .ppt .pptx .xls .xlsx .csv .json
+                    .xml .html .css .cpp .js .py .java ... and many other text
+                    formats
+                  </div>
+                </template>
+              </ElUpload>
+
+              <ElInput
+                v-if="activeIndexInput === InputMode.INSERT_TEXT"
+                class="apps-item-menu"
+                v-model="insertText"
+                placeholder="Please insert text here"
+                :autosize="{ minRows: 9, maxRows: 20 }"
+                type="textarea"
+              />
+              <ElInput
+                v-if="activeIndexInput === InputMode.URL"
+                class="apps-item-menu"
+                v-model="url"
+                placeholder="https://example.com"
+              />
+            </ElCard>
+          </ElTimelineItem>
+          <ElTimelineItem timestamp="Menu" placement="top">
+            <ElCard>
               <Icon
-                class="apps-scroll-content-loading"
+                class="apps-menu-card-loading"
                 icon="line-md:loading-twotone-loop"
                 :style="{
-                  visibility: isStreaming ? 'visible' : 'hidden',
+                  visibility: isUploading ? 'visible' : 'hidden',
                 }"
               />
-              <div v-html="markedRender(outputContent)"></div>
-              <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
+              <ElButtonGroup class="el-upload__tip" style="margin-left: auto">
+                <template
+                  v-for="(feature, index) in filteredFeatureList"
+                  :key="index"
+                >
+                  <ElTooltip
+                    :hide-after="0"
+                    :content="feature.APP?.title"
+                    placement="top"
+                    v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+                  >
+                    <ElButton
+                      type="success"
+                      plain
+                      @click="
+                        handleFeatureClick(feature, index, featureModeEnum.APP)
+                      "
+                      :disabled="isUploading"
+                    >
+                      <Icon
+                        :icon="feature.APP?.Icon.content || ''"
+                        :style="{ fontSize: feature.APP?.Icon.fontSize }"
+                        v-if="feature.APP?.Icon.type === 'icon'"
+                      />
+                      <div
+                        v-if="feature.APP?.Icon.type === 'svg'"
+                        v-html="feature.APP?.Icon.content"
+                      ></div>
+                    </ElButton>
+                  </ElTooltip>
+                </template>
+              </ElButtonGroup>
+            </ElCard>
+          </ElTimelineItem>
+          <ElTimelineItem timestamp="Output" placement="top">
+            <ElCard>
+              <div style="display: flex; justify-content: flex-end">
+                <ElButtonGroup>
+                  <ElTooltip
+                    :hide-after="0"
+                    content="Clean output"
+                    placement="top"
+                  >
+                    <ElButton plain @click="handleCleanOutput">
+                      <Icon icon="carbon:clean" :style="{ fontSize: '20px' }" />
+                    </ElButton>
+                  </ElTooltip>
+                  <ElTooltip
+                    :hide-after="0"
+                    content="Regenerate"
+                    placement="top"
+                  >
+                    <ElButton plain @click="handleRegenerate">
+                      <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+                    </ElButton>
+                  </ElTooltip>
+                  <ElTooltip
+                    :hide-after="0"
+                    content="Copy to clipboard"
+                    placement="top"
+                  >
+                    <ElButton plain @click="handleCopyToClipboard">
+                      <Icon
+                        icon="solar:copy-line-duotone"
+                        :style="{ fontSize: '20px' }"
+                      />
+                    </ElButton>
+                  </ElTooltip>
+                </ElButtonGroup>
+              </div>
+              <div
+                ref="contentRef"
+                class="apps-scroll-content"
+                :style="{
+                  padding: '20px',
+                }"
+              >
+                <Icon
+                  class="apps-scroll-content-loading"
+                  icon="line-md:loading-twotone-loop"
+                  :style="{
+                    visibility: isStreaming ? 'visible' : 'hidden',
+                  }"
+                />
+                <div v-html="outputContentRender"></div>
+
+                <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
                 outputContent
               }}</pre> -->
-            </div>
-          </ElCard>
-        </ElTimelineItem>
-      </ElTimeline>
-    </ElScrollbar>
+              </div>
+            </ElCard>
+          </ElTimelineItem>
+        </ElTimeline>
+      </ElScrollbar>
+    </div>
   </slot>
 
   <slot name="drawer">
@@ -145,7 +176,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, Ref, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  Ref,
+  ref,
+  watch,
+} from "vue";
 import { Icon } from "@iconify/vue";
 import {
   UploadFile,
@@ -226,18 +265,23 @@ const marked = new Marked(
     },
   })
 );
-marked.use({ silent: true, breaks: true });
+marked.use({ silent: true, mangle: false, breaks: true });
 
 const props = defineProps({
   start: {
     type: Boolean,
-    required: true,
+    required: false,
     default: false,
   },
   isStreaming: {
     type: Boolean,
     required: false,
     default: false,
+  },
+  maxHeight: {
+    type: Number,
+    required: false,
+    default: (90 / 100) * window.innerHeight, // 80% of the page height
   },
 });
 
@@ -253,14 +297,6 @@ const aiProviderKey = computed(() => {
   return "ChatGPT";
 });
 
-const isStreaming = ref(false);
-const llm = new LLM();
-const featureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
-const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
-const currentFeatureId: Ref<string> = ref("");
-const currentFeatureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
-const featureList: Ref<FeatureSchema[]> = ref([]);
-
 const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
     const { APP } = feature;
@@ -274,15 +310,27 @@ const filteredFeatureList = computed(() => {
   });
   return _filteredFeatureList;
 });
+
+const outputContentRender = computed(() => {
+  return marked.parse(outputContent.value);
+});
+
+const isStreaming = ref(false);
+const isUploading = ref(false);
+const llm = new LLM();
+const featureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
+const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
+const currentFeatureId: Ref<string> = ref("");
+const currentFeatureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
+const featureList: Ref<FeatureSchema[]> = ref([]);
+
 const enabledFeatureStates: Ref<boolean[]> = ref([]);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const clickOutsideFocus = ref(true);
 const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
-const contentMaxHeight = ref(
-  (90 / 100) * document.documentElement.offsetHeight
-); // 90% of the page height
+const contentMaxHeight = ref(props.maxHeight);
 const outputContent = ref("");
 const activeIndexInput = ref(InputMode.UPLOAD);
 const insertText = ref("");
@@ -300,6 +348,13 @@ watch(
   () => isStreaming.value,
   (value) => {
     emits("update:isStreaming", value);
+  }
+);
+
+watch(
+  () => props.maxHeight,
+  (value) => {
+    contentMaxHeight.value = value;
   }
 );
 
@@ -353,6 +408,7 @@ const onSuccess = async (
   uploadFiles: UploadFiles
 ) => {
   uploadItems = response.payload.items;
+  isUploading.value = false;
 };
 
 const onError = (
@@ -366,6 +422,7 @@ const onError = (
   } catch {
     ElMessage.error(error.message);
   }
+  isUploading.value = false;
 };
 
 const onProgress = (
@@ -379,11 +436,8 @@ const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
     ElMessage.error("File size can not exceed 4MB!");
     return false;
   }
+  isUploading.value = true;
   return true;
-};
-
-const markedRender = (text: string) => {
-  return marked.parse(text);
 };
 
 const deleteConversation = () => {
@@ -413,6 +467,36 @@ const handleStartGenerateResponse = (formDataVariableSchema: {
 const handleCloseDrawer = () => {
   clickOutsideFocus.value = true;
   isStreaming.value = false;
+};
+
+const handleRegenerate = () => {
+  if (isStreaming.value) {
+    ElMessageBox.alert(
+      "You cannot regenerate again because the response is being processed",
+      "Warning",
+      {
+        confirmButtonText: "OK",
+        callback: () => {},
+      }
+    );
+    return;
+  }
+  startGenerateResponse(formDataVariableSchema.value);
+};
+
+const handleCleanOutput = () => {
+  if (isStreaming.value) {
+    ElMessageBox.alert(
+      "You cannot clean the output because the response is being processed",
+      "Warning",
+      {
+        confirmButtonText: "OK",
+        callback: () => {},
+      }
+    );
+    return;
+  }
+  outputContent.value = "";
 };
 
 const handleCopyToClipboard = () => {
@@ -497,20 +581,21 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
               : ConversationModeEnum.NORMAL,
             deleteConversation: false,
           });
-          result.on("data", (data) => {
-            outputContent.value += data;
+          result.on("data", async (data) => {
+            outputContent.value = completeContent + data;
             nextTick(() => {
               scrollToBottom();
             });
           });
           let resStt: ResPayloadType = await new Promise<ResPayloadType>(
             (resolve) => {
-              result.on("complete", (data) => {
+              result.on("complete", async (data) => {
                 consoleLog(LogLevelEnum.DEBUG, "=====>complete");
                 consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
-                outputContent.value += "\n";
+                completeContent += "\n";
+                outputContent.value = completeContent;
               });
-              result.on("endOfChain", (data) => {
+              result.on("endOfChain", async (data) => {
                 consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
                 const extractText =
                   ResponseParser.getInstance().extractTextFromBlock(
@@ -656,6 +741,7 @@ async function handleFeatureClick(
       "Warning",
       {
         confirmButtonText: "OK",
+        callback: () => {},
       }
     );
     return;
@@ -664,7 +750,12 @@ async function handleFeatureClick(
   handleFeature(id, featureSchema[type]!, type);
 }
 
+function handleBeforeUnload(event: Event) {
+  deleteConversation();
+}
+
 onMounted(() => {
+  window.addEventListener("beforeunload", handleBeforeUnload);
   const data: IPCMessageType = {
     topic: IPCTopicEnum.COMMUNICATION,
     type: CommunicationMessageTypeEnum.GET_FEATURES,
@@ -680,6 +771,10 @@ onMounted(() => {
       featureList.value = [];
     }
   });
+});
+
+onUnmounted(() => {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 });
 
 defineExpose({

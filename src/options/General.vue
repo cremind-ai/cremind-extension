@@ -75,9 +75,9 @@
     <div class="card-horizontal-container">
       <ElCard
         shadow="hover"
-        @click="handleGeneralSettingsClick(GeneralSettings.SIDEBARD_OPTION, 0)"
+        @click="handleGeneralSettingsClick(GeneralSettings.SIDEBAR_OPTION, 0)"
         :class="{
-          'card-selected': generalState[GeneralSettings.SIDEBARD_OPTION][0],
+          'card-selected': generalState[GeneralSettings.SIDEBAR_OPTION][0],
         }"
       >
         <ImageDetailCard
@@ -92,9 +92,9 @@
       </ElCard>
       <ElCard
         shadow="hover"
-        @click="handleGeneralSettingsClick(GeneralSettings.SIDEBARD_OPTION, 1)"
+        @click="handleGeneralSettingsClick(GeneralSettings.SIDEBAR_OPTION, 1)"
         :class="{
-          'card-selected': generalState[GeneralSettings.SIDEBARD_OPTION][1],
+          'card-selected': generalState[GeneralSettings.SIDEBAR_OPTION][1],
         }"
       >
         <ImageDetailCard
@@ -173,10 +173,11 @@ import {
 } from "@/constants";
 import { LLM } from "@/lib/llm";
 import { Status } from "@/constants/status";
+import { SidebarMode } from "@/types/ui";
 
 enum GeneralSettings {
   AI_PROVIDER_OPTION = "AI_PROVIDER_OPTION",
-  SIDEBARD_OPTION = "SIDEBARD_OPTION",
+  SIDEBAR_OPTION = "SIDEBAR_OPTION",
   TIDY_DISPLAY_OPTION = "TIDY_DISPLAY_OPTION",
 }
 
@@ -189,9 +190,9 @@ const generalState = reactive({
     userSettings.getAiProvider === AIMode.CHAT_GPT,
     userSettings.getAiProvider === AIMode.BARD,
   ],
-  [GeneralSettings.SIDEBARD_OPTION]: [
-    userSettings.getSidebar === true,
-    userSettings.getSidebar === false,
+  [GeneralSettings.SIDEBAR_OPTION]: [
+    userSettings.getSidebar === SidebarMode.SIDEBAR,
+    userSettings.getSidebar === SidebarMode.WINDOWS,
   ],
   [GeneralSettings.TIDY_DISPLAY_OPTION]: [
     userSettings.getTidyDisplayOptionBarMode === false,
@@ -255,11 +256,11 @@ const handleGeneralSettingsClick = async (
         userSettings.setAIProvider(AIMode.BARD);
       }
       break;
-    case GeneralSettings.SIDEBARD_OPTION:
+    case GeneralSettings.SIDEBAR_OPTION:
       if (option === 0) {
-        userSettings.setSidebar(true);
+        userSettings.setSidebar(SidebarMode.SIDEBAR);
       } else {
-        userSettings.setSidebar(false);
+        userSettings.setSidebar(SidebarMode.WINDOWS);
       }
       break;
     case GeneralSettings.TIDY_DISPLAY_OPTION:

@@ -155,7 +155,7 @@ async function initialize() {
 
 onMounted(async () => {
   initialize();
-  await userSettings.initialize();
+  await userSettings.initialize(true);
 });
 </script>
 

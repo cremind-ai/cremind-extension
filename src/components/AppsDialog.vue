@@ -1,73 +1,80 @@
 <template>
-  <!-- Chat Dialog -->
-  <ElDialog
-    v-model="appDialogVisible"
-    :show-close="false"
-    :close-on-click-modal="false"
-    :width="`80%`"
-    :fullscreen="isMaximized"
-    :before-close="handleCloseDialog"
+  <!-- Custom Dialog -->
+  <!-- appDialogVisible -->
+  <div
+    :class="{
+      maximized: isMaximized && dialog,
+      'custom-dialog': dialog && appDialogVisible,
+    }"
+    :style="{ display: appDialogVisible ? 'block' : 'none' }"
   >
     <!-- Header -->
-    <template #header>
-      <ElButton
-        class="apps-dialog-minimize-icon"
-        type="warning"
-        plain
-        :icon="SemiSelect"
-        @click="handleMinimize"
-        size="small"
-        circle
-      ></ElButton>
-      <ElButton
-        class="apps-dialog-close-icon"
-        type="danger"
-        plain
-        :icon="Close"
-        @click="handleCloseDialog"
-        size="small"
-        circle
-      ></ElButton>
-      <ElButton
-        class="apps-dialog-maximize-icon"
-        type="success"
-        plain
-        :icon="FullScreen"
-        @click="handleMaximize"
-        size="small"
-        circle
-      ></ElButton>
+    <div :class="{ 'custom-dialog-content': dialog }">
       <div
-        style="
-          white-space: nowrap;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          font-size: 14px;
-          line-height: 1.3;
-        "
+        v-if="dialog && appDialogVisible"
+        :class="{ 'custom-dialog-header': dialog }"
       >
-        <div>
-          CreMind AI
-          <LoadImg
-            class="apps-dialog-cremind-icon-bar"
-            :filename="'CreMind-logo-64.png'"
-            :width="25"
-          />
+        <div
+          style="
+            white-space: nowrap;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            font-size: 14px;
+            line-height: 1.3;
+          "
+        >
+          <div>
+            CreMind AI
+            <LoadImg
+              class="apps-dialog-cremind-icon-bar"
+              :filename="'CreMind-logo-64.png'"
+              :width="25"
+            />
+          </div>
         </div>
+        <ElButton
+          class="apps-dialog-minimize-icon"
+          type="warning"
+          plain
+          :icon="SemiSelect"
+          @click="handleMinimize"
+          size="small"
+          circle
+        ></ElButton>
+        <ElButton
+          class="apps-dialog-close-icon"
+          type="danger"
+          plain
+          :icon="Close"
+          @click="handleCloseDialog"
+          size="small"
+          circle
+        ></ElButton>
+        <!-- <ElButton
+          class="apps-dialog-maximize-icon"
+          type="success"
+          plain
+          :icon="FullScreen"
+          @click="handleMaximize"
+          size="small"
+          circle
+        ></ElButton> -->
       </div>
-    </template>
-    <Apps
-      ref="appsRef"
-      :start="startApp"
-      v-model:is-streaming="isStreaming"
-      @complete="handleComplete"
-    >
-      <template #main />
-      <template #drawer />
-    </Apps>
-    <!-- <template #footer>hello footer</template> -->
-  </ElDialog>
+      <div :class="{ 'custom-dialog-body': dialog }">
+        <Apps
+          ref="appsRef"
+          :start="startApp"
+          :max-height="appMaxHeight"
+          v-model:is-streaming="isStreaming"
+          @complete="handleComplete"
+        >
+          <template #main />
+          <template #drawer />
+        </Apps>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -76,7 +83,7 @@ import { Close } from "@element-plus/icons-vue";
 import { FullScreen } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
 import { ElButton } from "element-plus";
-import { ElDialog } from "element-plus";
+import { ElCard } from "element-plus";
 import { ElMessage } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import { Marked } from "marked";
@@ -88,7 +95,17 @@ import { Apps } from "@/components";
 const props = defineProps({
   modelValue: {
     type: Boolean,
+    required: false,
+    default: false,
+  },
+  dialog: {
+    type: Boolean,
     required: true,
+    default: false,
+  },
+  isStreaming: {
+    type: Boolean,
+    required: false,
     default: false,
   },
 });
@@ -104,12 +121,19 @@ const marked = new Marked(
 );
 marked.use({ silent: true, breaks: true });
 
-const emits = defineEmits(["update:modelValue", "close"]);
+const emits = defineEmits(["update:modelValue", "update:isStreaming", "close"]);
 
+const appMaxHeight = computed(() => {
+  if (isMaximized.value) {
+    return (95 / 100) * window.innerHeight;
+  } else {
+    return (80 / 100) * window.innerHeight;
+  }
+});
 const appsRef = ref<ComponentRef<typeof Apps>>();
 const appDialogVisible = ref(props.modelValue);
 const isStreaming = ref(false);
-const isMaximized = ref(false);
+const isMaximized = ref(true);
 const isMinimized = ref(false);
 const startApp = ref(false);
 
@@ -130,12 +154,28 @@ watch(
   }
 );
 
+watch(
+  () => props.isStreaming,
+  (value) => {
+    isStreaming.value = value;
+  }
+);
+
+watch(
+  () => isStreaming.value,
+  (value) => {
+    emits("update:isStreaming", value);
+  }
+);
+
 const close = () => {
   appsRef.value!.close();
   isMinimized.value = false;
   startApp.value = false;
   appDialogVisible.value = false;
-  emits("close");
+  setTimeout(() => {
+    emits("close");
+  }, 0);
 };
 
 const handleCloseDialog = () => {

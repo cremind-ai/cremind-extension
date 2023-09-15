@@ -1,62 +1,47 @@
 <template>
-  <slot name="main">
-    <div style="position: relative">
-      <Icon
-        class="quick-feature-card-loading"
-        icon="line-md:loading-twotone-loop"
-        :style="{
-          visibility: isStreaming ? 'visible' : 'hidden',
-        }"
-      />
-      <div style="display: flex; justify-content: flex-end; margin-right: 60px">
-        <ElButtonGroup>
-          <ElTooltip
-            :hide-after="0"
-            content="Regenerate response"
-            placement="top"
-          >
-            <ElButton plain @click="handleRegenerate">
-              <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
-            </ElButton>
-          </ElTooltip>
-          <ElTooltip
-            :hide-after="0"
-            content="Copy to clipboard"
-            placement="top"
-          >
-            <ElButton plain @click="handleCopyToClipboard">
-              <Icon
-                icon="solar:copy-line-duotone"
-                :style="{ fontSize: '20px' }"
-              />
-            </ElButton>
-          </ElTooltip>
-        </ElButtonGroup>
-      </div>
-      <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
-        <div ref="contentRef" class="quick-feature-card-scroll-content">
-          <div v-html="markedRender(outputContent)"></div>
-        </div>
-      </ElScrollbar>
-      <ChatAction @new-chat="newChat" />
+  <div v-if="show" style="position: relative">
+    <div style="display: flex; justify-content: flex-end; margin-right: 60px">
+      <ElButtonGroup>
+        <ElTooltip
+          :hide-after="0"
+          content="Regenerate response"
+          placement="top"
+        >
+          <ElButton plain @click="handleRegenerate">
+            <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+          </ElButton>
+        </ElTooltip>
+        <ElTooltip :hide-after="0" content="Copy to clipboard" placement="top">
+          <ElButton plain @click="handleCopyToClipboard">
+            <Icon
+              icon="solar:copy-line-duotone"
+              :style="{ fontSize: '20px' }"
+            />
+          </ElButton>
+        </ElTooltip>
+      </ElButtonGroup>
     </div>
-  </slot>
+    <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
+      <div ref="contentRef" class="quick-feature-card-scroll-content">
+        <div v-html="outputContentRender"></div>
+      </div>
+    </ElScrollbar>
+    <ChatAction @new-chat="newChat" v-model:blockSend="isStreaming" />
+  </div>
 
-  <slot name="drawer">
-    <DrawerPromptInitialize
-      v-model:feature="currentFeature"
-      v-model:visible="drawer"
-      :form-data="formDataVariableSchema"
-      :feature-id="currentFeatureId"
-      :feature-mode="currentFeatureMode"
-      @run="handleStartGenerateResponse"
-      @close="handleCloseDrawer"
-    ></DrawerPromptInitialize>
-  </slot>
+  <DrawerPromptInitialize
+    v-model:feature="currentFeature"
+    v-model:visible="drawer"
+    :form-data="formDataVariableSchema"
+    :feature-id="currentFeatureId"
+    :feature-mode="currentFeatureMode"
+    @run="handleStartGenerateResponse"
+    @close="handleCloseDrawer"
+  ></DrawerPromptInitialize>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, Ref, computed, PropType } from "vue";
+import { ref, watch, Ref, computed, PropType, nextTick } from "vue";
 import { ElButton } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { ElScrollbar } from "element-plus";
@@ -97,9 +82,19 @@ const marked = new Marked(
     },
   })
 );
-marked.use({ silent: true, breaks: true });
+marked.use({ silent: true, mangle: false, breaks: true });
 
 const props = defineProps({
+  show: {
+    type: Boolean,
+    required: true,
+    default: true,
+  },
+  drawer: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
   start: {
     type: Boolean,
     required: true,
@@ -120,10 +115,12 @@ const props = defineProps({
 
 const emits = defineEmits([
   "update:start",
-  "drawer",
+  "update:drawer",
   "close",
+  "newChat",
   "data",
   "complete",
+  "error",
 ]);
 
 const chatDialog = useChatDialogStore();
@@ -138,6 +135,9 @@ const aiProviderKey = computed(() => {
   }
   return "ChatGPT";
 });
+const outputContentRender = computed(() => {
+  return marked.parse(outputContent.value);
+});
 
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
 const width = ref(0);
@@ -145,7 +145,7 @@ const outputContent = ref("");
 const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
 const contentMaxHeight = ref(500);
 const isStreaming = ref(false);
-const drawer = ref(false);
+const drawer = ref(props.drawer);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
@@ -175,19 +175,26 @@ watch(
 watch(
   () => outputContent.value,
   (newValue) => {
-    const _width = contentRef.value.offsetWidth;
-    if (_width > 700) {
-      width.value = 700;
+    if (props.show) {
+      const _width = contentRef.value.offsetWidth;
+      if (_width > 700) {
+        width.value = 700;
+      }
     }
   }
 );
 
 watch(
+  () => props.drawer,
+  (value) => {
+    drawer.value = value;
+  }
+);
+
+watch(
   () => drawer.value,
-  (newValue) => {
-    if (newValue) {
-      emits("drawer");
-    }
+  (value) => {
+    emits("update:drawer", value);
   }
 );
 
@@ -204,12 +211,10 @@ watch(
   }
 );
 
-const markedRender = (text: string) => {
-  return marked.parse(text);
-};
-
 const scrollToBottom = () => {
-  scrollContentRef.value!.setScrollTop(contentRef.value!.clientHeight);
+  if (props.show) {
+    scrollContentRef.value!.setScrollTop(contentRef.value!.clientHeight);
+  }
 };
 
 const handleRegenerate = () => {
@@ -228,15 +233,18 @@ const handleCopyToClipboard = () => {
 };
 
 const newChat = (value: string) => {
-  let text = "";
-  text += SystemVariableParser.getInstance().getSelectedText() + "\n";
-  text += "\\-\\-\\-\n";
-  text += outputContent.value + "\n";
-  text += "\\-\\-\\-\n";
-  text += value + "\n";
-  chatDialog.setInitialPrompt(text);
-  chatDialog.setChatDialogVisible(true);
+  // let text = "";
+  // text += SystemVariableParser.getInstance().getSelectedText() + "\n";
+  // text += "\\-\\-\\-\n";
+  // text += outputContent.value + "\n";
+  // text += "\\-\\-\\-\n";
+  // text += value + "\n";
+  // chatDialog.setInitialPrompt(text);
+  // nextTick(() => {
+  //   chatDialog.setChatDialogVisible(true);
+  // });
   emits("close");
+  emits("newChat", value);
 };
 
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
@@ -261,30 +269,31 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   });
 
   outputContent.value = "";
+  let completeContent = "";
   result.on("data", (data: string) => {
-    emits("data", data);
-    outputContent.value += data;
+    outputContent.value = completeContent + data;
     scrollToBottom();
+    emits("data", data);
   });
   result.on("complete", (data: any) => {
     consoleLog(LogLevelEnum.DEBUG, "=====>complete");
-    outputContent.value += "\n";
-    consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
+    completeContent += "\n";
+    outputContent.value = completeContent;
   });
   result.on("endOfChain", (data: any) => {
     consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
     isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
     let extractText = ResponseParser.getInstance().extractTextFromBlock(
       AI_SYSTEM_RESPONSE_START_BLOCK,
       AI_SYSTEM_RESPONSE_END_BLOCK,
       data.message
     );
     if (extractText) {
-      outputContent.value = extractText;
+      completeContent += extractText;
     } else {
-      outputContent.value = data.message;
+      completeContent += data.message;
     }
+    outputContent.value = completeContent;
     emits("complete", outputContent.value);
     scrollToBottom();
     width.value = 700;
@@ -305,6 +314,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     } else {
       ElMessage.error(error.message);
     }
+    emits("error");
   });
 };
 

@@ -210,7 +210,7 @@ const handleAddCustomOption = async (key: string | number) => {
   }
   arrList.push(addCustomOptionVariableSchema.value[key].input);
   await ChromeStorage.getInstance().set(storageKey, JSON.stringify(arrList));
-  const featureList = await getJsonFeatures();
+  const featureList = await getJsonFeatures(false);
   const featureIndex = findIndex(featureList, {
     id: props.featureId,
   });
@@ -234,7 +234,7 @@ const handleRemoveCustomOption = async (key: string | number) => {
   ) {
     pull(arrList, formDataVariableSchema.value[key]);
     await ChromeStorage.getInstance().set(storageKey, JSON.stringify(arrList));
-    const featureList = await getJsonFeatures();
+    const featureList = await getJsonFeatures(false);
     const featureIndex = findIndex(featureList, {
       id: props.featureId,
     });

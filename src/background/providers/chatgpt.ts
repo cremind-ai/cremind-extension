@@ -1,3 +1,4 @@
+import { ofetch } from "ofetch";
 import ExpiryMap from "expiry-map";
 import { createParser } from "eventsource-parser";
 import { AIResponseType, AIResponseTypeEnum } from "@/types/provider";
@@ -152,12 +153,17 @@ export class ChatGPT extends AIProvider {
   public async closeStream() {
     consoleLog(LogLevelEnum.DEBUG, "Closing stream");
     if (this.reader) {
-      await this.reader.cancel();
+      try {
+        await this.reader.cancel();
+      } catch (e) {
+        consoleLog(LogLevelEnum.DEBUG, e);
+        this.reader = null;
+      }
     }
     if (this.conversationId) {
-      this.setConversationProperty(this.token!, this.conversationId!, {
-        is_visible: false,
-      });
+      // this.setConversationProperty(this.token!, this.conversationId!, {
+      //   is_visible: false,
+      // });
     }
     this.isProcessing = false;
   }
@@ -291,25 +297,25 @@ export class ChatGPT extends AIProvider {
               message:
                 error.detail && error.detail.message
                   ? error.detail.message
-                  : error.detail.message,
+                  : error.detail,
               code: Status.CHATGPT_RESPONSE_ERROR,
             });
             if (this.conversationId) {
-              this.setConversationProperty(this.token!, this.conversationId, {
-                is_visible: false,
-              });
+              // this.setConversationProperty(this.token!, this.conversationId, {
+              //   is_visible: false,
+              // });
             }
             this.isProcessing = false;
             return null;
           }
-          let prevText: string = "";
+          let finalText: string = "";
           const parser = createParser(async (event) => {
             if (event.type === "event") {
               const message = event.data;
               if (message === "[DONE]") {
                 callback({
                   type: AIResponseTypeEnum.COMPLETE,
-                  message: prevText,
+                  message: finalText,
                   payload: {
                     ...(!args.deleteConversation && {
                       conversationId: this.conversationId!,
@@ -358,16 +364,15 @@ export class ChatGPT extends AIProvider {
               } catch (err) {
                 return null;
               }
-              const text: string = data.message?.content?.parts?.[0];
+              const currentText: string = data.message?.content?.parts?.[0];
               const role = data.message?.author.role;
-              if (text && role === "assistant") {
-                const finalText = text.replace(prevText, "");
+              if (currentText && role === "assistant") {
                 this.conversationId = data.conversation_id;
                 callback({
                   type: AIResponseTypeEnum.MESSAGE,
-                  message: finalText,
+                  message: currentText,
                 });
-                prevText = text;
+                finalText = currentText;
               }
               if (data.message_id) {
                 this.messageId = data.message_id;
@@ -393,9 +398,9 @@ export class ChatGPT extends AIProvider {
               code: Status.CHATGPT_STREAM_ERROR,
             });
             if (this.conversationId) {
-              this.setConversationProperty(this.token!, this.conversationId, {
-                is_visible: false,
-              });
+              // this.setConversationProperty(this.token!, this.conversationId, {
+              //   is_visible: false,
+              // });
             }
             this.isProcessing = false;
             return null;
@@ -420,9 +425,9 @@ export class ChatGPT extends AIProvider {
                 code: Status.CHATGPT_STREAM_ERROR,
               });
               if (this.conversationId) {
-                this.setConversationProperty(this.token!, this.conversationId, {
-                  is_visible: false,
-                });
+                // this.setConversationProperty(this.token!, this.conversationId, {
+                //   is_visible: false,
+                // });
               }
             }
           };

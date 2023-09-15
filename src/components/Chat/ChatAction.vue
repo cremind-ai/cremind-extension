@@ -1,6 +1,14 @@
 <template>
-  <div style="position: relative">
+  <div ref="chatActionRef" style="position: relative">
+    <Icon
+      class="chat-action-input-loading"
+      icon="line-md:loading-twotone-loop"
+      :style="{
+        visibility: blockSend ? 'visible' : 'hidden',
+      }"
+    />
     <ElInput
+      ref="inputRef"
       class="chat-action-w-full chat-action-px-2 chat-action-py-1 chat-action-rounded-xl"
       placeholder=""
       v-model="textField"
@@ -31,7 +39,7 @@
 import { Icon } from "@iconify/vue";
 import { ElInput } from "element-plus";
 import { ElTooltip } from "element-plus";
-import { nextTick, ref } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
 
 const props = defineProps({
   blockSend: {
@@ -41,10 +49,21 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(["new-chat", "update:modelValue"]);
+const emits = defineEmits(["new-chat", "update:modelValue", "mounted"]);
 
 const textField = ref("");
+const chatActionRef = ref<HTMLDivElement>();
+const inputRef = ref<InstanceType<typeof ElInput>>();
 let lastEnterTime = 0;
+
+watch(
+  () => props.blockSend,
+  (value) => {
+    if (!value) {
+      inputRef.value!.focus();
+    }
+  }
+);
 
 const newChat = () => {
   if (!props.blockSend && textField.value.trim().length > 0) {
@@ -63,6 +82,10 @@ const handleEnterKey = () => {
   }
   lastEnterTime = currentTime;
 };
+
+onMounted(() => {
+  emits("mounted");
+});
 </script>
 
 <style scoped></style>

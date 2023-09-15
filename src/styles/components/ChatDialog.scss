@@ -2,17 +2,26 @@
   border-radius: 15px;
 }
 
+.chat-dialog-header {
+  position: absolute;
+  height: 80px;
+  width: 100%;
+}
+
 .chat-dialog-minimize-icon {
   position: absolute;
   top: 8px;
   right: 36px;
   cursor: pointer;
+  z-index: 1;
 }
+
 .chat-dialog-close-icon {
   position: absolute;
   top: 8px;
   right: 8px;
   cursor: pointer;
+  z-index: 1;
 }
 
 .chat-dialog-cremind-icon {

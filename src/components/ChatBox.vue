@@ -7,6 +7,14 @@
       </div>
       <div style="margin-left: auto; margin-right: 66px">
         <ElButtonGroup>
+          <ElTooltip :hide-after="0" content="New conversation" placement="top">
+            <ElButton plain @click="handleNewConversation">
+              <Icon
+                icon="gridicons:reader-follow-conversation"
+                :style="{ fontSize: '20px' }"
+              />
+            </ElButton>
+          </ElTooltip>
           <ElTooltip
             :hide-after="0"
             content="Regenerate response"
@@ -42,10 +50,10 @@
             </ElButton>
           </ElTooltip>
           <!-- <ElTooltip :hide-after="0" content="Stop generating" placement="top">
-                <ElButton plain @click="handleStopGenerating">
-                  <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
-                </ElButton>
-              </ElTooltip> -->
+            <ElButton plain @click="handleStopGenerating">
+              <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
+            </ElButton>
+          </ElTooltip> -->
         </ElButtonGroup>
       </div>
     </div>
@@ -61,9 +69,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, Ref, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+  reactive,
+  Ref,
+  ref,
+  watch,
+  onUnmounted,
+} from "vue";
 import { Icon } from "@iconify/vue";
-import { ElButton } from "element-plus";
+import { ElButton, ElMessageBox } from "element-plus";
 import { ElTooltip } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { ElMessage } from "element-plus";
@@ -83,12 +101,12 @@ import { LoadImg } from "@/components";
 const props = defineProps({
   isSend: {
     type: Boolean,
-    required: true,
+    required: false,
     default: false,
   },
   prompt: {
     type: String,
-    required: true,
+    required: false,
     default: "",
   },
   isStreaming: {
@@ -98,7 +116,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(["update:isStreaming", "complete"]);
+const emits = defineEmits(["update:isStreaming", "data", "complete", "error"]);
 
 const userSettings = useUserSettingsStore();
 const conversation = useConversationStore();
@@ -112,7 +130,7 @@ let contextIds: string[][] = [];
 let endTurn: Ref<boolean> = ref(true);
 let saveConversation = false;
 let currentPrompt: string | null = null;
-const isStreaming = ref(false);
+const isStreaming = ref(props.isStreaming);
 const aiProvider = computed(() => userSettings.getAiProvider);
 
 const llm = new LLM();
@@ -123,6 +141,13 @@ watch(
     if (value && props.prompt !== "") {
       sendMessage(props.prompt, ConversationModeEnum.NORMAL);
     }
+  }
+);
+
+watch(
+  () => props.isStreaming,
+  (value) => {
+    isStreaming.value = value;
   }
 );
 
@@ -193,11 +218,6 @@ const sendMessage = async (
     deleteConversation: false,
   });
 
-  let response =
-    conversationMode === ConversationModeEnum.CONTINUE
-      ? chats.value[chats.value.length - 1].text
-      : "";
-
   let waiting = "";
   nextTick(() => {
     chatRef.value?.scrollToBottom();
@@ -212,19 +232,21 @@ const sendMessage = async (
       role: ConversationRoleEnum.ASSISTANT,
       text: waiting,
     });
+    nextTick(() => {
+      chatRef.value?.scrollToBottom();
+    });
   }, 500);
 
   result.on("data", (data: string) => {
     clearInterval(intervalId);
-    consoleLog(LogLevelEnum.DEBUG, data);
-    response += data;
     conversation.updateLastMessage({
       role: ConversationRoleEnum.ASSISTANT,
-      text: response,
+      text: data,
     });
     nextTick(() => {
       chatRef.value?.scrollToBottom();
     });
+    emits("data", data);
   });
 
   result.on("complete", (data: any) => {
@@ -247,6 +269,7 @@ const sendMessage = async (
     nextTick(() => {
       chatRef.value?.scrollToBottom();
     });
+    emits("complete", data.message);
   });
 
   result.on("error", (error: CWException) => {
@@ -268,10 +291,37 @@ const sendMessage = async (
     } else {
       ElMessage.error(error.message);
     }
+    emits("error");
   });
 };
 
+const handleNewConversation = () => {
+  if (isStreaming.value) {
+    ElMessageBox.alert(
+      "You cannot create a new conversation because the response is being processed",
+      "Warning",
+      {
+        confirmButtonText: "OK",
+        callback: () => {},
+      }
+    );
+    return;
+  }
+  deleteConversation();
+};
+
 const handleRegenerateConversation = () => {
+  if (isStreaming.value) {
+    ElMessageBox.alert(
+      "You cannot regenerate again because the response is being processed",
+      "Warning",
+      {
+        confirmButtonText: "OK",
+        callback: () => {},
+      }
+    );
+    return;
+  }
   if (currentPrompt) {
     sendMessage(currentPrompt, ConversationModeEnum.REGENERATE);
   }
@@ -301,7 +351,17 @@ const newChat = (value: string) => {
   });
 };
 
-onMounted(async () => {});
+function handleBeforeUnload(event: Event) {
+  deleteConversation();
+}
+
+onMounted(() => {
+  window.addEventListener("beforeunload", handleBeforeUnload);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
+});
 defineExpose({
   close,
 });

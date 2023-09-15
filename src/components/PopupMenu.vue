@@ -14,83 +14,138 @@
       ></ElButton>
     </ElTooltip>
   </div>
-  <ElPopover
-    :hide-after="0"
-    class="popup-card-popover"
-    style="word-break: normal"
-    placement="bottom"
-    :visible="popoverVisible"
-    :width="width"
-    popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(255, 78, 199, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%); border-radius: 14px;"
-  >
-    <template #reference>
+
+  <div v-if="isSidebar === SidebarMode.SIDEBAR">
+    <div
+      class="popup-card-cremind-icon-bar"
+      :style="{
+        zIndex: '2147483647',
+        top: optionBarTop,
+        left: optionBarLeft,
+      }"
+    >
+      <LoadImg
+        class="popup-card-cremind-logo"
+        :filename="'CreMind-logo-white-64.png'"
+        :width="20"
+        v-show="logoShow"
+        @click="handleClickLogo"
+      ></LoadImg>
       <div
-        class="popup-card-cremind-icon-bar"
+        class="popup-card-option-bar"
+        v-show="optionBarShow"
         :style="{
-          zIndex: optionBarZIndex,
-          top: optionBarTop,
-          left: optionBarLeft,
+          marginTop: optionBarMarginTop,
+          marginLeft: optionBarMarginLeft,
         }"
       >
-        <LoadImg
-          class="popup-card-cremind-logo"
-          :filename="'CreMind-logo-white-64.png'"
-          :width="20"
-          v-show="logoShow"
-          @click="handleClickLogo"
-        ></LoadImg>
+        <MenuBar
+          v-model:option-bar-mode="tidyDisplayOptionBarMode"
+          :feature-list="featureList"
+          :filtered-feature-list="filteredFeatureList"
+          :enabled-feature-states="enabledFeatureStates"
+          :more-options="moreOptions"
+          @feature-click="handleFeatureClick"
+          @command-click="handleCommand"
+        />
+      </div>
+      <QuickFeatureCard
+        :show="false"
+        v-model:start="isStreaming"
+        v-model:drawer="drawer"
+        :feature-mode="featureMode"
+        :feature-schema="featureSchema"
+        @close="close"
+        @data="quickFeatureDataEvent"
+        @complete="quickFeatureCompleteEvent"
+        @error="quickFeatureErrorEvent"
+      >
+      </QuickFeatureCard>
+    </div>
+  </div>
+
+  <div v-if="isSidebar === SidebarMode.WINDOWS">
+    <ElPopover
+      :hide-after="0"
+      class="popup-card-popover"
+      style="word-break: normal"
+      placement="bottom"
+      :visible="popoverVisible"
+      :width="width"
+      popper-style="background-image: linear-gradient(140deg, rgba(234, 222, 219, 0.4) 0%, rgba(255, 78, 199, 0.4) 50%, rgba(191, 214, 65, 0.4) 75%); border-radius: 14px;"
+    >
+      <template #reference>
         <div
-          class="popup-card-option-bar"
-          v-show="optionBarShow"
+          class="popup-card-cremind-icon-bar"
           :style="{
-            marginTop: optionBarMarginTop,
-            marginLeft: optionBarMarginLeft,
+            zIndex: '2147483647',
+            top: optionBarTop,
+            left: optionBarLeft,
           }"
         >
-          <MenuBar
-            v-model:option-bar-mode="tidyDisplayOptionBarMode"
-            :feature-list="featureList"
-            :filtered-feature-list="filteredFeatureList"
-            :enabled-feature-states="enabledFeatureStates"
-            :more-options="moreOptions"
-            @feature-click="handleFeatureClick"
-            @command-click="handleCommand"
-          />
+          <LoadImg
+            class="popup-card-cremind-logo"
+            :filename="'CreMind-logo-white-64.png'"
+            :width="20"
+            v-show="logoShow"
+            @click="handleClickLogo"
+          ></LoadImg>
+          <div
+            class="popup-card-option-bar"
+            v-show="optionBarShow"
+            :style="{
+              marginTop: optionBarMarginTop,
+              marginLeft: optionBarMarginLeft,
+            }"
+          >
+            <MenuBar
+              v-model:option-bar-mode="tidyDisplayOptionBarMode"
+              :feature-list="featureList"
+              :filtered-feature-list="filteredFeatureList"
+              :enabled-feature-states="enabledFeatureStates"
+              :more-options="moreOptions"
+              @feature-click="handleFeatureClick"
+              @command-click="handleCommand"
+            />
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <ElButton
-      class="popup-card-minimize-icon"
-      type="warning"
-      plain
-      :icon="SemiSelect"
-      @click="handleMinimize"
-      size="small"
-      circle
-    ></ElButton>
-    <ElButton
-      class="popup-card-close-icon"
-      type="danger"
-      plain
-      :icon="Close"
-      @click="handleClose"
-      size="small"
-      circle
-    ></ElButton>
-    <QuickFeatureCard
-      v-model:start="isStreaming"
-      :feature-mode="featureMode"
-      :feature-schema="featureSchema"
-      @close="close"
-      @data="quickFeatureDataEvent"
-      @complete="quickFeatureCompleteEvent"
-      @drawer="drawerOpenEvent"
-    >
-      <template #main />
-      <template #drawer />
-    </QuickFeatureCard>
-  </ElPopover>
+      <ElButton
+        class="popup-card-minimize-icon"
+        type="warning"
+        plain
+        :icon="SemiSelect"
+        @click="handleMinimize"
+        size="small"
+        circle
+      ></ElButton>
+      <ElButton
+        class="popup-card-close-icon"
+        type="danger"
+        plain
+        :icon="Close"
+        @click="handleClose"
+        size="small"
+        circle
+      ></ElButton>
+      <div ref="quickFeatureCardRef">
+        <QuickFeatureCard
+          :show="true"
+          v-model:start="isStreaming"
+          v-model:drawer="drawer"
+          :feature-mode="featureMode"
+          :feature-schema="featureSchema"
+          @close="close"
+          @new-chat="newChatEvent"
+          @data="quickFeatureDataEvent"
+          @complete="quickFeatureCompleteEvent"
+          @error="quickFeatureErrorEvent"
+        >
+        </QuickFeatureCard>
+      </div>
+    </ElPopover>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -103,6 +158,7 @@ import {
   computed,
   nextTick,
   PropType,
+  ComputedRef,
 } from "vue";
 import { ElPopover } from "element-plus";
 import { ElButton } from "element-plus";
@@ -130,8 +186,18 @@ import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { AIMode } from "@/constants";
 import { getJsonFeatures } from "@/lib/common";
+import { SidebarMode } from "@/types/ui";
 
 const props = defineProps({
+  index: {
+    type: Number,
+    required: true,
+  },
+  isStreaming: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   selectedText: {
     type: String,
     required: true,
@@ -154,6 +220,11 @@ const props = defineProps({
     validator: (value: string) =>
       Object.values(featureModeEnum).includes(value as featureModeEnum),
   },
+  activeElement: {
+    type: Object as PropType<HTMLElement | HTMLInputElement>,
+    required: true,
+    default: {},
+  },
 });
 
 const marked = new Marked(
@@ -167,7 +238,15 @@ const marked = new Marked(
 );
 marked.use({ silent: true, breaks: true });
 
-const emits = defineEmits(["close"]);
+const emits = defineEmits([
+  "update:isStreaming",
+  "close",
+  "newChat",
+  "data",
+  "complete",
+  "error",
+  "featureClick",
+]);
 
 const userSettings = useUserSettingsStore();
 
@@ -180,10 +259,12 @@ const aiProviderKey = computed(() => {
   return "ChatGPT";
 });
 
-const optionBarShow = ref(props.show);
+const isSidebar: ComputedRef<SidebarMode> = computed(
+  () => userSettings.getSidebar
+);
+const optionBarShow = ref(false);
 const tidyDisplayOptionBarMode = ref(userSettings.getTidyDisplayOptionBarMode);
 const popoverVisible = ref(false);
-const optionBarZIndex = ref(1000000000);
 const optionBarTop = ref(props.top);
 const optionBarLeft = ref(props.left);
 const optionBarRef: Ref<HTMLDivElement> = ref(null as any);
@@ -191,6 +272,7 @@ const optionBarMarginTop = ref("-6px");
 const optionBarMarginLeft = ref("16px");
 const logoRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
+const quickFeatureCardRef: Ref<HTMLDivElement> = ref(null as any);
 const width = ref(0);
 const featureMode: Ref<featureModeEnum> = ref(
   props.featureMode as featureModeEnum
@@ -198,9 +280,10 @@ const featureMode: Ref<featureModeEnum> = ref(
 const originalActiveElement: Ref<any> = ref(null as any);
 const outputContent = ref("");
 const clickOutsideConfirm = ref(false);
-const isStreaming = ref(false);
+const isStreaming = ref(props.isStreaming);
 const iconMaximizeShow = ref(false);
 const logoShow = ref(false);
+const drawer = ref(false);
 const enabledFeatureStates: Ref<boolean[]> = ref([]);
 
 const featureSchema: Ref<FeatureSchema> = ref({} as FeatureSchema);
@@ -238,94 +321,26 @@ const filteredFeatureList = computed(() => {
 let startPart: string | null = null;
 let endPart: string | null = null;
 
-let prevOptionBarShow = false;
 let shadowClickInside = false;
-
-watch(
-  () => props.show,
-  (newValue) => {
-    optionBarTop.value = props.top;
-    optionBarLeft.value = props.left;
-    if (newValue === true) {
-      if (
-        (!iconMaximizeShow.value && !tidyDisplayOptionBarMode.value) ||
-        (!logoShow.value && tidyDisplayOptionBarMode.value)
-      ) {
-        if (!tidyDisplayOptionBarMode.value) {
-          optionBarShow.value = newValue;
-        }
-        logoShow.value = newValue;
-        iconMaximizeShow.value = false;
-        consoleLog(LogLevelEnum.DEBUG, "===> Show menu");
-        optionBarZIndex.value = 1000000000;
-
-        const screenHeight = window.innerHeight + window.scrollY;
-        const top = parseInt(props.top);
-        if (screenHeight < top + 40) {
-          optionBarTop.value = `${top - 60}px`;
-          optionBarMarginTop.value = "-31px";
-          optionBarMarginLeft.value = "24px";
-        } else {
-          optionBarMarginTop.value = "-6px";
-          optionBarMarginLeft.value = "16px";
-        }
-
-        const activeElement = document.activeElement as HTMLElement;
-        if (
-          props.featureMode === featureModeEnum.EDITABLE_CONTEXT_MENU ||
-          props.featureMode === featureModeEnum.EDITABLE
-        ) {
-          originalActiveElement.value = activeElement as HTMLInputElement;
-        }
-
-        if (
-          originalActiveElement.value &&
-          originalActiveElement.value!.value !== undefined &&
-          originalActiveElement.value!.value !== null &&
-          props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
-          props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
-        ) {
-          const startSelectionIndex =
-            originalActiveElement.value!.selectionStart;
-          const endSelectionIndex = originalActiveElement.value!.selectionEnd;
-          const text = readOriginalActiveElementValue();
-          startPart = text.slice(0, startSelectionIndex);
-          endPart = text.slice(endSelectionIndex);
-        } else if (
-          /* prettier-ignore */
-          originalActiveElement.value &&
-          ((originalActiveElement.value!.innerText !== undefined &&
-            originalActiveElement.value!.innerText !== null) ||
-            (originalActiveElement.value!.textContent !== undefined &&
-              originalActiveElement.value!.textContent !== null)) && 
-              props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
-              props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
-        ) {
-          var selection = window.getSelection();
-          let selectedText = selection!.toString().trim();
-          var range = selection!.getRangeAt(0).cloneRange();
-          range.selectNodeContents(activeElement);
-          range.setEnd(
-            selection!.getRangeAt(0).startContainer,
-            selection!.getRangeAt(0).startOffset
-          );
-          const startSelectionIndex = range.toString().length;
-          const endSelectionIndex = startSelectionIndex + selectedText.length;
-          const text = readOriginalActiveElementValue();
-          startPart = text.slice(0, startSelectionIndex);
-          endPart = text.slice(endSelectionIndex);
-        }
-      }
-    } else if (newValue === false && !popoverVisible.value) {
-      close();
-    }
-  }
-);
 
 watch(
   () => props.selectedText,
   (newValue) => {
     width.value = 0;
+  }
+);
+
+watch(
+  () => props.isStreaming,
+  (value) => {
+    isStreaming.value = value;
+  }
+);
+
+watch(
+  () => isStreaming.value,
+  (value) => {
+    emits("update:isStreaming", value);
   }
 );
 
@@ -389,6 +404,10 @@ const readOriginalActiveElementValue = (): string => {
   return "";
 };
 
+function newChatEvent(value: string) {
+  emits("newChat", value);
+}
+
 function quickFeatureDataEvent(data: string) {
   outputContent.value += data;
   if (
@@ -400,6 +419,14 @@ function quickFeatureDataEvent(data: string) {
   ) {
     writeOriginalActiveElementValue(startPart + outputContent.value + endPart);
   }
+
+  if (
+    quickFeatureCardRef.value &&
+    quickFeatureCardRef.value.clientWidth > 700
+  ) {
+    width.value = 700;
+  }
+  emits("data", data, props.index);
 }
 
 function quickFeatureCompleteEvent(data: string) {
@@ -413,10 +440,17 @@ function quickFeatureCompleteEvent(data: string) {
     outputContent.value = data;
     writeOriginalActiveElementValue(startPart + outputContent.value + endPart);
   }
+  if (
+    quickFeatureCardRef.value &&
+    quickFeatureCardRef.value.clientWidth > 700
+  ) {
+    width.value = 700;
+  }
+  emits("complete", data, props.index);
 }
 
-function drawerOpenEvent() {
-  optionBarZIndex.value = 2000;
+function quickFeatureErrorEvent() {
+  emits("error", props.index);
 }
 
 async function handleFeatureClick(_featureSchema: FeatureSchema) {
@@ -427,6 +461,7 @@ async function handleFeatureClick(_featureSchema: FeatureSchema) {
       "Warning",
       {
         confirmButtonText: "OK",
+        callback: () => {},
       }
     );
     return;
@@ -435,13 +470,16 @@ async function handleFeatureClick(_featureSchema: FeatureSchema) {
   popoverVisible.value = true;
   featureSchema.value = _featureSchema;
   isStreaming.value = true;
+  emits("featureClick");
 }
 
 function close() {
+  // const selection = window.getSelection();
+  // selection!.removeAllRanges();
   popoverVisible.value = false;
   optionBarShow.value = false;
   logoShow.value = false;
-  emits("close");
+  emits("close", props.index);
 }
 
 function handleClose() {
@@ -468,72 +506,63 @@ function handleClose() {
   }
 }
 
-const clickOutside = (event: Event) => {
+const clickOutside = () => {
   if (tidyDisplayOptionBarMode.value) {
-    if (logoShow.value && !popoverVisible.value && !shadowClickInside) {
+    if (
+      logoShow.value &&
+      (!popoverVisible.value || isSidebar.value === SidebarMode.SIDEBAR)
+    ) {
       close();
     }
   } else {
-    if (logoShow.value && !popoverVisible.value && !shadowClickInside) {
+    if (
+      logoShow.value &&
+      (!popoverVisible.value || isSidebar.value === SidebarMode.SIDEBAR)
+    ) {
       close();
     }
   }
-  shadowClickInside = false;
 };
 
-const handleMousedownShadow = (event: Event) => {};
-
-const handleMouseupShadow = (event: Event) => {
-  if (
-    (prevOptionBarShow && logoShow.value) ||
-    (prevOptionBarShow && optionBarShow.value)
-  ) {
-    if (tidyDisplayOptionBarMode.value) {
-      if (
-        (logoRef.value && logoRef.value.contains(event.target as Node)) ||
-        (optionBarRef.value &&
-          optionBarRef.value.contains(event.target as Node))
-      ) {
-        shadowClickInside = true;
-      } else {
-        shadowClickInside = false;
-      }
+const handleMousedownShadow = (event: Event) => {
+  if (tidyDisplayOptionBarMode.value) {
+    if (
+      (logoRef.value && logoRef.value.contains(event.target as Node)) ||
+      (optionBarRef.value && optionBarRef.value.contains(event.target as Node))
+    ) {
+      shadowClickInside = true;
     } else {
-      if (
-        (logoRef.value && logoRef.value.contains(event.target as Node)) ||
-        (optionBarRef.value &&
-          optionBarRef.value.contains(event.target as Node))
-      ) {
-        shadowClickInside = true;
-      } else {
-        shadowClickInside = false;
-      }
+      shadowClickInside = false;
+    }
+  } else {
+    if (
+      (logoRef.value && logoRef.value.contains(event.target as Node)) ||
+      (optionBarRef.value && optionBarRef.value.contains(event.target as Node))
+    ) {
+      shadowClickInside = true;
+    } else {
+      shadowClickInside = false;
     }
   }
 };
 
 const handleMousedown = (event: MouseEvent) => {
-  if (tidyDisplayOptionBarMode.value) {
-    prevOptionBarShow = logoShow.value;
-  } else {
-    prevOptionBarShow = optionBarShow.value;
-  }
-};
-
-const handleMouseup = (event: MouseEvent) => {
   if (
-    (prevOptionBarShow && logoShow.value) ||
-    (prevOptionBarShow && optionBarShow.value)
+    (logoShow.value || optionBarShow.value) &&
+    !shadowClickInside &&
+    !iconMaximizeShow.value &&
+    (!isStreaming.value || isSidebar.value === SidebarMode.SIDEBAR)
   ) {
-    clickOutside(event);
+    clickOutside();
   }
+  shadowClickInside = false;
 };
 
 const handleKeyup = (event: KeyboardEvent) => {
   const pressedKey = event.key;
-  if (pressedKey !== "Shift" && pressedKey !== "Meta") {
+  if (pressedKey !== "Shift" && pressedKey !== "Meta" && !drawer) {
     if (logoShow.value || optionBarShow.value) {
-      clickOutside(event);
+      close();
     }
   }
 };
@@ -587,7 +616,7 @@ const getFeatureEnabledState = async (
 };
 
 onMounted(async () => {
-  document.addEventListener("mouseup", handleMouseup);
+  consoleLog(LogLevelEnum.DEBUG, "Mounted PopupMenu");
   document.addEventListener("mousedown", handleMousedown);
   document.addEventListener("keyup", handleKeyup);
   const shadowHost = document.querySelector("cremind-app-extension");
@@ -604,25 +633,87 @@ onMounted(async () => {
         ".popup-card-cremind-logo"
       ) as HTMLDivElement;
 
-      shadowRoot.addEventListener("mouseup", handleMouseupShadow);
       shadowRoot.addEventListener("mousedown", handleMousedownShadow);
-      featureList.value = await getJsonFeatures();
+      featureList.value = await getJsonFeatures(true);
       enabledFeatureStates.value = await Promise.all(
         featureList.value.map((feature: any) => getFeatureEnabledState(feature))
       );
     }
   }
+
+  if (!tidyDisplayOptionBarMode.value) {
+    optionBarShow.value = props.show;
+  } else {
+    optionBarShow.value = false;
+  }
+  logoShow.value = props.show;
+  iconMaximizeShow.value = false;
+
+  const screenHeight = window.innerHeight + window.scrollY;
+  const top = parseInt(props.top);
+  if (screenHeight < top + 40) {
+    optionBarTop.value = `${top - 60}px`;
+    optionBarMarginTop.value = "-31px";
+    optionBarMarginLeft.value = "24px";
+  } else {
+    optionBarMarginTop.value = "-6px";
+    optionBarMarginLeft.value = "16px";
+  }
+
+  const activeElement = props.activeElement;
+  if (
+    props.featureMode === featureModeEnum.EDITABLE_CONTEXT_MENU ||
+    props.featureMode === featureModeEnum.EDITABLE
+  ) {
+    originalActiveElement.value = props.activeElement;
+  }
+
+  if (
+    originalActiveElement.value &&
+    originalActiveElement.value!.value !== undefined &&
+    originalActiveElement.value!.value !== null &&
+    props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
+    props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
+  ) {
+    const startSelectionIndex = originalActiveElement.value!.selectionStart;
+    const endSelectionIndex = originalActiveElement.value!.selectionEnd;
+    const text = readOriginalActiveElementValue();
+    startPart = text.slice(0, startSelectionIndex);
+    endPart = text.slice(endSelectionIndex);
+  } else if (
+    /* prettier-ignore */
+    originalActiveElement.value &&
+          ((originalActiveElement.value!.innerText !== undefined &&
+            originalActiveElement.value!.innerText !== null) ||
+            (originalActiveElement.value!.textContent !== undefined &&
+              originalActiveElement.value!.textContent !== null)) && 
+              props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
+              props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
+  ) {
+    var selection = window.getSelection();
+    let selectedText = selection!.toString().trim();
+    var range = selection!.getRangeAt(0).cloneRange();
+    range.selectNodeContents(activeElement);
+    range.setEnd(
+      selection!.getRangeAt(0).startContainer,
+      selection!.getRangeAt(0).startOffset
+    );
+    const startSelectionIndex = range.toString().length;
+    const endSelectionIndex = startSelectionIndex + selectedText.length;
+    const text = readOriginalActiveElementValue();
+    startPart = text.slice(0, startSelectionIndex);
+    endPart = text.slice(endSelectionIndex);
+  }
 });
 
 onUnmounted(() => {
-  document.removeEventListener("mouseup", handleMouseup);
+  consoleLog(LogLevelEnum.DEBUG, "Unmounted PopupMenu");
   document.removeEventListener("mousedown", handleMousedown);
   document.removeEventListener("keyup", handleKeyup);
   const shadowHost = document.querySelector("cremind-app-extension");
   if (shadowHost) {
     const shadowRoot = shadowHost.shadowRoot;
     if (shadowRoot) {
-      shadowRoot.removeEventListener("mouseup", handleMouseupShadow);
       shadowRoot.removeEventListener("mousedown", handleMousedownShadow);
     }
   }

@@ -1,10 +1,11 @@
 import { defineStore } from "pinia";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 import { AIMode } from "@/constants";
+import { SidebarMode } from "@/types/ui";
 
 interface UserSettingsState {
   isDark: boolean;
-  sidebar: boolean;
+  sidebar: SidebarMode;
   aiProvider: AIMode;
   tidyDisplayOptionBarMode: boolean;
 }
@@ -14,7 +15,7 @@ export const useUserSettingsStore = defineStore({
   state: (): UserSettingsState => {
     return {
       isDark: false,
-      sidebar: true,
+      sidebar: SidebarMode.SIDEBAR,
       aiProvider: AIMode.CHAT_GPT,
       tidyDisplayOptionBarMode: false,
     };
@@ -23,7 +24,7 @@ export const useUserSettingsStore = defineStore({
     getIsDark(): boolean {
       return this.isDark;
     },
-    getSidebar(): boolean {
+    getSidebar(): SidebarMode {
       return this.sidebar;
     },
     getAiProvider(): AIMode {
@@ -43,18 +44,33 @@ export const useUserSettingsStore = defineStore({
         }
       }
     },
-    async initialize() {
+    applySidebarClass() {
+      const htmlRootElement = document.querySelector("html");
+      if (this.sidebar === SidebarMode.SIDEBAR) {
+        htmlRootElement!.style.width = "calc(100% - 450px)";
+        htmlRootElement!.style.setProperty(
+          "width",
+          "calc(100% - 450px)",
+          "important"
+        );
+      } else {
+        htmlRootElement!.style.removeProperty("width");
+      }
+    },
+    async initialize(isSettingPage: boolean) {
       const storedSettingsJSON = await ChromeStorage.getInstance().get(
         "USER_SETTINGS"
       );
       if (storedSettingsJSON === undefined) {
         await this.updateSettingsInStorage();
-        this.applyDarkModeClass(false);
       } else {
         const storedSettings: UserSettingsState =
           JSON.parse(storedSettingsJSON);
         Object.assign(this, storedSettings);
-        this.applyDarkModeClass(false);
+      }
+      this.applyDarkModeClass(false);
+      if (!isSettingPage) {
+        this.applySidebarClass();
       }
     },
     async setIsDark(isDark: boolean) {
@@ -62,7 +78,7 @@ export const useUserSettingsStore = defineStore({
       await this.updateSettingsInStorage();
       this.applyDarkModeClass(true);
     },
-    async setSidebar(sidebar: boolean) {
+    async setSidebar(sidebar: SidebarMode) {
       this.sidebar = sidebar;
       await this.updateSettingsInStorage();
     },
