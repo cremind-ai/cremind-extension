@@ -51,7 +51,8 @@
       </div>
       <QuickFeatureCard
         :show="false"
-        v-model:start="isStreaming"
+        v-model:start="isStarted"
+        v-model:is-streaming="isStreaming"
         v-model:drawer="drawer"
         :feature-mode="featureMode"
         :feature-schema="featureSchema"
@@ -132,7 +133,8 @@
       <div ref="quickFeatureCardRef">
         <QuickFeatureCard
           :show="true"
-          v-model:start="isStreaming"
+          v-model:start="isStarted"
+          v-model:is-streaming="isStreaming"
           v-model:drawer="drawer"
           :feature-mode="featureMode"
           :feature-schema="featureSchema"
@@ -281,6 +283,7 @@ const originalActiveElement: Ref<any> = ref(null as any);
 const outputContent = ref("");
 const clickOutsideConfirm = ref(false);
 const isStreaming = ref(props.isStreaming);
+const isStarted = ref(false);
 const iconMaximizeShow = ref(false);
 const logoShow = ref(false);
 const drawer = ref(false);
@@ -340,6 +343,9 @@ watch(
 watch(
   () => isStreaming.value,
   (value) => {
+    if (!isStreaming.value) {
+      isStarted.value = false;
+    }
     emits("update:isStreaming", value);
   }
 );
@@ -469,7 +475,8 @@ async function handleFeatureClick(_featureSchema: FeatureSchema) {
   outputContent.value = "";
   popoverVisible.value = true;
   featureSchema.value = _featureSchema;
-  isStreaming.value = true;
+  isStarted.value = true;
+  // isStreaming.value = true;
   emits("featureClick");
 }
 
@@ -549,6 +556,7 @@ const handleMousedownShadow = (event: Event) => {
 const handleMousedown = (event: MouseEvent) => {
   if (
     (logoShow.value || optionBarShow.value) &&
+    !drawer.value &&
     !shadowClickInside &&
     !iconMaximizeShow.value &&
     (!isStreaming.value || isSidebar.value === SidebarMode.SIDEBAR)
@@ -560,7 +568,7 @@ const handleMousedown = (event: MouseEvent) => {
 
 const handleKeyup = (event: KeyboardEvent) => {
   const pressedKey = event.key;
-  if (pressedKey !== "Shift" && pressedKey !== "Meta" && !drawer) {
+  if (pressedKey !== "Shift" && pressedKey !== "Meta" && !drawer.value) {
     if (logoShow.value || optionBarShow.value) {
       close();
     }
@@ -686,7 +694,7 @@ onMounted(async () => {
           ((originalActiveElement.value!.innerText !== undefined &&
             originalActiveElement.value!.innerText !== null) ||
             (originalActiveElement.value!.textContent !== undefined &&
-              originalActiveElement.value!.textContent !== null)) && 
+              originalActiveElement.value!.textContent !== null)) &&
               props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
               props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
   ) {

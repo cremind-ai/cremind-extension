@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { consoleLog, LogLevelEnum } from "@/utils";
 import { Icon } from "@iconify/vue";
 import { ElInput } from "element-plus";
 import { ElTooltip } from "element-plus";
@@ -54,11 +55,13 @@ const emits = defineEmits(["new-chat", "update:modelValue", "mounted"]);
 const textField = ref("");
 const chatActionRef = ref<HTMLDivElement>();
 const inputRef = ref<InstanceType<typeof ElInput>>();
+const blockSend = ref(props.blockSend);
 let lastEnterTime = 0;
 
 watch(
   () => props.blockSend,
   (value) => {
+    blockSend.value = value;
     if (!value) {
       inputRef.value!.focus();
     }
@@ -66,7 +69,7 @@ watch(
 );
 
 const newChat = () => {
-  if (!props.blockSend && textField.value.trim().length > 0) {
+  if (!blockSend.value && textField.value.trim().length > 0) {
     emits("new-chat", textField.value.trim());
     nextTick(() => {
       textField.value = "";
@@ -84,6 +87,8 @@ const handleEnterKey = () => {
 };
 
 onMounted(() => {
+  consoleLog(LogLevelEnum.DEBUG, "Mounted ChatAction");
+  blockSend.value = props.blockSend;
   emits("mounted");
 });
 </script>

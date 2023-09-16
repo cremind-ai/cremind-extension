@@ -67,6 +67,7 @@
           :start="startApp"
           :max-height="appMaxHeight"
           v-model:is-streaming="isStreaming"
+          v-model:conversation-id="conversationId"
           @complete="handleComplete"
         >
           <template #main />
@@ -108,6 +109,11 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  conversationId: {
+    type: String,
+    required: false,
+    default: "",
+  },
 });
 
 const marked = new Marked(
@@ -121,7 +127,12 @@ const marked = new Marked(
 );
 marked.use({ silent: true, breaks: true });
 
-const emits = defineEmits(["update:modelValue", "update:isStreaming", "close"]);
+const emits = defineEmits([
+  "update:modelValue",
+  "update:isStreaming",
+  "update:conversationId",
+  "close",
+]);
 
 const appMaxHeight = computed(() => {
   if (isMaximized.value) {
@@ -136,6 +147,7 @@ const isStreaming = ref(false);
 const isMaximized = ref(true);
 const isMinimized = ref(false);
 const startApp = ref(false);
+const conversationId: Ref<string> = ref("");
 
 watch(
   () => props.modelValue,
@@ -168,8 +180,22 @@ watch(
   }
 );
 
-const close = () => {
-  appsRef.value!.close();
+watch(
+  () => props.conversationId,
+  (value) => {
+    conversationId.value = value;
+  }
+);
+
+watch(
+  () => conversationId.value,
+  (value) => {
+    emits("update:conversationId", value);
+  }
+);
+
+const close = async () => {
+  await appsRef.value!.close();
   isMinimized.value = false;
   startApp.value = false;
   appDialogVisible.value = false;
@@ -178,24 +204,12 @@ const close = () => {
   }, 0);
 };
 
-const handleCloseDialog = () => {
-  if (isStreaming.value) {
-    ElMessageBox.confirm(
-      "The result is being streamed, do you want to stop?",
-      "Warning",
-      {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning",
-      }
-    )
-      .then(async () => {
-        isStreaming.value = false;
-      })
-      .catch(() => {});
-  } else {
-    close();
-  }
+async function stopGenerating(): Promise<string> {
+  return await appsRef.value!.stopGenerating();
+}
+
+const handleCloseDialog = async () => {
+  close();
 };
 
 const handleMinimize = () => {
@@ -217,5 +231,9 @@ const handleComplete = () => {
 };
 
 onMounted(() => {});
+defineExpose({
+  close,
+  stopGenerating,
+});
 </script>
 <style scoped></style>

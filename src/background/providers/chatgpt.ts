@@ -170,10 +170,14 @@ export class ChatGPT extends AIProvider {
 
   public async deleteConversation(conversationId: string): Promise<void> {
     consoleLog(LogLevelEnum.DEBUG, "deleteConversation");
-    this.token = await this.getChatGPTAccessToken();
-    this.setConversationProperty(this.token!, conversationId, {
-      is_visible: false,
-    });
+
+    // TODO: WORK AROUND
+    setTimeout(async () => {
+      this.token = await this.getChatGPTAccessToken();
+      this.setConversationProperty(this.token!, conversationId, {
+        is_visible: false,
+      });
+    }, 10000);
   }
 
   async conversation(

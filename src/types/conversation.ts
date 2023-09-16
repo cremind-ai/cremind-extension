@@ -10,3 +10,13 @@ export enum ConversationModeEnum {
   REGENERATE = 1,
   CONTINUE = 2,
 }
+
+export type ConversationContextType = {
+  conversationId: string | null;
+  messageId: string | null;
+  childMessageId: string | null;
+  contextIds: string[][];
+  endTurn: boolean;
+  saveConversation: boolean;
+  currentPrompt: string | null;
+};

@@ -102,7 +102,57 @@
           <ElTimelineItem timestamp="Output" placement="top">
             <ElCard>
               <div style="display: flex; justify-content: flex-end">
-                <ElButtonGroup>
+                <ElAffix v-if="checkAffix" position="top" :offset="66">
+                  <ElButtonGroup>
+                    <ElTooltip
+                      :hide-after="0"
+                      content="Clean output"
+                      placement="top"
+                    >
+                      <ElButton plain @click="handleCleanOutput">
+                        <Icon
+                          icon="carbon:clean"
+                          :style="{ fontSize: '20px' }"
+                        />
+                      </ElButton>
+                    </ElTooltip>
+                    <ElTooltip
+                      :hide-after="0"
+                      content="Regenerate"
+                      placement="top"
+                    >
+                      <ElButton plain @click="handleRegenerate">
+                        <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
+                      </ElButton>
+                    </ElTooltip>
+                    <ElTooltip
+                      :hide-after="0"
+                      content="Stop generating"
+                      placement="top"
+                    >
+                      <ElButton plain @click="handleStopGenerating">
+                        <Icon
+                          icon="ph:stop-duotone"
+                          :style="{ fontSize: '20px' }"
+                        />
+                      </ElButton>
+                    </ElTooltip>
+
+                    <ElTooltip
+                      :hide-after="0"
+                      content="Copy to clipboard"
+                      placement="top"
+                    >
+                      <ElButton plain @click="handleCopyToClipboard">
+                        <Icon
+                          icon="solar:copy-line-duotone"
+                          :style="{ fontSize: '20px' }"
+                        />
+                      </ElButton>
+                    </ElTooltip>
+                  </ElButtonGroup>
+                </ElAffix>
+                <ElButtonGroup v-else-if="!checkAffix">
                   <ElTooltip
                     :hide-after="0"
                     content="Clean output"
@@ -121,6 +171,19 @@
                       <Icon icon="ion:reload" :style="{ fontSize: '20px' }" />
                     </ElButton>
                   </ElTooltip>
+                  <ElTooltip
+                    :hide-after="0"
+                    content="Stop generating"
+                    placement="top"
+                  >
+                    <ElButton plain @click="handleStopGenerating">
+                      <Icon
+                        icon="ph:stop-duotone"
+                        :style="{ fontSize: '20px' }"
+                      />
+                    </ElButton>
+                  </ElTooltip>
+
                   <ElTooltip
                     :hide-after="0"
                     content="Copy to clipboard"
@@ -149,11 +212,7 @@
                     visibility: isStreaming ? 'visible' : 'hidden',
                   }"
                 />
-                <div v-html="outputContentRender"></div>
-
-                <!-- <pre style="white-space: pre-wrap; word-wrap: break-word">{{
-                outputContent
-              }}</pre> -->
+                <div ref="outputOuterRef" v-html="outputContentRender"></div>
               </div>
             </ElCard>
           </ElTimelineItem>
@@ -206,6 +265,7 @@ import { ElTimelineItem } from "element-plus";
 import { ElScrollbar } from "element-plus";
 import { ElMenu } from "element-plus";
 import { ElMenuItem } from "element-plus";
+import { ElAffix } from "element-plus";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
@@ -283,9 +343,18 @@ const props = defineProps({
     required: false,
     default: (90 / 100) * window.innerHeight, // 80% of the page height
   },
+  conversationId: {
+    type: String,
+    required: false,
+    default: "",
+  },
 });
 
-const emits = defineEmits(["update:isStreaming", "complete"]);
+const emits = defineEmits([
+  "update:isStreaming",
+  "update:conversationId",
+  "complete",
+]);
 
 const aiProvider = computed(() => userSettings.getAiProvider);
 const aiProviderKey = computed(() => {
@@ -330,18 +399,21 @@ const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const clickOutsideFocus = ref(true);
 const scrollContentRef = ref<InstanceType<typeof ElScrollbar>>();
 const contentRef: Ref<HTMLDivElement> = ref(null as any);
+const outputOuterRef = ref<HTMLDivElement>();
 const contentMaxHeight = ref(props.maxHeight);
 const outputContent = ref("");
 const activeIndexInput = ref(InputMode.UPLOAD);
 const insertText = ref("");
 const url = ref("");
 const fileList = ref<UploadUserFile[]>([]);
+const checkAffix = ref(false);
 
+const conversationId: Ref<string> = ref("");
 let uploadItems: string[] = [];
-let conversationId: string | null = null;
 let messageId: string | null = null;
 let contextIds: string[][] = [];
 let continueGenerating: boolean = false;
+let stopGeneratingCheck: boolean = false;
 const unstructuredApiUrl = import.meta.env.VITE_UNSTRUCTURED_API;
 
 watch(
@@ -355,6 +427,29 @@ watch(
   () => props.maxHeight,
   (value) => {
     contentMaxHeight.value = value;
+  }
+);
+
+watch(
+  () => props.conversationId,
+  (value) => {
+    conversationId.value = value;
+  }
+);
+
+watch(
+  () => conversationId.value,
+  (value) => {
+    emits("update:conversationId", value);
+  }
+);
+
+watch(
+  () => outputContent.value,
+  (value) => {
+    if (outputOuterRef.value!.clientHeight > (80 / 100) * window.innerHeight) {
+      checkAffix.value = true;
+    }
   }
 );
 
@@ -387,14 +482,36 @@ const getFeatureEnabledState = async (
   }
 };
 
-function close() {
-  deleteConversation();
-  outputContent.value = "";
-  isStreaming.value = false;
-  fileList.value = [];
-  uploadItems = [];
-  insertText.value = "";
-  url.value = "";
+async function close(): Promise<void> {
+  return new Promise(async (resolve, reject) => {
+    if (isStreaming.value) {
+      ElMessageBox.confirm(
+        "The result is being streamed, do you want to stop?",
+        "Warning",
+        {
+          confirmButtonText: "OK",
+          cancelButtonText: "Cancel",
+          type: "warning",
+        }
+      )
+        .then(async () => {
+          await handleStopGenerating();
+          deleteConversation();
+          resolve();
+        })
+        .catch(() => {
+          resolve();
+        });
+    } else {
+      deleteConversation();
+      resolve();
+    }
+  });
+}
+
+async function handleStopGenerating() {
+  conversationId.value = await stopGenerating();
+  stopGeneratingCheck = true;
 }
 
 const handleSelectInput = (key: string, keyPath: string[]) => {
@@ -441,15 +558,26 @@ const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
 };
 
 const deleteConversation = () => {
-  consoleLog(LogLevelEnum.DEBUG, "onDeleteConversation", conversationId);
-  if (conversationId) {
+  consoleLog(
+    LogLevelEnum.DEBUG,
+    "onDeleteConversation Apps",
+    conversationId.value
+  );
+  if (conversationId.value !== "") {
     llm.deleteConversation({
       aiProvider: aiProvider.value,
-      conversationId: conversationId!,
+      conversationId: conversationId.value!,
     });
   }
-  conversationId = null;
+  conversationId.value = "";
   messageId = null;
+  outputContent.value = "";
+  isStreaming.value = false;
+  fileList.value = [];
+  uploadItems = [];
+  insertText.value = "";
+  url.value = "";
+  checkAffix.value = false;
   emits("complete");
 };
 
@@ -481,8 +609,19 @@ const handleRegenerate = () => {
     );
     return;
   }
+  stopGeneratingCheck = false;
   startGenerateResponse(formDataVariableSchema.value);
 };
+
+async function stopGenerating(): Promise<string> {
+  if (isStreaming.value) {
+    isStreaming.value = false;
+    const resData = await llm.stopGenerating();
+    return resData.conversationId;
+  } else {
+    return conversationId.value!;
+  }
+}
 
 const handleCleanOutput = () => {
   if (isStreaming.value) {
@@ -557,7 +696,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     outputContent.value = "";
     let completeContent = "";
     continueGenerating = false;
-    conversationId = null;
+    conversationId.value = "";
     messageId = null;
 
     isStreaming.value = true;
@@ -565,6 +704,9 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
       let retryCount = 0;
       try {
         do {
+          if (stopGeneratingCheck) {
+            return;
+          }
           SystemVariableParser.getInstance().setUploadedText(item);
           const chainBuilder = new ChainBuilder(
             llm,
@@ -573,7 +715,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
           await chainBuilder.buildChains(variables);
           const result = await chainBuilder.executeChains(true, {
             aiProvider: aiProvider.value,
-            conversationId: conversationId!,
+            conversationId: conversationId.value!,
             messageId: messageId!,
             contextIds: contextIds,
             conversationMode: continueGenerating
@@ -608,7 +750,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
                 } else {
                   completeContent += data.message;
                 }
-                conversationId = data.conversationId;
+                conversationId.value = data.conversationId;
                 messageId = data.messageId;
                 continueGenerating = data.endTurn ? false : true;
                 contextIds = data.contextIds ? data.contextIds : null;
@@ -750,12 +892,7 @@ async function handleFeatureClick(
   handleFeature(id, featureSchema[type]!, type);
 }
 
-function handleBeforeUnload(event: Event) {
-  deleteConversation();
-}
-
 onMounted(() => {
-  window.addEventListener("beforeunload", handleBeforeUnload);
   const data: IPCMessageType = {
     topic: IPCTopicEnum.COMMUNICATION,
     type: CommunicationMessageTypeEnum.GET_FEATURES,
@@ -773,12 +910,11 @@ onMounted(() => {
   });
 });
 
-onUnmounted(() => {
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
+onUnmounted(() => {});
 
 defineExpose({
   close,
+  stopGenerating,
 });
 </script>
 

@@ -7,7 +7,7 @@
         style="padding-left: 5px; padding-right: 5px"
       >
         <div ref="innerRef">
-          <RoomChat :chats="chats" />
+          <RoomChat v-if="!initScrollbarHeight" :chats="chats" />
         </div>
       </ElScrollbar>
     </div>
@@ -31,6 +31,7 @@ import {
   ref,
   watch,
   nextTick,
+  reactive,
 } from "vue";
 import { ElScrollbar } from "element-plus";
 import { RoomChat } from "../Chat";
@@ -40,6 +41,7 @@ const props = defineProps({
   chats: {
     type: Array as () => ConversationMessageType[],
     required: true,
+    default: [],
   },
   blockSend: {
     type: Boolean,
@@ -52,10 +54,10 @@ const emits = defineEmits(["new-chat", "height"]);
 const innerRef = ref<HTMLDivElement>();
 const outerRef = ref<HTMLDivElement>();
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>();
-const chatActionRef = ref<HTMLDivElement>();
-const blockSend = ref(false);
+const blockSend = ref(props.blockSend);
 const scrollbarHeight = ref(0);
-const chats: Ref<ConversationMessageType[]> = ref([]);
+const initScrollbarHeight = ref(true);
+let chats: ConversationMessageType[] = reactive(props.chats);
 
 watch(
   () => props.blockSend,
@@ -64,12 +66,15 @@ watch(
   }
 );
 
-watch(
-  () => props.chats,
-  (value) => {
-    chats.value = value;
+watch(props.chats, (value, _) => {
+  chats = value;
+  if (initScrollbarHeight.value && outerRef.value!.clientHeight !== 0) {
+    nextTick(() => {
+      scrollbarHeight.value = outerRef.value!.clientHeight;
+      initScrollbarHeight.value = false;
+    });
   }
-);
+});
 
 const newChat = (value: string) => {
   emits("new-chat", value);
@@ -86,15 +91,11 @@ const chatActionComponent = defineAsyncComponent(async () => {
   return module.default;
 });
 
-const chatActionMounted = () => {
-  scrollbarHeight.value = outerRef.value!.clientHeight;
-  chats.value = props.chats;
-  nextTick(() => {
-    scrollToBottom();
-  });
-};
+const chatActionMounted = () => {};
 
-onMounted(async () => {});
+onMounted(async () => {
+  blockSend.value = props.blockSend;
+});
 
 defineExpose({
   scrollToBottom,

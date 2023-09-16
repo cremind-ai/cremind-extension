@@ -18,6 +18,11 @@
       @complete="handlePopupMenuCompleteEvent"
       @error="handlePopupMenuErrorEvent"
     />
+    <div v-if="!appSidebarEnable" class="app-cremind-features">
+      <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
+        <LoadImg :filename="'CreMind-logo-white-128.png'" :width="20" />
+      </ElTooltip>
+    </div>
     <div v-show="appSidebarEnable">
       <div class="app-sidebar">
         <ElCard class="app-sidebar-card">
@@ -41,21 +46,23 @@
             <ElMenuItem index="2">Apps</ElMenuItem>
           </ElMenu>
           <div
-            v-if="activeIndexMenu === SidebarMenu.CHAT"
+            v-show="activeIndexMenu === SidebarMenu.CHAT"
             class="app-sidebar-child-full"
           >
             <ChatBox
               ref="chatBoxRef"
               v-model:is-streaming="isStreaming"
+              v-model:conversation-context="conversationContext"
               :is-send="isSendChatBox"
               :prompt="chatPrompt"
+              v-model:chats="chats"
               @complete="handleChatBoxCompleteEvent"
               @error="handleChatBoxErrorEvent"
             ></ChatBox>
           </div>
 
           <div
-            v-if="activeIndexMenu === SidebarMenu.QUICK"
+            v-show="activeIndexMenu === SidebarMenu.QUICK"
             class="app-sidebar-child-full"
           >
             <Chat
@@ -91,9 +98,11 @@
             </ElTooltip>
 
             <AppsDialog
+              ref="appsDialogRef"
               :dialog="appsMode"
               v-model="appsVisible"
               v-model:is-streaming="isStreaming"
+              v-model:conversation-id="appsConversationId"
               @close="handleAppClose"
             />
           </div>
@@ -102,7 +111,7 @@
     </div>
   </div>
   <div v-if="isSidebar === SidebarMode.WINDOWS">
-    <div v-if="appEnable">
+    <div v-show="appEnable">
       <div v-show="appMenuVisible" class="app-cremind-features">
         <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
           <LoadImg
@@ -165,12 +174,18 @@
         @error="handlePopupMenuErrorEvent"
       />
       <ChatDialog
+        ref="chatDialogRef"
         :show="chatVisible"
-        @close="handleChatDialogClose"
+        v-model:is-streaming="isStreaming"
+        v-model:conversation-context="conversationContext"
         :prompt="chatPrompt"
+        :chats="chats"
+        @close="handleChatDialogClose"
       />
       <AppsDialog
+        ref="appsDialogRef"
         v-model="appsVisible"
+        v-model:conversation-id="appsConversationId"
         :dialog="true"
         v-model:is-streaming="isStreaming"
         @close="handleAppClose"
@@ -185,6 +200,7 @@ import {
   ComputedRef,
   nextTick,
   onMounted,
+  onUnmounted,
   reactive,
   Ref,
   ref,
@@ -209,13 +225,16 @@ import {
 } from "@/types";
 import { consoleLog, detectOperatingSystem, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
-import { useChatDialogStore } from "@/store/chat_dialog";
 import { ConversationRoleEnum, OperatingSystemEnum } from "@/constants";
 import { ChatBox } from "@/components";
 import { SidebarMode } from "@/types/ui";
-import { ConversationMessageType } from "@/types/conversation";
+import {
+  ConversationContextType,
+  ConversationMessageType,
+} from "@/types/conversation";
 import { Chat } from "@/components/Chat";
 import { getJsonFeatures } from "@/lib/common";
+import { LLM } from "@/lib/llm";
 
 enum SidebarMenu {
   CHAT = "0",
@@ -233,10 +252,9 @@ type PopupMenuVariableType = {
 };
 
 const userSettings = useUserSettingsStore();
-const chatDialog = useChatDialogStore();
 
 const appMenuVisible = ref(true);
-const appSidebarEnable = ref(true);
+const appSidebarEnable = ref(false);
 const appEnable = ref(true);
 const selectedText = ref("");
 const top = ref("");
@@ -258,7 +276,7 @@ const hideMeLabel = computed(() => {
     ctrlKey = "Cmd";
   }
   if (isSidebar.value === SidebarMode.SIDEBAR) {
-    return `${ctrlKey}+Shift+Z: hide sidebar`;
+    return `${ctrlKey}+Shift+Z: show sidebar`;
   } else if (isSidebar.value === SidebarMode.WINDOWS) {
     return `${ctrlKey}+Shift+Z: hide me`;
   }
@@ -268,7 +286,10 @@ const isStreaming = ref(false);
 const activeIndexMenu = ref(SidebarMenu.CHAT);
 const activeElement = ref<HTMLInputElement | HTMLElement>();
 const selectionChats: Ref<ConversationMessageType[]> = ref([]);
+let chats: ConversationMessageType[] = reactive([]);
 const selectionChatRef = ref<ComponentRef<typeof Chat>>();
+const appsDialogRef = ref<ComponentRef<typeof AppsDialog>>();
+const chatDialogRef = ref<ComponentRef<typeof ChatDialog>>();
 
 const isSendChatBox = ref(false);
 const chatPrompt = ref("");
@@ -278,6 +299,20 @@ const appSidebarRef: Ref<HTMLDivElement> = ref(null as any);
 
 let popupMenuVariables: PopupMenuVariableType[] = reactive([]);
 
+let conversationContext: ConversationContextType = reactive({
+  conversationId: null,
+  messageId: null,
+  childMessageId: null,
+  contextIds: [],
+  endTurn: true,
+  saveConversation: false,
+  currentPrompt: null,
+});
+
+const chatBoxRef = ref<ComponentRef<typeof ChatBox>>();
+const aiProvider = computed(() => userSettings.getAiProvider);
+const appsConversationId: Ref<string> = ref("");
+
 let showFeaturesTimeout: any;
 let popupMenuDataResponse: string = "";
 let shadowClick = false;
@@ -285,6 +320,8 @@ let shadowInsidePrevState = false;
 
 var prevStartOffsetSelection: number | null = null;
 var prevEndOffseSelection: number | null = null;
+
+const llm = new LLM();
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (
@@ -509,7 +546,6 @@ function handlePopupMenuClose(index: number) {
 function handlePopupMenuFeatureClick() {
   if (isSidebar.value === SidebarMode.SIDEBAR) {
     activeIndexMenu.value = SidebarMenu.QUICK;
-    isStreaming.value = true;
     selectionChats.value.push({
       role: ConversationRoleEnum.USER,
       text: selectedText.value,
@@ -519,11 +555,13 @@ function handlePopupMenuFeatureClick() {
       text: "",
     });
     popupMenuDataResponse = "";
+    nextTick(() => {
+      selectionChatRef.value?.scrollToBottom();
+    });
   }
 }
 
 function handleChatDialogClose() {
-  chatDialog.setChatDialogVisible(false);
   chatVisible.value = false;
   appMenuVisible.value = true;
 }
@@ -561,7 +599,7 @@ function hideFeatures() {
   }, 3000);
 }
 
-const handleSelectMenu = (key: string, keyPath: string[]) => {
+const handleSelectMenu = async (key: string, keyPath: string[]) => {
   const sidebarMenuEnum: SidebarMenu = key as SidebarMenu;
   activeIndexMenu.value = sidebarMenuEnum;
 };
@@ -598,10 +636,12 @@ const handlePopupMenuErrorEvent = (index: number) => {
 };
 
 const handleChatBoxCompleteEvent = () => {
+  isStreaming.value = false;
   isSendChatBox.value = false;
 };
 
 const handleChatBoxErrorEvent = () => {
+  isStreaming.value = false;
   isSendChatBox.value = false;
 };
 
@@ -632,10 +672,49 @@ const handleAppsMaximize = () => {
   appsVisible.value = true;
 };
 
+async function handleBeforeUnload(event: Event) {
+  appsConversationId.value = await appsDialogRef.value!.stopGenerating();
+  if (isSidebar.value === SidebarMode.SIDEBAR) {
+    conversationContext.conversationId =
+      await chatBoxRef.value!.stopGenerating();
+
+    nextTick(() => {
+      appsDialogRef.value!.close();
+      chatBoxRef.value!.close();
+    });
+  } else if (isSidebar.value === SidebarMode.WINDOWS) {
+    conversationContext.conversationId =
+      await chatDialogRef.value!.stopGenerating();
+
+    nextTick(() => {
+      appsDialogRef.value!.close();
+      chatDialogRef.value!.close();
+    });
+  }
+
+  if (
+    !conversationContext.saveConversation &&
+    conversationContext.conversationId
+  ) {
+    llm.deleteConversation({
+      aiProvider: aiProvider.value,
+      conversationId: conversationContext.conversationId!,
+    });
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener("beforeunload", handleBeforeUnload);
   getJsonFeatures(false);
   await userSettings.initialize(false);
   isSidebar.value = userSettings.getSidebar;
+  console.log("appSidebarEnable", appSidebarEnable.value);
+  if (appSidebarEnable.value) {
+    userSettings.$state.sidebar = SidebarMode.SIDEBAR;
+  } else {
+    userSettings.$state.sidebar = SidebarMode.NONE;
+  }
+  userSettings.applySidebarClass();
   if (isSidebar.value === SidebarMode.SIDEBAR) {
     appsVisible.value = true;
     nextTick(() => {
@@ -652,6 +731,10 @@ onMounted(async () => {
     });
   } else if (isSidebar.value === SidebarMode.WINDOWS) {
   }
+});
+
+onUnmounted(() => {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 });
 </script>
 

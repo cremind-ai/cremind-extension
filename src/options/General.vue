@@ -84,9 +84,10 @@
           :filename="SIDEBAR_IMG"
           position="left"
           title="Sidebar mode"
+          content='"Cmd/Ctrl + Shift + Z" to enable/disable'
           image-height="100px"
           image-width="100px"
-          width="300px"
+          width="400px"
         >
         </ImageDetailCard>
       </ElCard>
@@ -103,7 +104,7 @@
           title="Windows dialog mode"
           image-height="100px"
           image-width="100px"
-          width="300px"
+          width="400px"
         >
         </ImageDetailCard>
       </ElCard>

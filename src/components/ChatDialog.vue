@@ -35,15 +35,26 @@
       <ChatBox
         ref="chatBoxRef"
         v-model:is-streaming="isStreaming"
+        v-model:conversation-context="conversationContext"
         :is-send="isSend"
         :prompt="prompt"
+        :chats="chats"
       ></ChatBox>
     </div>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, Ref, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  PropType,
+  reactive,
+  Ref,
+  ref,
+  watch,
+} from "vue";
 import { Icon } from "@iconify/vue";
 import { Close } from "@element-plus/icons-vue";
 import { SemiSelect } from "@element-plus/icons-vue";
@@ -52,6 +63,10 @@ import { ElDialog } from "element-plus";
 import { ElMessage } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import { ChatBox } from "@/components";
+import {
+  ConversationContextType,
+  ConversationMessageType,
+} from "@/types/conversation";
 
 const props = defineProps({
   show: {
@@ -59,24 +74,55 @@ const props = defineProps({
     required: true,
     default: false,
   },
+  isStreaming: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   prompt: {
     type: String,
     required: false,
     default: "",
   },
+  chats: {
+    type: Array as () => ConversationMessageType[],
+    required: false,
+    default: [],
+  },
+  conversationContext: {
+    type: Object as PropType<ConversationContextType>,
+    required: false,
+    default: {
+      conversationId: null,
+      messageId: null,
+      childMessageId: null,
+      contextIds: [],
+      endTurn: true,
+      saveConversation: false,
+      currentPrompt: null,
+    },
+  },
 });
 
-const emits = defineEmits(["close"]);
+const emits = defineEmits([
+  "update:isStreaming",
+  "update:conversationContext",
+  "close",
+]);
 
 const chatBoxRef = ref<ComponentRef<typeof ChatBox>>();
 const chatDialogVisible = ref(props.show);
 
-const isStreaming = ref(false);
+const isStreaming = ref(props.isStreaming);
 const isMinimized = ref(false);
 
 const isSend = ref(false);
 
 const dialogHeight = ref(`${(70 / 100) * window.innerHeight}px`);
+
+let conversationContext: ConversationContextType = reactive(
+  props.conversationContext
+);
 
 watch(
   () => props.show,
@@ -89,6 +135,44 @@ watch(
     }
   }
 );
+
+watch(
+  () => props.isStreaming,
+  (value) => {
+    isStreaming.value = value;
+  }
+);
+
+watch(
+  () => isStreaming.value,
+  (value) => {
+    emits("update:isStreaming", value);
+  }
+);
+
+watch(
+  () => props.conversationContext,
+  (value) => {
+    conversationContext = value;
+  }
+);
+
+/* TODO
+watch(
+  () => conversationContext,
+  (value) => {
+    emits("update:conversationContext", value);
+  }
+);
+*/
+
+async function stopGenerating(): Promise<string> {
+  return await chatBoxRef.value!.stopGenerating();
+}
+
+function close() {
+  chatBoxRef.value!.close();
+}
 
 const handleCloseDialog = () => {
   if (isStreaming.value) {
@@ -123,5 +207,9 @@ const handleMinimize = () => {
 };
 
 onMounted(async () => {});
+defineExpose({
+  close,
+  stopGenerating,
+});
 </script>
 <style scoped></style>

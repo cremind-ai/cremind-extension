@@ -16,6 +16,7 @@
             </ElButton>
           </ElTooltip>
           <ElTooltip
+            v-if="conversationContext.messageId"
             :hide-after="0"
             content="Regenerate response"
             placement="top"
@@ -38,7 +39,7 @@
           </ElTooltip>
           <ElTooltip
             :hide-after="0"
-            v-if="endTurn === false"
+            v-if="conversationContext.endTurn === false"
             content="Continue generating"
             placement="top"
           >
@@ -49,11 +50,11 @@
               />
             </ElButton>
           </ElTooltip>
-          <!-- <ElTooltip :hide-after="0" content="Stop generating" placement="top">
+          <ElTooltip :hide-after="0" content="Stop generating" placement="top">
             <ElButton plain @click="handleStopGenerating">
               <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
             </ElButton>
-          </ElTooltip> -->
+          </ElTooltip>
         </ElButtonGroup>
       </div>
     </div>
@@ -79,6 +80,7 @@ import {
   ref,
   watch,
   onUnmounted,
+  PropType,
 } from "vue";
 import { Icon } from "@iconify/vue";
 import { ElButton, ElMessageBox } from "element-plus";
@@ -88,14 +90,17 @@ import { ElMessage } from "element-plus";
 import { ConversationRoleEnum } from "@/constants";
 import { Chat } from "./Chat";
 import { useUserSettingsStore } from "@/store/user_settings";
-import { useConversationStore } from "@/store/conversation";
 import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
 import { CWException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { Status } from "@/constants/status";
-import { ConversationModeEnum } from "@/types/conversation";
+import {
+  ConversationContextType,
+  ConversationMessageType,
+  ConversationModeEnum,
+} from "@/types/conversation";
 import { LoadImg } from "@/components";
 
 const props = defineProps({
@@ -114,22 +119,42 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  chats: {
+    type: Array as () => ConversationMessageType[],
+    required: false,
+    default: [],
+  },
+  conversationContext: {
+    type: Object as PropType<ConversationContextType>,
+    required: false,
+    default: {
+      conversationId: null,
+      messageId: null,
+      childMessageId: null,
+      contextIds: [],
+      endTurn: true,
+      saveConversation: false,
+      currentPrompt: null,
+    },
+  },
 });
 
-const emits = defineEmits(["update:isStreaming", "data", "complete", "error"]);
+const emits = defineEmits([
+  "update:isStreaming",
+  "update:conversationContext",
+  "update:chats",
+  "data",
+  "complete",
+  "error",
+]);
 
 const userSettings = useUserSettingsStore();
-const conversation = useConversationStore();
 
 const chatRef = ref<ComponentRef<typeof Chat>>();
-const chats = computed(() => conversation.getConversations);
-let conversationId: string | null = null;
-let messageId: string | null = null;
-let childMessageId: string | null = null;
-let contextIds: string[][] = [];
-let endTurn: Ref<boolean> = ref(true);
-let saveConversation = false;
-let currentPrompt: string | null = null;
+let chats: ConversationMessageType[] = reactive(props.chats);
+let conversationContext: ConversationContextType = reactive(
+  props.conversationContext
+);
 const isStreaming = ref(props.isStreaming);
 const aiProvider = computed(() => userSettings.getAiProvider);
 
@@ -158,21 +183,56 @@ watch(
   }
 );
 
+watch(
+  () => props.conversationContext,
+  (value) => {
+    conversationContext = value;
+  }
+);
+
+/* TODO
+watch(
+  () => conversationContext,
+  (value) => {
+    emits("update:conversationContext", value);
+  }
+);
+
+watch(chats, (value, _) => {
+  emits("update:chats", value);
+});
+*/
+
 const deleteConversation = () => {
-  if (saveConversation) {
-    saveConversation = false;
+  if (conversationContext.saveConversation) {
+    conversationContext.saveConversation = false;
     return;
   }
-  consoleLog(LogLevelEnum.DEBUG, "onDeleteConversation", conversationId);
+  consoleLog(
+    LogLevelEnum.DEBUG,
+    "onDeleteConversation",
+    conversationContext.conversationId
+  );
   llm.deleteConversation({
     aiProvider: aiProvider.value,
-    conversationId: conversationId!,
+    conversationId: conversationContext.conversationId!,
   });
-  conversation.setConversations([]);
-  conversationId = null;
-  messageId = null;
+  chats.splice(0, chats.length);
+
+  conversationContext.conversationId = null;
+  conversationContext.messageId = null;
   isStreaming.value = false;
 };
+
+async function stopGenerating(): Promise<string> {
+  if (isStreaming.value) {
+    isStreaming.value = false;
+    const resData = await llm.stopGenerating();
+    return resData.conversationId;
+  } else {
+    return conversationContext.conversationId!;
+  }
+}
 
 function close() {
   deleteConversation();
@@ -183,14 +243,14 @@ const sendMessage = async (
   conversationMode: ConversationModeEnum
 ) => {
   isStreaming.value = true;
-  endTurn.value = true;
-  currentPrompt = prompt;
+  conversationContext.endTurn = true;
+  conversationContext.currentPrompt = prompt;
   if (conversationMode === ConversationModeEnum.NORMAL) {
-    conversation.addingNewMessage({
+    chats.push({
       role: ConversationRoleEnum.USER,
       text: prompt,
     });
-    conversation.addingNewMessage({
+    chats.push({
       role: ConversationRoleEnum.ASSISTANT,
       text: "",
     });
@@ -208,12 +268,12 @@ const sendMessage = async (
   );
   const result = await chain.execute(true, {
     aiProvider: aiProvider.value,
-    conversationId: conversationId!,
-    messageId: messageId!,
-    contextIds: contextIds,
+    conversationId: conversationContext.conversationId!,
+    messageId: conversationContext.messageId!,
+    contextIds: conversationContext.contextIds,
     conversationMode: conversationMode,
     ...(conversationMode === ConversationModeEnum.REGENERATE && {
-      childMessageId: childMessageId!,
+      childMessageId: conversationContext.childMessageId!,
     }),
     deleteConversation: false,
   });
@@ -228,10 +288,10 @@ const sendMessage = async (
     } else {
       waiting += ".";
     }
-    conversation.updateLastMessage({
+    chats[chats.length - 1] = {
       role: ConversationRoleEnum.ASSISTANT,
       text: waiting,
-    });
+    };
     nextTick(() => {
       chatRef.value?.scrollToBottom();
     });
@@ -239,10 +299,10 @@ const sendMessage = async (
 
   result.on("data", (data: string) => {
     clearInterval(intervalId);
-    conversation.updateLastMessage({
+    chats[chats.length - 1] = {
       role: ConversationRoleEnum.ASSISTANT,
       text: data,
-    });
+    };
     nextTick(() => {
       chatRef.value?.scrollToBottom();
     });
@@ -254,18 +314,20 @@ const sendMessage = async (
   });
 
   result.on("endOfChain", (data: any) => {
+    isStreaming.value = false;
     consoleLog(LogLevelEnum.DEBUG, "endOfChain");
     clearInterval(intervalId);
-    conversation.updateLastMessage({
+    chats[chats.length - 1] = {
       role: ConversationRoleEnum.ASSISTANT,
       text: data.message,
-    });
-    isStreaming.value = false;
-    conversationId = data.conversationId;
-    messageId = data.messageId ? data.messageId : null;
-    childMessageId = data.childMessageId ? data.childMessageId : null;
-    contextIds = data.contextIds ? data.contextIds : null;
-    endTurn.value = data.endTurn ? data.endTurn : null;
+    };
+    conversationContext.conversationId = data.conversationId;
+    conversationContext.messageId = data.messageId ? data.messageId : null;
+    conversationContext.childMessageId = data.childMessageId
+      ? data.childMessageId
+      : null;
+    conversationContext.contextIds = data.contextIds ? data.contextIds : null;
+    conversationContext.endTurn = data.endTurn ? data.endTurn : null;
     nextTick(() => {
       chatRef.value?.scrollToBottom();
     });
@@ -276,7 +338,7 @@ const sendMessage = async (
     consoleLog(LogLevelEnum.DEBUG, "error");
     clearInterval(intervalId);
     isStreaming.value = false;
-    endTurn.value = true;
+    conversationContext.endTurn = true;
     consoleLog(LogLevelEnum.DEBUG, error);
     if (error.code === Status.CHATGPT_UNAUTHORIZED) {
       ElMessage.error(
@@ -322,13 +384,16 @@ const handleRegenerateConversation = () => {
     );
     return;
   }
-  if (currentPrompt) {
-    sendMessage(currentPrompt, ConversationModeEnum.REGENERATE);
+  if (conversationContext.currentPrompt) {
+    sendMessage(
+      conversationContext.currentPrompt,
+      ConversationModeEnum.REGENERATE
+    );
   }
 };
 
 const handleSaveConversation = () => {
-  saveConversation = true;
+  conversationContext.saveConversation = true;
 };
 
 const handleContinueGenerating = async () => {
@@ -338,7 +403,7 @@ const handleContinueGenerating = async () => {
 const handleStopGenerating = async () => {
   isStreaming.value = false;
   const resData = await llm.stopGenerating();
-  conversationId = resData.conversationId;
+  conversationContext.conversationId = resData.conversationId;
 };
 
 const newChat = (value: string) => {
@@ -351,19 +416,16 @@ const newChat = (value: string) => {
   });
 };
 
-function handleBeforeUnload(event: Event) {
-  deleteConversation();
-}
-
 onMounted(() => {
-  window.addEventListener("beforeunload", handleBeforeUnload);
+  consoleLog(LogLevelEnum.DEBUG, "Mounted ChatBox");
+  isStreaming.value = props.isStreaming;
 });
 
-onUnmounted(() => {
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
+onUnmounted(() => {});
 defineExpose({
   close,
+  deleteConversation,
+  stopGenerating,
 });
 </script>
 <style scoped></style>

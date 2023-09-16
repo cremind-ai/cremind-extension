@@ -100,6 +100,11 @@ const props = defineProps({
     required: true,
     default: false,
   },
+  isStreaming: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
   featureMode: {
     type: String as PropType<featureModeEnum>,
     required: true,
@@ -114,7 +119,7 @@ const props = defineProps({
 });
 
 const emits = defineEmits([
-  "update:start",
+  "update:isStreaming",
   "update:drawer",
   "close",
   "newChat",
@@ -159,7 +164,7 @@ let conversationId: string | null = null;
 let messageId: string | null = null;
 
 watch(
-  () => props.start,
+  () => props.isStreaming,
   (value) => {
     isStreaming.value = value;
   }
@@ -168,7 +173,7 @@ watch(
 watch(
   () => isStreaming.value,
   (value) => {
-    emits("update:start", value);
+    emits("update:isStreaming", value);
   }
 );
 
@@ -222,7 +227,7 @@ const handleRegenerate = () => {
     return;
   }
   drawer.value = false;
-  isStreaming.value = true;
+  startGenerateResponse(formDataVariableSchema.value);
 };
 
 const handleCopyToClipboard = () => {
@@ -233,16 +238,6 @@ const handleCopyToClipboard = () => {
 };
 
 const newChat = (value: string) => {
-  // let text = "";
-  // text += SystemVariableParser.getInstance().getSelectedText() + "\n";
-  // text += "\\-\\-\\-\n";
-  // text += outputContent.value + "\n";
-  // text += "\\-\\-\\-\n";
-  // text += value + "\n";
-  // chatDialog.setInitialPrompt(text);
-  // nextTick(() => {
-  //   chatDialog.setChatDialogVisible(true);
-  // });
   emits("close");
   emits("newChat", value);
 };
