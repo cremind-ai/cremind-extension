@@ -482,6 +482,16 @@ const getFeatureEnabledState = async (
   }
 };
 
+function resetVariables() {
+  outputContent.value = "";
+  isStreaming.value = false;
+  fileList.value = [];
+  uploadItems = [];
+  insertText.value = "";
+  url.value = "";
+  checkAffix.value = false;
+}
+
 async function close(): Promise<void> {
   return new Promise(async (resolve, reject) => {
     if (isStreaming.value) {
@@ -497,6 +507,7 @@ async function close(): Promise<void> {
         .then(async () => {
           await handleStopGenerating();
           deleteConversation();
+          resetVariables();
           resolve();
         })
         .catch(() => {
@@ -504,6 +515,7 @@ async function close(): Promise<void> {
         });
     } else {
       deleteConversation();
+      resetVariables();
       resolve();
     }
   });
@@ -571,13 +583,6 @@ const deleteConversation = () => {
   }
   conversationId.value = "";
   messageId = null;
-  outputContent.value = "";
-  isStreaming.value = false;
-  fileList.value = [];
-  uploadItems = [];
-  insertText.value = "";
-  url.value = "";
-  checkAffix.value = false;
   emits("complete");
 };
 
