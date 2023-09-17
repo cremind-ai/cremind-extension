@@ -708,15 +708,15 @@ onMounted(async () => {
   getJsonFeatures(false);
   await userSettings.initialize(false);
   isSidebar.value = userSettings.getSidebar;
-  console.log("appSidebarEnable", appSidebarEnable.value);
-  if (appSidebarEnable.value) {
-    userSettings.$state.sidebar = SidebarMode.SIDEBAR;
-  } else {
-    userSettings.$state.sidebar = SidebarMode.NONE;
-  }
-  userSettings.applySidebarClass();
   if (isSidebar.value === SidebarMode.SIDEBAR) {
     appsVisible.value = true;
+    if (appSidebarEnable.value) {
+      userSettings.$state.sidebar = SidebarMode.SIDEBAR;
+    } else {
+      userSettings.$state.sidebar = SidebarMode.NONE;
+    }
+    userSettings.applySidebarClass();
+
     nextTick(() => {
       const shadowHost = document.querySelector("cremind-app-extension");
       if (shadowHost) {
