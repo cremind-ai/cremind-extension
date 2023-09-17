@@ -172,6 +172,7 @@
                     </ElButton>
                   </ElTooltip>
                   <ElTooltip
+                    v-if="isStreaming"
                     :hide-after="0"
                     content="Stop generating"
                     placement="top"

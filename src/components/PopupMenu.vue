@@ -64,8 +64,7 @@
       </QuickFeatureCard>
     </div>
   </div>
-
-  <div v-if="isSidebar === SidebarMode.WINDOWS">
+  <div v-else-if="isSidebar === SidebarMode.WINDOWS">
     <ElPopover
       :hide-after="0"
       class="popup-card-popover"
@@ -216,6 +215,11 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  sidebar: {
+    type: String as PropType<SidebarMode>,
+    required: true,
+    default: SidebarMode.NONE,
+  },
   featureMode: {
     type: String as PropType<featureModeEnum>,
     required: true,
@@ -261,9 +265,7 @@ const aiProviderKey = computed(() => {
   return "ChatGPT";
 });
 
-const isSidebar: ComputedRef<SidebarMode> = computed(
-  () => userSettings.getSidebar
-);
+const isSidebar = ref(props.sidebar);
 const optionBarShow = ref(false);
 const tidyDisplayOptionBarMode = ref(userSettings.getTidyDisplayOptionBarMode);
 const popoverVisible = ref(false);

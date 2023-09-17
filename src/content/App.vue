@@ -10,6 +10,7 @@
       :show="popupMenuVariable.show"
       :featureMode="popupMenuVariable.featureMode"
       :active-element="popupMenuVariable.activeElement"
+      :sidebar="isSidebar"
       v-model:is-streaming="isStreaming"
       @feature-click="handlePopupMenuFeatureClick"
       @close="handlePopupMenuClose"
@@ -110,7 +111,7 @@
       </div>
     </div>
   </div>
-  <div v-if="isSidebar === SidebarMode.WINDOWS">
+  <div v-else-if="isSidebar === SidebarMode.WINDOWS">
     <div v-show="appEnable">
       <div v-show="appMenuVisible" class="app-cremind-features">
         <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
@@ -166,6 +167,7 @@
         :show="true"
         :featureMode="popupMenuVariable.featureMode"
         :active-element="popupMenuVariable.activeElement"
+        :sidebar="isSidebar"
         v-model:is-streaming="isStreaming"
         @close="handlePopupMenuClose"
         @new-chat="newSelectionChat"
@@ -545,6 +547,9 @@ function handlePopupMenuClose(index: number) {
 
 function handlePopupMenuFeatureClick() {
   if (isSidebar.value === SidebarMode.SIDEBAR) {
+    appSidebarEnable.value = true;
+    userSettings.$state.sidebar = SidebarMode.SIDEBAR;
+    userSettings.applySidebarClass();
     activeIndexMenu.value = SidebarMenu.QUICK;
     selectionChats.value.push({
       role: ConversationRoleEnum.USER,

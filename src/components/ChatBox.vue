@@ -50,7 +50,12 @@
               />
             </ElButton>
           </ElTooltip>
-          <ElTooltip :hide-after="0" content="Stop generating" placement="top">
+          <ElTooltip
+            v-if="isStreaming"
+            :hide-after="0"
+            content="Stop generating"
+            placement="top"
+          >
             <ElButton plain @click="handleStopGenerating">
               <Icon icon="ph:stop-duotone" :style="{ fontSize: '20px' }" />
             </ElButton>
