@@ -53,8 +53,11 @@ export const useUserSettingsStore = defineStore({
           "calc(100% - 450px)",
           "important"
         );
+        htmlRootElement!.style.position = "relative";
+        htmlRootElement!.style.setProperty("position", "relative");
       } else {
         htmlRootElement!.style.removeProperty("width");
+        htmlRootElement!.style.removeProperty("position");
       }
     },
     async initialize(isSettingPage: boolean) {
