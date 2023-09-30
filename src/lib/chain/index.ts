@@ -27,6 +27,8 @@ export type VariableSchema = {
   storage: boolean;
   sample: string | number;
   default: string | number;
+  value: string | null;
+  customOptions: string[];
 };
 
 export type ChainVariableSchema = {

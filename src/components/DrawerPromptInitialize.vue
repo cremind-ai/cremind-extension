@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, PropType, ref, watch } from "vue";
 import { ElPopover } from "element-plus";
 import { ElButton } from "element-plus";
 import { ElDrawer } from "element-plus";
@@ -120,16 +120,22 @@ import { ElTooltip } from "element-plus";
 import { Plus } from "@element-plus/icons-vue";
 import { Minus } from "@element-plus/icons-vue";
 import { concat, findIndex, includes, pull } from "lodash-es";
-import { FeatureType } from "@/lib/features";
+import { FeatureSchema, FeatureType } from "@/lib/features";
 import { SystemOptions } from "@/constants/system_variables";
-import { featureModeEnum } from "@/types";
-import { ChromeStorage } from "@/hooks/chrome_storage";
-import { getJsonFeatures } from "@/lib/common";
+import { FeatureModeEnum } from "@/types";
+import { getJsonFeatures, setJsonFeature } from "@/lib/common";
+import { MAXIMUM_FEATURES_SIZE_DEFAULT } from "@/constants";
+import { consoleLog, LogLevelEnum } from "@/utils";
 
 const props = defineProps({
   visible: {
     type: Boolean,
     required: true,
+  },
+  featureSchema: {
+    type: Object as PropType<FeatureSchema>,
+    required: true,
+    default: {},
   },
   feature: {
     type: Object as PropType<FeatureType>,
@@ -142,10 +148,10 @@ const props = defineProps({
     default: "",
   },
   featureMode: {
-    type: String as PropType<featureModeEnum>,
+    type: String as PropType<FeatureModeEnum>,
     required: true,
     validator: (value: string) =>
-      Object.values(featureModeEnum).includes(value as featureModeEnum),
+      Object.values(FeatureModeEnum).includes(value as FeatureModeEnum),
   },
   formData: {
     type: Object as PropType<{ [key: string]: string }>,
@@ -202,19 +208,28 @@ watch(
 );
 
 const handleAddCustomOption = async (key: string | number) => {
-  const storageKey = `FEATURE:${props.featureId}:${props.featureMode}:custom_options:${key}`;
-  const value = await ChromeStorage.getInstance().get(storageKey);
-  let arrList: string[] = [];
-  if (value) {
-    arrList = JSON.parse(value);
-  }
-  arrList.push(addCustomOptionVariableSchema.value[key].input);
-  await ChromeStorage.getInstance().set(storageKey, JSON.stringify(arrList));
-  const featureList = await getJsonFeatures(false);
-  const featureIndex = findIndex(featureList, {
+  props.featureSchema[props.featureMode]!.variableSchema[
+    key
+  ].customOptions.push(addCustomOptionVariableSchema.value[key].input);
+
+  props.featureSchema[props.featureMode]!.variableSchema[key].options = concat(
+    props.featureSchema[props.featureMode]!.variableSchema[key]
+      .options as string[],
+    props.featureSchema[props.featureMode]!.variableSchema[key].customOptions
+  );
+
+  await setJsonFeature(props.featureSchema);
+  const resFeatures = await getJsonFeatures(
+    false,
+    1,
+    MAXIMUM_FEATURES_SIZE_DEFAULT,
+    null,
+    null
+  );
+  const featureIndex = findIndex(resFeatures.list, {
     id: props.featureId,
   });
-  const currentFeature = featureList[featureIndex][props.featureMode];
+  const currentFeature = resFeatures.list[featureIndex][props.featureMode];
   emits("update:feature", currentFeature);
   formDataVariableSchema.value[key] =
     addCustomOptionVariableSchema.value[key].input;
@@ -222,23 +237,31 @@ const handleAddCustomOption = async (key: string | number) => {
 };
 
 const handleRemoveCustomOption = async (key: string | number) => {
-  const storageKey = `FEATURE:${props.featureId}:${props.featureMode}:custom_options:${key}`;
-  const value = await ChromeStorage.getInstance().get(storageKey);
-  let arrList: string[] = [];
-  if (value) {
-    arrList = JSON.parse(value);
-  }
+  let arrList: string[] =
+    props.featureSchema[props.featureMode]!.variableSchema[key].customOptions;
   if (
     formDataVariableSchema.value[key] &&
     includes(arrList, formDataVariableSchema.value[key])
   ) {
     pull(arrList, formDataVariableSchema.value[key]);
-    await ChromeStorage.getInstance().set(storageKey, JSON.stringify(arrList));
-    const featureList = await getJsonFeatures(false);
-    const featureIndex = findIndex(featureList, {
+    pull(
+      props.featureSchema[props.featureMode]!.variableSchema[key].options!,
+      formDataVariableSchema.value[key]
+    );
+    props.featureSchema[props.featureMode]!.variableSchema[key].customOptions =
+      arrList;
+    await setJsonFeature(props.featureSchema);
+    const resFeatures = await getJsonFeatures(
+      false,
+      1,
+      MAXIMUM_FEATURES_SIZE_DEFAULT,
+      null,
+      null
+    );
+    const featureIndex = findIndex(resFeatures.list, {
       id: props.featureId,
     });
-    const currentFeature = featureList[featureIndex][props.featureMode]!;
+    const currentFeature = resFeatures.list[featureIndex][props.featureMode]!;
     // Fill default value
     if (currentFeature.variableSchema[key].options) {
       formDataVariableSchema.value[key] = currentFeature.variableSchema[key]
@@ -292,6 +315,14 @@ const handleCloseDrawer = () => {
   visible.value = false;
   emits("close");
 };
+
+onMounted(() => {
+  consoleLog(LogLevelEnum.DEBUG, "DrawerPromptInitialize Mounted");
+});
+
+onUnmounted(() => {
+  consoleLog(LogLevelEnum.DEBUG, "DrawerPromptInitialize Unmounted");
+});
 </script>
 
 <style scoped></style>

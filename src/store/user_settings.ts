@@ -44,9 +44,13 @@ export const useUserSettingsStore = defineStore({
         }
       }
     },
-    applySidebarClass() {
+    applySidebarClass(isolation: boolean, sidebar: SidebarMode | null) {
       const htmlRootElement = document.querySelector("html");
-      if (this.sidebar === SidebarMode.SIDEBAR) {
+      let _sidebar = this.sidebar;
+      if (isolation && sidebar) {
+        _sidebar = sidebar;
+      }
+      if (_sidebar === SidebarMode.SIDEBAR) {
         htmlRootElement!.style.width = "calc(100% - 450px)";
         htmlRootElement!.style.setProperty(
           "width",
@@ -73,7 +77,7 @@ export const useUserSettingsStore = defineStore({
       }
       this.applyDarkModeClass(false);
       if (!isSettingPage) {
-        this.applySidebarClass();
+        this.applySidebarClass(false, null);
       }
     },
     async setIsDark(isDark: boolean) {
@@ -83,6 +87,9 @@ export const useUserSettingsStore = defineStore({
     },
     async setSidebar(sidebar: SidebarMode) {
       this.sidebar = sidebar;
+      if (sidebar === SidebarMode.NONE) {
+        this.sidebar = SidebarMode.SIDEBAR;
+      }
       await this.updateSettingsInStorage();
     },
     async setAIProvider(aiProvider: AIMode) {

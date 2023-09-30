@@ -7,6 +7,7 @@ export enum ConversationMessageTypeEnum {
 
 export enum CommunicationMessageTypeEnum {
   GET_FEATURES = "get_features",
+  SET_FEATURES = "set_features",
   OPEN_OPTIONS_PAGE = "open_options_page",
   MESSAGE = "message",
   ERROR = "error",
@@ -34,12 +35,11 @@ export type IPCMessageType = {
   code?: number;
 };
 
-export enum featureModeEnum {
+export enum FeatureModeEnum {
   READONLY = "READONLY",
   EDITABLE = "EDITABLE",
-  READONLY_CONTEXT_MENU = "READONLY_CONTEXT_MENU",
-  EDITABLE_CONTEXT_MENU = "EDITABLE_CONTEXT_MENU",
-  APP = "APP",
+  PROMPT = "PROMPT",
+  UPLOAD = "UPLOAD",
 }
 
 export enum LLMMODE {

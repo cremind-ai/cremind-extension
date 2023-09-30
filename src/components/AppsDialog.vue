@@ -67,6 +67,7 @@
           :start="startApp"
           :max-height="appMaxHeight"
           v-model:is-streaming="isStreaming"
+          v-model:drawer-show="drawerShow"
           v-model:conversation-id="conversationId"
           @complete="handleComplete"
         >
@@ -109,6 +110,11 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  drawerShow: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   conversationId: {
     type: String,
     required: false,
@@ -130,6 +136,7 @@ marked.use({ silent: true, breaks: true });
 const emits = defineEmits([
   "update:modelValue",
   "update:isStreaming",
+  "update:drawerShow",
   "update:conversationId",
   "close",
 ]);
@@ -147,6 +154,7 @@ const isStreaming = ref(false);
 const isMaximized = ref(true);
 const isMinimized = ref(false);
 const startApp = ref(false);
+const drawerShow = ref(false);
 const conversationId: Ref<string> = ref("");
 
 watch(
@@ -181,6 +189,20 @@ watch(
 );
 
 watch(
+  () => props.drawerShow,
+  (value) => {
+    drawerShow.value = value;
+  }
+);
+
+watch(
+  () => drawerShow.value,
+  (value) => {
+    emits("update:drawerShow", value);
+  }
+);
+
+watch(
   () => props.conversationId,
   (value) => {
     conversationId.value = value;
@@ -195,13 +217,15 @@ watch(
 );
 
 const close = async () => {
-  await appsRef.value!.close();
-  isMinimized.value = false;
-  startApp.value = false;
-  appDialogVisible.value = false;
-  setTimeout(() => {
-    emits("close");
-  }, 0);
+  const closeStt = await appsRef.value!.close();
+  if (closeStt) {
+    isMinimized.value = false;
+    startApp.value = false;
+    appDialogVisible.value = false;
+    setTimeout(() => {
+      emits("close");
+    }, 0);
+  }
 };
 
 async function stopGenerating(): Promise<string> {

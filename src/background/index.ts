@@ -1,3 +1,13 @@
+import {
+  filter,
+  has,
+  map,
+  values,
+  intersection,
+  difference,
+  find,
+  sortBy,
+} from "lodash-es";
 import { AIResponseType, AIResponseTypeEnum } from "@/types/provider";
 import {
   IPCMessageType,
@@ -15,20 +25,67 @@ import { consoleLog, LogLevelEnum } from "@/utils";
 import { CWException } from "@/types/exception";
 import { Status } from "@/constants/status";
 import { ChromeStorage } from "@/hooks/chrome_storage";
+import { CategoryFeatureEnum, FeatureSchema } from "@/lib/features";
+
+function processFeature(
+  features: FeatureSchema[],
+  page: number,
+  size: number,
+  featureType: CategoryFeatureEnum | null,
+  category: CategoryFeatureEnum | null
+): {
+  total: number;
+  list: FeatureSchema[];
+} {
+  if (featureType) {
+    features = filter(features, (item: FeatureSchema) =>
+      has(item, featureType)
+    );
+  }
+  if (category && category !== CategoryFeatureEnum.ALL) {
+    features = features.filter(
+      (item: FeatureSchema) => item.category === category
+    );
+  }
+
+  if (size > 0) {
+    const startIndex = (page - 1) * size;
+    const endIndex = startIndex + size;
+
+    if (startIndex >= features.length) {
+      features = [];
+    } else {
+      features = features.slice(
+        startIndex,
+        endIndex >= features.length ? undefined : endIndex
+      );
+    }
+  }
+  return { total: features.length, list: features };
+}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const data: IPCMessageType = request;
   if (data && data.topic === IPCTopicEnum.COMMUNICATION) {
     if (data.type === CommunicationMessageTypeEnum.GET_FEATURES) {
+      const page = parseInt(data.payload.page) || 1;
+      const size = parseInt(data.payload.size) || 10000;
       if (data.payload && data.payload.cache) {
         ChromeStorage.getInstance()
-          .get("FEATURES_JSON")
+          .getWithWildcard("FEATURES_JSON:")
           .then((value) => {
-            if (value) {
-              sendResponse({ features: JSON.parse(value) });
-            } else {
-              sendResponse({ features: null });
-            }
+            let featuresStore = values(value).map((jsonString) =>
+              JSON.parse(jsonString)
+            );
+            featuresStore = sortBy(featuresStore, "timestamp");
+            const res = processFeature(
+              featuresStore,
+              page,
+              size,
+              data.payload.featureType,
+              data.payload.category
+            );
+            sendResponse({ features: res.list, total: res.total });
           });
       } else {
         fetch(`${import.meta.env.VITE_CREMIND_API!}/prompt/features`, {
@@ -47,26 +104,89 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return response.json();
           })
           .then((resData: ResPayloadType) => {
-            sendResponse({ features: resData.payload.features });
             if (resData.status === Status.SUCCESS && resData.payload.features) {
-              ChromeStorage.getInstance().set(
-                "FEATURES_JSON",
-                JSON.stringify(resData.payload.features)
-              );
+              const currentIds = map(resData.payload.features, "id");
+
+              ChromeStorage.getInstance()
+                .getWithWildcard("FEATURES_JSON:")
+                .then((value) => {
+                  let featuresStore = values(value).map((jsonString) =>
+                    JSON.parse(jsonString)
+                  );
+                  const storeIds = map(featuresStore, "id");
+
+                  const tempArray = intersection(storeIds, currentIds);
+                  const rms = difference(storeIds, currentIds);
+                  const adds = difference(currentIds, tempArray);
+
+                  for (const id of adds) {
+                    const feature = find(resData.payload.features, ["id", id]);
+                    for (let key in feature) {
+                      if (
+                        feature.READONLY === feature[key] ||
+                        feature.EDITABLE === feature[key] ||
+                        feature.PROMPT === feature[key] ||
+                        feature.UPLOAD === feature[key]
+                      ) {
+                        for (let keyVar in feature[key].variableSchema) {
+                          feature[key].variableSchema[keyVar]["value"] = null;
+                          feature[key].variableSchema[keyVar]["customOptions"] =
+                            [];
+                        }
+                      }
+                    }
+
+                    ChromeStorage.getInstance().set(
+                      `FEATURES_JSON:${id}`,
+                      JSON.stringify(feature)
+                    );
+                    featuresStore.push(feature);
+                  }
+
+                  for (const id of rms) {
+                    ChromeStorage.getInstance().remove(`FEATURES_JSON:${id}`);
+                    featuresStore = featuresStore.filter(
+                      (obj) => obj.id !== id
+                    );
+                  }
+                  featuresStore = sortBy(featuresStore, "timestamp");
+                  const res = processFeature(
+                    featuresStore,
+                    page,
+                    size,
+                    data.payload.featureType,
+                    data.payload.category
+                  );
+                  sendResponse({ features: res.list, total: res.total });
+                });
             }
           })
-          .catch((error) => {
+          .catch(async (error) => {
             ChromeStorage.getInstance()
-              .get("FEATURES_JSON")
+              .getWithWildcard("FEATURES_JSON:")
               .then((value) => {
-                if (value) {
-                  sendResponse({ features: JSON.parse(value) });
-                } else {
-                  sendResponse({ features: null });
-                }
+                let featuresStore = values(value).map((jsonString) =>
+                  JSON.parse(jsonString)
+                );
+                featuresStore = sortBy(featuresStore, "timestamp");
+                const res = processFeature(
+                  featuresStore,
+                  page,
+                  size,
+                  data.payload.featureType,
+                  data.payload.category
+                );
+                sendResponse({ features: res.list, total: res.total });
               });
           });
       }
+    } else if (data.type === CommunicationMessageTypeEnum.SET_FEATURES) {
+      const feature: FeatureSchema = data.payload.feature;
+      ChromeStorage.getInstance().set(
+        `FEATURES_JSON:${feature.id}`,
+        JSON.stringify(feature)
+      );
+      sendResponse({});
     } else if (data.type === CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE) {
       chrome.runtime.openOptionsPage();
       sendResponse({});

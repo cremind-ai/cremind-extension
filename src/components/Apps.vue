@@ -72,26 +72,30 @@
                 >
                   <ElTooltip
                     :hide-after="0"
-                    :content="feature.APP?.title"
+                    :content="feature.UPLOAD?.title"
                     placement="top"
-                    v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+                    v-if="feature.enabled"
                   >
                     <ElButton
                       type="success"
                       plain
                       @click="
-                        handleFeatureClick(feature, index, featureModeEnum.APP)
+                        handleFeatureClick(
+                          feature,
+                          index,
+                          FeatureModeEnum.UPLOAD
+                        )
                       "
                       :disabled="isUploading"
                     >
                       <Icon
-                        :icon="feature.APP?.Icon.content || ''"
-                        :style="{ fontSize: feature.APP?.Icon.fontSize }"
-                        v-if="feature.APP?.Icon.type === 'icon'"
+                        :icon="feature.UPLOAD?.Icon.content || ''"
+                        :style="{ fontSize: feature.UPLOAD?.Icon.fontSize }"
+                        v-if="feature.UPLOAD?.Icon.type === 'icon'"
                       />
                       <div
-                        v-if="feature.APP?.Icon.type === 'svg'"
-                        v-html="feature.APP?.Icon.content"
+                        v-if="feature.UPLOAD?.Icon.type === 'svg'"
+                        v-html="feature.UPLOAD?.Icon.content"
                       ></div>
                     </ElButton>
                   </ElTooltip>
@@ -226,6 +230,7 @@
     <DrawerPromptInitialize
       v-model:feature="currentFeature"
       v-model:visible="drawer"
+      :feature-schema="featureSchema"
       :form-data="formDataVariableSchema"
       :feature-id="currentFeatureId"
       :feature-mode="currentFeatureMode"
@@ -278,6 +283,7 @@ import {
   APP_RETRY_TIME,
   AI_SYSTEM_RESPONSE_END_BLOCK,
   AI_SYSTEM_RESPONSE_START_BLOCK,
+  MAXIMUM_FEATURES_SIZE_DEFAULT,
 } from "@/constants";
 import { DrawerPromptInitialize } from "@/components";
 import { LoadImg } from ".";
@@ -299,7 +305,7 @@ import {
   IPCMessageType,
   IPCTopicEnum,
   ResPayloadType,
-  featureModeEnum,
+  FeatureModeEnum,
 } from "@/types";
 import { FeatureSchema, FeatureType } from "@/lib/features";
 import { ChromeStorage } from "@/hooks/chrome_storage";
@@ -308,6 +314,7 @@ import { ChainBuilder } from "@/lib/chain/chain_builder";
 import { ConversationModeEnum } from "@/types/conversation";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { ResponseParser } from "@/lib/response_parser";
+import { getJsonFeatures } from "@/lib/common";
 
 enum InputMode {
   UPLOAD = "0",
@@ -339,6 +346,11 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  drawerShow: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   maxHeight: {
     type: Number,
     required: false,
@@ -353,6 +365,7 @@ const props = defineProps({
 
 const emits = defineEmits([
   "update:isStreaming",
+  "update:drawerShow",
   "update:conversationId",
   "complete",
 ]);
@@ -369,11 +382,11 @@ const aiProviderKey = computed(() => {
 
 const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
-    const { APP } = feature;
+    const { UPLOAD } = feature;
 
     switch (featureMode.value) {
-      case featureModeEnum.APP:
-        return APP !== undefined && APP![aiProviderKey.value] !== null;
+      case FeatureModeEnum.UPLOAD:
+        return UPLOAD !== undefined && UPLOAD![aiProviderKey.value] !== null;
       default:
         return false;
     }
@@ -388,13 +401,13 @@ const outputContentRender = computed(() => {
 const isStreaming = ref(false);
 const isUploading = ref(false);
 const llm = new LLM();
-const featureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
+const featureSchema: Ref<FeatureSchema> = ref({} as FeatureSchema);
+const featureMode: Ref<FeatureModeEnum> = ref(FeatureModeEnum.UPLOAD);
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
-const currentFeatureMode: Ref<featureModeEnum> = ref(featureModeEnum.APP);
+const currentFeatureMode: Ref<FeatureModeEnum> = ref(FeatureModeEnum.UPLOAD);
 const featureList: Ref<FeatureSchema[]> = ref([]);
 
-const enabledFeatureStates: Ref<boolean[]> = ref([]);
 const drawer = ref(false);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const clickOutsideFocus = ref(true);
@@ -421,6 +434,20 @@ watch(
   () => isStreaming.value,
   (value) => {
     emits("update:isStreaming", value);
+  }
+);
+
+watch(
+  () => props.drawerShow,
+  (value) => {
+    drawer.value = value;
+  }
+);
+
+watch(
+  () => drawer.value,
+  (value) => {
+    emits("update:drawerShow", value);
   }
 );
 
@@ -467,22 +494,6 @@ function convertIndexToOriginal(indexInFiltered: number): number {
   return -1;
 }
 
-const getFeatureEnabledState = async (
-  feature: FeatureSchema
-): Promise<boolean> => {
-  const value = await ChromeStorage.getInstance().get(
-    `FEATURE:${feature.id}:enable`
-  );
-  if (value === undefined) {
-    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true);
-    return true;
-  } else if (value === false) {
-    return false;
-  } else {
-    return true;
-  }
-};
-
 function resetVariables() {
   outputContent.value = "";
   isStreaming.value = false;
@@ -493,7 +504,7 @@ function resetVariables() {
   checkAffix.value = false;
 }
 
-async function close(): Promise<void> {
+async function close(): Promise<boolean> {
   return new Promise(async (resolve, reject) => {
     if (isStreaming.value) {
       ElMessageBox.confirm(
@@ -509,15 +520,15 @@ async function close(): Promise<void> {
           await handleStopGenerating();
           deleteConversation();
           resetVariables();
-          resolve();
+          resolve(true);
         })
         .catch(() => {
-          resolve();
+          resolve(false);
         });
     } else {
       deleteConversation();
       resetVariables();
-      resolve();
+      resolve(true);
     }
   });
 }
@@ -840,7 +851,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
 async function handleFeature(
   id: string,
   feature: FeatureType,
-  type: featureModeEnum
+  type: FeatureModeEnum
 ) {
   const variables: { [key: string]: string } = {};
   let checkShowDrawer: boolean = false;
@@ -878,11 +889,11 @@ async function handleFeature(
 }
 
 async function handleFeatureClick(
-  featureSchema: FeatureSchema,
+  _featureSchema: FeatureSchema,
   index: number,
-  type: featureModeEnum
+  type: FeatureModeEnum
 ) {
-  const id: string = featureSchema.id;
+  const id: string = _featureSchema.id;
   if (isStreaming.value) {
     ElMessageBox.alert(
       "You cannot switch feature because the response is being streamed",
@@ -895,25 +906,23 @@ async function handleFeatureClick(
     return;
   }
   outputContent.value = "";
-  handleFeature(id, featureSchema[type]!, type);
+  featureSchema.value = _featureSchema;
+  handleFeature(id, _featureSchema[type]!, type);
 }
 
-onMounted(() => {
-  const data: IPCMessageType = {
-    topic: IPCTopicEnum.COMMUNICATION,
-    type: CommunicationMessageTypeEnum.GET_FEATURES,
-    message: "Get JSON Features",
-  };
-  chrome.runtime.sendMessage(data, async (response) => {
-    if (response.features) {
-      featureList.value = response.features;
-      enabledFeatureStates.value = await Promise.all(
-        response.features.map((feature: any) => getFeatureEnabledState(feature))
-      );
-    } else {
-      featureList.value = [];
-    }
-  });
+onMounted(async () => {
+  const resFeatures = await getJsonFeatures(
+    false,
+    1,
+    MAXIMUM_FEATURES_SIZE_DEFAULT,
+    null,
+    null
+  );
+  if (resFeatures.list) {
+    featureList.value = resFeatures.list;
+  } else {
+    featureList.value = [];
+  }
 });
 
 onUnmounted(() => {});

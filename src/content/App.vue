@@ -12,7 +12,9 @@
       :active-element="popupMenuVariable.activeElement"
       :sidebar="isSidebar"
       v-model:is-streaming="isStreaming"
+      v-model:drawer-show="drawerShow"
       @feature-click="handlePopupMenuFeatureClick"
+      @unmounted="handlePopupMenuUnmounted"
       @close="handlePopupMenuClose"
       @new-chat="newSelectionChat"
       @data="handlePopupMenuDataEvent"
@@ -27,27 +29,61 @@
     <div v-show="appSidebarEnable">
       <div class="app-sidebar">
         <ElCard class="app-sidebar-card">
-          <div class="app-settings-sidebar">
-            <ElTooltip :hide-after="0" content="Settings" placement="bottom">
-              <Icon
-                icon="solar:settings-line-duotone"
-                :style="{ fontSize: '30px' }"
-                @click="handleSettings"
-              />
-            </ElTooltip>
-          </div>
           <ElMenu
+            class="app-sidebar-menu app-icon-color"
             mode="horizontal"
             :default-active="activeIndexMenu"
             :ellipsis="false"
+            :collapse="false"
             @select="handleSelectMenu"
           >
-            <ElMenuItem index="0">Chatting</ElMenuItem>
-            <ElMenuItem index="1">Quick Features</ElMenuItem>
-            <ElMenuItem index="2">Apps</ElMenuItem>
+            <ElTooltip :hide-after="0" content="Chatting" placement="bottom">
+              <ElMenuItem index="0">
+                <Icon
+                  icon="fluent:chat-12-filled"
+                  :style="{ fontSize: '25px' }"
+                />
+              </ElMenuItem>
+            </ElTooltip>
+            <ElTooltip
+              :hide-after="0"
+              content="Selected text"
+              placement="bottom"
+            >
+              <ElMenuItem index="1">
+                <Icon
+                  icon="fluent:textbox-16-filled"
+                  :style="{ fontSize: '25px' }"
+                />
+              </ElMenuItem>
+            </ElTooltip>
+            <ElTooltip :hide-after="0" content="Prompts" placement="bottom">
+              <ElMenuItem index="2">
+                <Icon
+                  icon="ic:outline-auto-awesome"
+                  :style="{ fontSize: '25px' }"
+                />
+              </ElMenuItem>
+            </ElTooltip>
+            <ElTooltip :hide-after="0" content="Upload" placement="bottom">
+              <ElMenuItem index="3">
+                <Icon
+                  icon="ic:twotone-cloud-upload"
+                  :style="{ fontSize: '25px' }"
+                />
+              </ElMenuItem>
+            </ElTooltip>
+            <ElTooltip :hide-after="0" content="Settings" placement="bottom">
+              <ElMenuItem index="4">
+                <Icon
+                  icon="solar:settings-line-duotone"
+                  :style="{ fontSize: '25px' }"
+                />
+              </ElMenuItem>
+            </ElTooltip>
           </ElMenu>
           <div
-            v-show="activeIndexMenu === SidebarMenu.CHAT"
+            v-show="activeIndexMenu === SidebarMenuEnum.CHAT"
             class="app-sidebar-child-full"
           >
             <ChatBox
@@ -63,9 +99,43 @@
           </div>
 
           <div
-            v-show="activeIndexMenu === SidebarMenu.QUICK"
+            v-show="activeIndexMenu === SidebarMenuEnum.TEXT"
             class="app-sidebar-child-full"
           >
+            <div class="custom-popover-outer">
+              <ElButton
+                class="app-sidebar-text-manual-insert"
+                type="success"
+                plain
+                @click="handleManualInsert"
+                size="small"
+                circle
+              >
+                <ElTooltip
+                  :hide-after="0"
+                  content="Manual insert text"
+                  placement="bottom"
+                >
+                  <Icon
+                    icon="ic:round-post-add"
+                    :style="{ fontSize: '16px' }"
+                  />
+                </ElTooltip>
+              </ElButton>
+              <div v-show="manualInsertVisible" class="custom-popover">
+                <ManualMenu
+                  v-model:is-streaming="isStreaming"
+                  v-model:drawer-show="drawerShow"
+                  :show-ouput="false"
+                  @feature-click="handleManualInsertFeatureClick"
+                  @close="handleManualInsertClose"
+                  @data="handleManualInsertDataEvent"
+                  @complete="handleManualInsertCompleteEvent"
+                  @error="handleManualInsertErrorEvent"
+                >
+                </ManualMenu>
+              </div>
+            </div>
             <Chat
               ref="selectionChatRef"
               :chats="selectionChats"
@@ -73,9 +143,20 @@
               v-model:blockSend="isStreaming"
             />
           </div>
-
           <div
-            v-show="activeIndexMenu === SidebarMenu.APPS"
+            v-show="activeIndexMenu === SidebarMenuEnum.PROMPT"
+            class="app-sidebar-child-full"
+          >
+            <PromptApp
+              :activation="menuActivationState[SidebarMenuEnum.PROMPT]"
+              v-model:is-streaming="isStreaming"
+              v-model:drawer-show="drawerShow"
+              @new-chat="newPromptChat"
+              @close="handlePromptAppClose"
+            ></PromptApp>
+          </div>
+          <div
+            v-show="activeIndexMenu === SidebarMenuEnum.UPLOAD"
             class="app-sidebar-child-full"
           >
             <ElTooltip
@@ -103,6 +184,7 @@
               :dialog="appsMode"
               v-model="appsVisible"
               v-model:is-streaming="isStreaming"
+              v-model:drawer-show="drawerShow"
               v-model:conversation-id="appsConversationId"
               @close="handleAppClose"
             />
@@ -128,7 +210,7 @@
           @mouseover="showFeatures"
           @mouseout="hideFeatures"
         >
-          <ElTooltip :hide-after="0" content="Settings" placement="bottom">
+          <ElTooltip :hide-after="0" content="Settings" placement="top">
             <div class="app-settings">
               <Icon
                 icon="solar:settings-line-duotone"
@@ -137,7 +219,8 @@
               />
             </div>
           </ElTooltip>
-          <ElTooltip :hide-after="0" content="Start Chat" placement="top">
+
+          <ElTooltip :hide-after="0" content="Start chat" placement="left">
             <div class="app-button-chatting">
               <Icon
                 icon="fluent:chat-12-filled"
@@ -146,16 +229,63 @@
               />
             </div>
           </ElTooltip>
-          <ElTooltip :hide-after="0" content="Apps" placement="top">
+          <ElTooltip :hide-after="0" content="Prompts" placement="bottom">
+            <div class="app-prompts">
+              <Icon
+                icon="ic:outline-auto-awesome"
+                :style="{ fontSize: '25px' }"
+                @click="handlePrompt"
+              />
+            </div>
+          </ElTooltip>
+          <ElTooltip :hide-after="0" content="Upload" placement="bottom">
             <div class="app-apps">
               <Icon
-                icon="icon-park-twotone:more-app"
+                icon="ic:twotone-cloud-upload"
                 :style="{ fontSize: '25px' }"
                 @click="handleApps"
               />
             </div>
           </ElTooltip>
         </div>
+        <ElPopover
+          :hide-after="0"
+          placement="top"
+          :visible="manualInsertVisible"
+          :width="manualInsertWidth"
+        >
+          <template #reference>
+            <div
+              v-show="featureVisible || manualInsertVisible"
+              class="manual-insert-text"
+            >
+              <ElTooltip
+                :hide-after="0"
+                content="Manual insert text"
+                placement="top"
+              >
+                <Icon
+                  icon="ic:round-post-add"
+                  :style="{ fontSize: '30px' }"
+                  @click="handleManualInsertText"
+              /></ElTooltip>
+            </div>
+          </template>
+          <div @mouseover="manualInsertVisible = true">
+            <ManualMenu
+              v-model:is-streaming="isStreaming"
+              v-model:drawer-show="drawerShow"
+              :show-ouput="true"
+              @feature-click="handleManualInsertFeatureClick"
+              @close="handleManualInsertClose"
+              @data="handleManualInsertDataEvent"
+              @complete="handleManualInsertCompleteEvent"
+              @error="handleManualInsertErrorEvent"
+              @new-chat="handleManualInsertNewChatEvent"
+            >
+            </ManualMenu>
+          </div>
+        </ElPopover>
       </div>
       <PopupMenu
         v-for="(popupMenuVariable, index) in popupMenuVariables"
@@ -169,12 +299,15 @@
         :active-element="popupMenuVariable.activeElement"
         :sidebar="isSidebar"
         v-model:is-streaming="isStreaming"
+        v-model:drawer-show="drawerShow"
         @close="handlePopupMenuClose"
+        @unmounted="handlePopupMenuUnmounted"
         @new-chat="newSelectionChat"
         @data="handlePopupMenuDataEvent"
         @complete="handlePopupMenuCompleteEvent"
         @error="handlePopupMenuErrorEvent"
       />
+
       <ChatDialog
         ref="chatDialogRef"
         :show="chatVisible"
@@ -184,10 +317,18 @@
         :chats="chats"
         @close="handleChatDialogClose"
       />
+      <PromptAppDialog
+        :show="promptVisible"
+        v-model:is-streaming="isStreaming"
+        v-model:drawer-show="drawerShow"
+        @close="handlePromptDialogClose"
+        @new-chat="newPromptChat"
+      />
       <AppsDialog
         ref="appsDialogRef"
         v-model="appsVisible"
         v-model:conversation-id="appsConversationId"
+        v-model:drawer-show="drawerShow"
         :dialog="true"
         v-model:is-streaming="isStreaming"
         @close="handleAppClose"
@@ -213,22 +354,30 @@ import { ElTooltip } from "element-plus";
 import { ElMenu } from "element-plus";
 import { ElCard } from "element-plus";
 import { ElMenuItem } from "element-plus";
+import { ElPopover } from "element-plus";
 import { FullScreen } from "@element-plus/icons-vue";
 import { PopupMenu } from "@/components";
 import { ChatDialog } from "@/components";
 import { AppsDialog } from "@/components";
 import { LoadImg } from "@/components";
+import { PromptAppDialog } from "@/components";
+import { PromptApp } from "@/components";
 import { SystemVariableParser } from "@/lib";
 import {
   CommunicationMessageTypeEnum,
   IPCMessageType,
   IPCTopicEnum,
-  featureModeEnum,
+  FeatureModeEnum,
 } from "@/types";
 import { consoleLog, detectOperatingSystem, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
-import { ConversationRoleEnum, OperatingSystemEnum } from "@/constants";
+import {
+  ConversationRoleEnum,
+  MAXIMUM_FEATURES_SIZE_DEFAULT,
+  OperatingSystemEnum,
+} from "@/constants";
 import { ChatBox } from "@/components";
+import { ManualMenu } from "@/components";
 import { SidebarMode } from "@/types/ui";
 import {
   ConversationContextType,
@@ -237,19 +386,15 @@ import {
 import { Chat } from "@/components/Chat";
 import { getJsonFeatures } from "@/lib/common";
 import { LLM } from "@/lib/llm";
-
-enum SidebarMenu {
-  CHAT = "0",
-  QUICK = "1",
-  APPS = "2",
-}
+import { FeatureSchema } from "@/lib/features";
+import { SidebarMenuEnum } from "@/constants/ui";
 
 type PopupMenuVariableType = {
   show: boolean;
   selectedText: string;
   top: string;
   left: string;
-  featureMode: featureModeEnum;
+  featureMode: FeatureModeEnum;
   activeElement: HTMLInputElement | HTMLElement;
 };
 
@@ -263,12 +408,11 @@ const top = ref("");
 const left = ref("");
 const topMousedown = ref("");
 const leftMousedown = ref("");
-const showPopupMenu = ref(false);
-const featureMode: Ref<featureModeEnum> = ref(
-  featureModeEnum.EDITABLE_CONTEXT_MENU
-);
+const drawerShow = ref(false);
+const featureMode: Ref<FeatureModeEnum> = ref(FeatureModeEnum.READONLY);
 const featureVisible = ref(false);
 const chatVisible = ref(false);
+const promptVisible = ref(false);
 const appsVisible = ref(false);
 const isDark = computed(() => userSettings.getIsDark);
 const isSidebar = ref(SidebarMode.NONE);
@@ -285,7 +429,14 @@ const hideMeLabel = computed(() => {
 });
 
 const isStreaming = ref(false);
-const activeIndexMenu = ref(SidebarMenu.CHAT);
+const activeIndexMenu = ref(SidebarMenuEnum.CHAT);
+let menuActivationState = reactive({
+  [SidebarMenuEnum.CHAT]: true,
+  [SidebarMenuEnum.TEXT]: false,
+  [SidebarMenuEnum.PROMPT]: false,
+  [SidebarMenuEnum.UPLOAD]: false,
+  [SidebarMenuEnum.SETTINGS]: false,
+});
 const activeElement = ref<HTMLInputElement | HTMLElement>();
 const selectionChats: Ref<ConversationMessageType[]> = ref([]);
 let chats: ConversationMessageType[] = reactive([]);
@@ -296,6 +447,8 @@ const chatDialogRef = ref<ComponentRef<typeof ChatDialog>>();
 const isSendChatBox = ref(false);
 const chatPrompt = ref("");
 const appsMode = ref(false);
+const manualInsertVisible = ref(false);
+const manualInsertWidth = ref(400);
 
 const appSidebarRef: Ref<HTMLDivElement> = ref(null as any);
 
@@ -316,7 +469,7 @@ const aiProvider = computed(() => userSettings.getAiProvider);
 const appsConversationId: Ref<string> = ref("");
 
 let showFeaturesTimeout: any;
-let popupMenuDataResponse: string = "";
+let dataResponse: string = "";
 let shadowClick = false;
 let shadowInsidePrevState = false;
 
@@ -331,22 +484,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     ((isSidebar.value === SidebarMode.WINDOWS && appMenuVisible.value) ||
       (isSidebar.value === SidebarMode.SIDEBAR && !shadowInsidePrevState))
   ) {
-    activeElement.value = document.activeElement as HTMLElement;
-    if (
-      activeElement &&
-      (activeElement.value.isContentEditable ||
-        activeElement.value.nodeName.toUpperCase() === "TEXTAREA" ||
-        activeElement.value.nodeName.toUpperCase() === "INPUT")
-    ) {
-      selectedText.value = window.getSelection()!.toString().trim();
-      featureMode.value = featureModeEnum.EDITABLE_CONTEXT_MENU;
-    } else {
-      selectedText.value = "";
-      featureMode.value = featureModeEnum.READONLY_CONTEXT_MENU;
-    }
-    top.value = topMousedown.value;
-    left.value = leftMousedown.value;
-    handleShowPopupMenu();
   }
 });
 
@@ -362,8 +499,12 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
     }
     if (
       !isStreaming.value &&
-      ((isSidebar.value === SidebarMode.WINDOWS && appMenuVisible.value) ||
-        (isSidebar.value === SidebarMode.SIDEBAR && !shadowInsidePrevState))
+      ((isSidebar.value === SidebarMode.WINDOWS &&
+        appMenuVisible.value &&
+        !manualInsertVisible.value) ||
+        (isSidebar.value === SidebarMode.SIDEBAR &&
+          !shadowInsidePrevState &&
+          !drawerShow.value))
     ) {
       var selection = window.getSelection();
       let selectionText = selection!.toString().trim();
@@ -396,9 +537,9 @@ document.addEventListener("mouseup", function (event: MouseEvent) {
             activeElement.value.nodeName.toUpperCase() === "TEXTAREA" ||
             activeElement.value.nodeName.toUpperCase() === "INPUT")
         ) {
-          featureMode.value = featureModeEnum.EDITABLE;
+          featureMode.value = FeatureModeEnum.EDITABLE;
         } else {
-          featureMode.value = featureModeEnum.READONLY;
+          featureMode.value = FeatureModeEnum.READONLY;
         }
         handleShowPopupMenu();
         prevStartOffsetSelection = selection!.anchorOffset;
@@ -436,12 +577,12 @@ document.addEventListener("keydown", function (event: KeyboardEvent) {
     if (isSidebar.value === SidebarMode.SIDEBAR) {
       if (appSidebarEnable.value) {
         appSidebarEnable.value = false;
-        userSettings.$state.sidebar = SidebarMode.NONE;
+        userSettings.applySidebarClass(true, SidebarMode.NONE);
       } else {
         appSidebarEnable.value = true;
-        userSettings.$state.sidebar = SidebarMode.SIDEBAR;
+        userSettings.setSidebar(SidebarMode.SIDEBAR);
+        userSettings.applySidebarClass(false, null);
       }
-      userSettings.applySidebarClass();
     } else if (
       appMenuVisible.value &&
       isSidebar.value === SidebarMode.WINDOWS
@@ -459,8 +600,12 @@ document.addEventListener("keydown", function (event: KeyboardEvent) {
 document.addEventListener("keyup", function (event: KeyboardEvent) {
   if (
     !isStreaming.value &&
-    ((isSidebar.value === SidebarMode.WINDOWS && appMenuVisible.value) ||
-      (isSidebar.value === SidebarMode.SIDEBAR && !shadowInsidePrevState))
+    ((isSidebar.value === SidebarMode.WINDOWS &&
+      appMenuVisible.value &&
+      !manualInsertVisible.value) ||
+      (isSidebar.value === SidebarMode.SIDEBAR &&
+        !shadowInsidePrevState &&
+        !drawerShow.value))
   ) {
     const pressedKey = event.key;
     if (pressedKey === "Shift" || pressedKey === "Meta") {
@@ -490,9 +635,9 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
             activeElement.value.nodeName.toUpperCase() === "TEXTAREA" ||
             activeElement.value.nodeName.toUpperCase() === "INPUT")
         ) {
-          featureMode.value = featureModeEnum.EDITABLE;
+          featureMode.value = FeatureModeEnum.EDITABLE;
         } else {
-          featureMode.value = featureModeEnum.READONLY;
+          featureMode.value = FeatureModeEnum.READONLY;
         }
         handleShowPopupMenu();
         prevStartOffsetSelection = selection!.anchorOffset;
@@ -507,7 +652,7 @@ document.addEventListener("keyup", function (event: KeyboardEvent) {
 
 function handleShowPopupMenu() {
   if (isSidebar.value === SidebarMode.SIDEBAR && selectedText.value !== "") {
-    activeIndexMenu.value = SidebarMenu.QUICK;
+    activeIndexMenu.value = SidebarMenuEnum.TEXT;
   } else if (isSidebar.value === SidebarMode.WINDOWS) {
     appMenuVisible.value = false;
   }
@@ -529,49 +674,52 @@ const handleStartChat = () => {
   appMenuVisible.value = false;
 };
 
+const handlePrompt = () => {
+  promptVisible.value = true;
+  appMenuVisible.value = false;
+};
+
 const handleApps = () => {
   appsVisible.value = true;
   appMenuVisible.value = false;
 };
 
-function handlePopupMenuClose(index: number) {
-  appMenuVisible.value = true;
-  if (isStreaming.value) {
-    popupMenuVariables[index].show = false;
-  } else {
-    popupMenuVariables.splice(index, 1);
-  }
-  prevStartOffsetSelection = null;
-  prevEndOffseSelection = null;
-}
-
-function handlePopupMenuFeatureClick() {
-  if (isSidebar.value === SidebarMode.SIDEBAR) {
-    appSidebarEnable.value = true;
-    userSettings.$state.sidebar = SidebarMode.SIDEBAR;
-    userSettings.applySidebarClass();
-    activeIndexMenu.value = SidebarMenu.QUICK;
-    selectionChats.value.push({
-      role: ConversationRoleEnum.USER,
-      text: selectedText.value,
-    });
-    selectionChats.value.push({
-      role: ConversationRoleEnum.ASSISTANT,
-      text: "",
-    });
-    popupMenuDataResponse = "";
-    nextTick(() => {
-      selectionChatRef.value?.scrollToBottom();
-    });
-  }
-}
-
 function handleChatDialogClose() {
+  chatPrompt.value = "";
   chatVisible.value = false;
   appMenuVisible.value = true;
 }
 
+function handlePromptDialogClose() {
+  chatPrompt.value = "";
+  promptVisible.value = false;
+  appMenuVisible.value = true;
+}
+
+function handlePromptAppClose() {
+  chatPrompt.value = "";
+}
+
+const newPromptChat = (value: string) => {
+  nextTick(() => {
+    isStreaming.value = true;
+    chatPrompt.value = value;
+    if (isSidebar.value === SidebarMode.SIDEBAR) {
+      activeIndexMenu.value = SidebarMenuEnum.CHAT;
+      nextTick(() => {
+        isSendChatBox.value = true;
+      });
+    } else if (isSidebar.value === SidebarMode.WINDOWS) {
+      nextTick(() => {
+        appMenuVisible.value = false;
+        chatVisible.value = true;
+      });
+    }
+  });
+};
+
 function handleAppClose() {
+  chatPrompt.value = "";
   nextTick(() => {
     if (isSidebar.value === SidebarMode.SIDEBAR) {
       appsMode.value = false;
@@ -605,9 +753,148 @@ function hideFeatures() {
 }
 
 const handleSelectMenu = async (key: string, keyPath: string[]) => {
-  const sidebarMenuEnum: SidebarMenu = key as SidebarMenu;
+  const sidebarMenuEnum: SidebarMenuEnum = key as SidebarMenuEnum;
   activeIndexMenu.value = sidebarMenuEnum;
+  for (const key in menuActivationState) {
+    if (key == activeIndexMenu.value) {
+      menuActivationState[key as SidebarMenuEnum] = true;
+    } else {
+      menuActivationState[key as SidebarMenuEnum] = false;
+    }
+  }
+  if (activeIndexMenu.value === SidebarMenuEnum.SETTINGS) {
+    handleSettings();
+  }
 };
+
+const handleManualInsertText = () => {
+  if (isSidebar.value === SidebarMode.WINDOWS) {
+    if (manualInsertVisible.value) {
+      manualInsertVisible.value = false;
+    } else {
+      manualInsertVisible.value = true;
+    }
+  }
+};
+
+const handleManualInsertClose = () => {
+  chatPrompt.value = "";
+  manualInsertVisible.value = false;
+};
+
+function handleManualInsertFeatureClick(insertedText: string) {
+  if (isSidebar.value === SidebarMode.SIDEBAR) {
+    appSidebarEnable.value = true;
+    userSettings.setSidebar(SidebarMode.SIDEBAR);
+    userSettings.applySidebarClass(false, null);
+    activeIndexMenu.value = SidebarMenuEnum.TEXT;
+    selectionChats.value.push({
+      role: ConversationRoleEnum.USER,
+      text: insertedText,
+    });
+    selectionChats.value.push({
+      role: ConversationRoleEnum.ASSISTANT,
+      text: "",
+    });
+    nextTick(() => {
+      selectionChatRef.value?.scrollToBottom();
+      if (!drawerShow.value) {
+        manualInsertVisible.value = false;
+      }
+    });
+  }
+}
+
+const handleManualInsertDataEvent = (data: string) => {
+  selectionChats.value[selectionChats.value.length - 1] = {
+    role: ConversationRoleEnum.ASSISTANT,
+    text: data,
+  };
+  nextTick(() => {
+    selectionChatRef.value?.scrollToBottom();
+  });
+  if (isSidebar.value === SidebarMode.SIDEBAR) {
+    manualInsertVisible.value = false;
+  }
+};
+
+const handleManualInsertCompleteEvent = (data: string) => {
+  dataResponse = data;
+  if (isSidebar.value === SidebarMode.SIDEBAR) {
+    selectionChats.value[selectionChats.value.length - 1] = {
+      role: ConversationRoleEnum.ASSISTANT,
+      text: data,
+    };
+
+    nextTick(() => {
+      selectionChatRef.value?.scrollToBottom();
+    });
+    manualInsertVisible.value = false;
+  } else if (isSidebar.value === SidebarMode.WINDOWS) {
+  }
+  isStreaming.value = false;
+};
+
+const handleManualInsertErrorEvent = () => {
+  isStreaming.value = false;
+  if (isSidebar.value === SidebarMode.SIDEBAR) {
+    manualInsertVisible.value = false;
+  }
+};
+
+const handleManualInsertNewChatEvent = (text: string) => {
+  nextTick(() => {
+    isStreaming.value = true;
+    chatPrompt.value = text;
+    if (isSidebar.value === SidebarMode.SIDEBAR) {
+      activeIndexMenu.value = SidebarMenuEnum.CHAT;
+      nextTick(() => {
+        isSendChatBox.value = true;
+      });
+    } else if (isSidebar.value === SidebarMode.WINDOWS) {
+      appMenuVisible.value = false;
+      chatVisible.value = true;
+    }
+  });
+};
+
+function handlePopupMenuClose(index: number) {
+  chatPrompt.value = "";
+  appMenuVisible.value = true;
+  if (isStreaming.value) {
+    popupMenuVariables[index].show = false;
+  } else {
+    popupMenuVariables.splice(index, 1);
+  }
+  prevStartOffsetSelection = null;
+  prevEndOffseSelection = null;
+}
+
+function handlePopupMenuUnmounted() {
+  drawerShow.value = false;
+}
+
+function handlePopupMenuFeatureClick() {
+  if (isSidebar.value === SidebarMode.SIDEBAR) {
+    appSidebarEnable.value = true;
+    userSettings.setSidebar(SidebarMode.SIDEBAR);
+    userSettings.applySidebarClass(false, null);
+    activeIndexMenu.value = SidebarMenuEnum.TEXT;
+    selectionChats.value.push({
+      role: ConversationRoleEnum.USER,
+      text: selectedText.value,
+    });
+    selectionChats.value.push({
+      role: ConversationRoleEnum.ASSISTANT,
+      text: "",
+    });
+    dataResponse = "";
+    chatPrompt.value = "";
+    nextTick(() => {
+      selectionChatRef.value?.scrollToBottom();
+    });
+  }
+}
 
 const handlePopupMenuDataEvent = (data: string, index: number) => {
   selectionChats.value[selectionChats.value.length - 1] = {
@@ -631,7 +918,7 @@ const handlePopupMenuCompleteEvent = (data: string, index: number) => {
   nextTick(() => {
     selectionChatRef.value?.scrollToBottom();
   });
-  popupMenuDataResponse = data;
+  dataResponse = data;
   isStreaming.value = false;
 };
 
@@ -656,13 +943,13 @@ const newSelectionChat = (value: string) => {
   isStreaming.value = true;
   let text = "";
   text += SystemVariableParser.getInstance().getSelectedText() + "\n";
-  text += "\\-\\-\\-\n";
-  text += popupMenuDataResponse + "\n";
-  text += "\\-\\-\\-\n";
+  text += "\\`\\`\\`\n";
+  text += dataResponse + "\n";
+  text += "\\`\\`\\`\n";
   text += value + "\n";
   chatPrompt.value = text;
   if (isSidebar.value === SidebarMode.SIDEBAR) {
-    activeIndexMenu.value = SidebarMenu.CHAT;
+    activeIndexMenu.value = SidebarMenuEnum.CHAT;
     nextTick(() => {
       isSendChatBox.value = true;
     });
@@ -670,6 +957,10 @@ const newSelectionChat = (value: string) => {
     appMenuVisible.value = false;
     chatVisible.value = true;
   }
+};
+
+const handleManualInsert = () => {
+  manualInsertVisible.value = true;
 };
 
 const handleAppsMaximize = () => {
@@ -710,17 +1001,18 @@ async function handleBeforeUnload(event: Event) {
 
 onMounted(async () => {
   window.addEventListener("beforeunload", handleBeforeUnload);
-  getJsonFeatures(false);
+  getJsonFeatures(false, 1, MAXIMUM_FEATURES_SIZE_DEFAULT, null, null);
   await userSettings.initialize(false);
   isSidebar.value = userSettings.getSidebar;
   if (isSidebar.value === SidebarMode.SIDEBAR) {
+    manualInsertWidth.value = 400;
     appsVisible.value = true;
     if (appSidebarEnable.value) {
-      userSettings.$state.sidebar = SidebarMode.SIDEBAR;
+      userSettings.setSidebar(SidebarMode.SIDEBAR);
+      userSettings.applySidebarClass(false, null);
     } else {
-      userSettings.$state.sidebar = SidebarMode.NONE;
+      userSettings.applySidebarClass(true, SidebarMode.NONE);
     }
-    userSettings.applySidebarClass();
 
     nextTick(() => {
       const shadowHost = document.querySelector("cremind-app-extension");
@@ -735,6 +1027,7 @@ onMounted(async () => {
       }
     });
   } else if (isSidebar.value === SidebarMode.WINDOWS) {
+    manualInsertWidth.value = 700;
   }
 });
 

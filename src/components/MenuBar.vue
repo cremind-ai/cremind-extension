@@ -1,6 +1,7 @@
 <template>
   <ElButtonGroup>
     <ElTooltip
+      v-if="!onlyMenu"
       :hide-after="0"
       content="Click the icon for a tidy display of the 'Options Bar'. Change mode now 👇."
       placement="top"
@@ -24,7 +25,7 @@
         :hide-after="0"
         :content="feature.EDITABLE?.title"
         placement="top"
-        v-if="enabledFeatureStates[convertIndexToOriginal(index)]"
+        v-if="feature.enabled"
       >
         <ElButton
           size="small"
@@ -45,7 +46,7 @@
         </ElButton>
       </ElTooltip>
     </template>
-    <ElDropdown @command="handleCommand">
+    <ElDropdown v-if="!onlyMenu" @command="handleCommand">
       <ElButton size="small" class="menu-bar-button" type="success" plain>
         <Icon icon="material-symbols:more-vert" :style="{ fontSize: '20px' }" />
       </ElButton>
@@ -90,9 +91,15 @@ import { FeatureSchema, Icon as IconType } from "@/lib/features";
 import { OptionCommandType } from "@/constants/ui";
 
 const props = defineProps({
+  onlyMenu: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   optionBarMode: {
     type: Boolean,
-    required: true,
+    required: false,
+    default: false,
   },
   featureList: {
     type: Array as PropType<FeatureSchema[]>,
@@ -104,11 +111,6 @@ const props = defineProps({
     required: true,
     default: [],
   },
-  enabledFeatureStates: {
-    type: Array as PropType<boolean[]>,
-    required: true,
-    default: [],
-  },
   moreOptions: {
     type: Array as PropType<
       {
@@ -116,7 +118,7 @@ const props = defineProps({
         icon: IconType;
       }[]
     >,
-    required: true,
+    required: false,
     default: [],
   },
 });

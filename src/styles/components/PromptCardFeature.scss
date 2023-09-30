@@ -1,0 +1,50 @@
+.prompt-feature {
+  width: 200px;
+  max-height: 200px;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.prompt-feature-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  color: var(--cremind-logo-color-dark);
+}
+
+.prompt-feature-content-card {
+  height: 150px;
+  overflow: hidden;
+  position: relative;
+  border-radius: 15px;
+}
+
+.prompt-feature-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--el-text-color-regular);
+  word-wrap: break-word;
+}
+
+.prompt-feature-description {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  color: var(--el-text-color-regular);
+  word-wrap: break-word;
+}
+
+.prompt-feature-use {
+  margin-top: 5px;
+  width: 100%;
+  border-radius: 20px;
+}
+
+.prompt-feature .el-card__body {
+  padding: 5px;
+}

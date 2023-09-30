@@ -165,13 +165,18 @@ watch(
   }
 );
 */
-
 async function stopGenerating(): Promise<string> {
-  return await chatBoxRef.value!.stopGenerating();
+  if (chatBoxRef.value) {
+    return await chatBoxRef.value!.stopGenerating();
+  } else {
+    return "";
+  }
 }
 
 function close() {
-  chatBoxRef.value!.close();
+  if (chatBoxRef.value) {
+    chatBoxRef.value!.close();
+  }
 }
 
 const handleCloseDialog = () => {

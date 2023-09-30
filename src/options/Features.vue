@@ -1,33 +1,47 @@
 <template>
   <ElCard>
     <ElCard style="margin-top: 10px; margin-bottom: 10px; border-radius: 20px">
-      <ElButton
-        :color="LOGO_COLOR"
-        type="primary"
-        @click="handleResetAllVariables"
-        size="large"
-        :plain="isDark"
-      >
-        <Icon
-          icon="solar:restart-bold-duotone"
-          :style="{ fontSize: '20px', paddingRight: '10px' }"
-        />
-        Reset All
-      </ElButton>
+      <ElForm :inline="true" size="large">
+        <ElFormItem>
+          <ElButton
+            :color="LOGO_COLOR"
+            type="primary"
+            @click="handleResetAllVariables"
+            :plain="isDark"
+          >
+            <Icon
+              icon="solar:restart-bold-duotone"
+              :style="{ fontSize: '20px', paddingRight: '10px' }"
+            />
+            Reset All
+          </ElButton>
+        </ElFormItem>
+        <ElFormItem>
+          <ElSelect
+            v-model="currentCategory"
+            placeholder="Categories"
+            filterable
+            @change="handleChangeCategory"
+          >
+            <ElOption
+              v-for="option in CategoryOptions"
+              :key="option"
+              :label="option"
+              :value="option"
+            ></ElOption>
+          </ElSelect>
+        </ElFormItem>
+      </ElForm>
     </ElCard>
     <div class="feature-grid">
-      <div
-        v-for="(feature, index) in featureList"
-        :key="index"
-        class="feature-card"
-      >
+      <div v-for="(feature, index) in featureList" :key="index">
         <PromptCardSetting
           :id="index"
           :title="feature.title"
           :description="feature.description"
           @enable-change="handleEnableChange"
           @reset-variable="handleResetVariable"
-          v-model:enable="switchStates[index]"
+          v-model:enable="feature.enabled"
           :supportModes="supportModes[index]"
         ></PromptCardSetting>
       </div>
@@ -37,15 +51,12 @@
 
 <script setup lang="ts">
 import { watch, computed, onMounted, ref, Ref } from "vue";
-import { ElContainer } from "element-plus";
-import { ElHeader } from "element-plus";
-import { ElMain } from "element-plus";
-import { ElFooter } from "element-plus";
+import { ElSelect } from "element-plus";
+import { ElOption } from "element-plus";
 import { ElButton } from "element-plus";
 import { ElCard } from "element-plus";
 import { ElForm } from "element-plus";
 import { ElFormItem } from "element-plus";
-import { ElSwitch } from "element-plus";
 import { Icon } from "@iconify/vue";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 import { consoleLog, LogLevelEnum } from "@/utils";
@@ -53,104 +64,98 @@ import {
   CommunicationMessageTypeEnum,
   IPCTopicEnum,
   IPCMessageType,
-  featureModeEnum,
+  FeatureModeEnum,
 } from "@/types";
-import { FeatureSchema, Icon as IconType } from "@/lib/features";
+import {
+  CategoryFeatureEnum,
+  FeatureSchema,
+  Icon as IconType,
+} from "@/lib/features";
 import { PromptCardSetting } from "@/components";
 import { useUserSettingsStore } from "@/store/user_settings";
-import { LOGO_COLOR, LOGO_COLOR_DARK } from "@/constants";
+import {
+  LOGO_COLOR,
+  LOGO_COLOR_DARK,
+  MAXIMUM_FEATURES_SIZE_DEFAULT,
+} from "@/constants";
+import { getJsonFeatures, setJsonFeature } from "@/lib/common";
 
 const userSettings = useUserSettingsStore();
 
 const featureList: Ref<FeatureSchema[]> = ref([]);
-const switchStates: Ref<boolean[]> = ref([]);
-const supportModes: Ref<featureModeEnum[][]> = ref([]);
+const supportModes: Ref<FeatureModeEnum[][]> = ref([]);
 const isDark = computed(() => userSettings.getIsDark);
 
-const getFeatureEnabledState = async (
-  feature: FeatureSchema
-): Promise<boolean> => {
-  const value = await ChromeStorage.getInstance().get(
-    `FEATURE:${feature.id}:enable`
+const currentCategory: Ref<CategoryFeatureEnum | string> = ref("");
+const CategoryOptions = Object.values(CategoryFeatureEnum);
+
+async function getFeatures(category: CategoryFeatureEnum) {
+  const resFeatures = await getJsonFeatures(
+    false,
+    1,
+    MAXIMUM_FEATURES_SIZE_DEFAULT,
+    null,
+    category
   );
-  if (value === undefined) {
-    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true);
-    return true;
-  } else if (value === false) {
-    return false;
+  if (resFeatures.list) {
+    featureList.value = resFeatures.list;
+
+    for (let i = 0; i < featureList.value.length; i++) {
+      supportModes.value[i] = [];
+      if (featureList.value[i].READONLY) {
+        supportModes.value[i].push(FeatureModeEnum.READONLY);
+      }
+      if (featureList.value[i].EDITABLE) {
+        supportModes.value[i].push(FeatureModeEnum.EDITABLE);
+      }
+      if (featureList.value[i].PROMPT) {
+        supportModes.value[i].push(FeatureModeEnum.PROMPT);
+      }
+      if (featureList.value[i].UPLOAD) {
+        supportModes.value[i].push(FeatureModeEnum.UPLOAD);
+      }
+    }
   } else {
-    return true;
+    featureList.value = [];
   }
-};
+}
 
 const handleResetAllVariables = async () => {
-  await ChromeStorage.getInstance().removeWithWildcard("FEATURE:");
+  await ChromeStorage.getInstance().removeWithWildcard("FEATURES_JSON:");
   initialize();
 };
 
 const handleEnableChange = async (index: number, value: boolean) => {
-  switchStates.value[index] = value;
-  await ChromeStorage.getInstance().set(
-    `FEATURE:${featureList.value[index].id}:enable`,
-    value
-  );
+  featureList.value[index].enabled = value;
+  setJsonFeature(featureList.value[index]);
 };
+
 const handleResetVariable = (index: number) => {
   for (let key in featureList.value[index]) {
     if (
-      key === featureModeEnum.EDITABLE ||
-      key === featureModeEnum.READONLY ||
-      key === featureModeEnum.EDITABLE_CONTEXT_MENU ||
-      key === featureModeEnum.READONLY_CONTEXT_MENU ||
-      key === featureModeEnum.APP
+      key === FeatureModeEnum.EDITABLE ||
+      key === FeatureModeEnum.READONLY ||
+      key === FeatureModeEnum.PROMPT ||
+      key === FeatureModeEnum.UPLOAD
     ) {
-      ChromeStorage.getInstance().removeWithWildcard(
-        `FEATURE:${featureList.value[index].id}:${key}:variable`
+      ChromeStorage.getInstance().remove(
+        `FEATURES_JSON:${featureList.value[index].id}`
       );
     }
   }
+};
+
+const handleChangeCategory = (value: string) => {
+  const categoryEnum: CategoryFeatureEnum = value as CategoryFeatureEnum;
+  getFeatures(categoryEnum);
 };
 
 const handleDarkMode = () => {
   userSettings.setIsDark(isDark.value);
 };
 
-async function initialize() {
-  const data: IPCMessageType = {
-    topic: IPCTopicEnum.COMMUNICATION,
-    type: CommunicationMessageTypeEnum.GET_FEATURES,
-    message: "Get JSON Features",
-  };
-  chrome.runtime.sendMessage(data, async (response) => {
-    if (response.features) {
-      featureList.value = response.features;
-
-      switchStates.value = await Promise.all(
-        response.features.map((feature: any) => getFeatureEnabledState(feature))
-      );
-
-      for (let i = 0; i < featureList.value.length; i++) {
-        supportModes.value[i] = [];
-        if (featureList.value[i].READONLY) {
-          supportModes.value[i].push(featureModeEnum.READONLY);
-        }
-        if (featureList.value[i].EDITABLE) {
-          supportModes.value[i].push(featureModeEnum.EDITABLE);
-        }
-        if (featureList.value[i].READONLY_CONTEXT_MENU) {
-          supportModes.value[i].push(featureModeEnum.READONLY_CONTEXT_MENU);
-        }
-        if (featureList.value[i].EDITABLE_CONTEXT_MENU) {
-          supportModes.value[i].push(featureModeEnum.EDITABLE_CONTEXT_MENU);
-        }
-        if (featureList.value[i].APP) {
-          supportModes.value[i].push(featureModeEnum.APP);
-        }
-      }
-    } else {
-      featureList.value = [];
-    }
-  });
+function initialize() {
+  getFeatures(CategoryFeatureEnum.ALL);
 }
 
 onMounted(async () => {

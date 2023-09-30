@@ -1,6 +1,12 @@
 <template>
-  <div v-if="show" style="position: relative">
-    <div style="display: flex; justify-content: flex-end; margin-right: 60px">
+  <div v-if="show" style="position: relative; margin-top: 10px">
+    <div
+      :style="{
+        display: 'flex',
+        justifyContent: headerAlignmentLeft ? 'flex-start' : 'flex-end',
+        marginRight: '10px',
+      }"
+    >
       <ElButtonGroup>
         <ElTooltip
           :hide-after="0"
@@ -32,6 +38,7 @@
   <DrawerPromptInitialize
     v-model:feature="currentFeature"
     v-model:visible="drawer"
+    :feature-schema="featureSchema"
     :form-data="formDataVariableSchema"
     :feature-id="currentFeatureId"
     :feature-mode="currentFeatureMode"
@@ -41,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, Ref, computed, PropType, nextTick } from "vue";
+import { ref, watch, Ref, computed, PropType, nextTick, onMounted } from "vue";
 import { ElButton } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { ElScrollbar } from "element-plus";
@@ -51,14 +58,13 @@ import { Icon } from "@iconify/vue";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
-import { featureModeEnum } from "@/types";
+import { FeatureModeEnum } from "@/types";
 import { FeatureType } from "@/lib/features";
 import { ChainBuilder } from "@/lib/chain/chain_builder";
 import { CWException } from "@/types/exception";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 import { FeatureSchema } from "@/lib/features";
 import { Status } from "@/constants/status";
-import { useChatDialogStore } from "@/store/chat_dialog";
 import { ChatAction } from "@/components/Chat";
 import { DrawerPromptInitialize } from "@/components";
 import { consoleLog, LogLevelEnum } from "@/utils";
@@ -71,7 +77,7 @@ import {
   AI_SYSTEM_RESPONSE_START_BLOCK,
 } from "@/constants";
 import { ResponseParser } from "@/lib/response_parser";
-import { SystemVariableParser } from "@/lib";
+import { setJsonFeature } from "@/lib/common";
 
 const marked = new Marked(
   markedHighlight({
@@ -106,15 +112,20 @@ const props = defineProps({
     default: false,
   },
   featureMode: {
-    type: String as PropType<featureModeEnum>,
+    type: String as PropType<FeatureModeEnum>,
     required: true,
     validator: (value: string) =>
-      Object.values(featureModeEnum).includes(value as featureModeEnum),
+      Object.values(FeatureModeEnum).includes(value as FeatureModeEnum),
   },
   featureSchema: {
     type: Object as PropType<FeatureSchema>,
     required: true,
     default: {},
+  },
+  headerAlignmentLeft: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
 });
 
@@ -128,7 +139,6 @@ const emits = defineEmits([
   "error",
 ]);
 
-const chatDialog = useChatDialogStore();
 const userSettings = useUserSettingsStore();
 
 const aiProvider = computed(() => userSettings.getAiProvider);
@@ -154,9 +164,7 @@ const drawer = ref(props.drawer);
 const formDataVariableSchema = ref<{ [key: string]: string }>({});
 const currentFeature: Ref<FeatureType> = ref({} as FeatureType);
 const currentFeatureId: Ref<string> = ref("");
-const currentFeatureMode: Ref<featureModeEnum> = ref(
-  featureModeEnum.READONLY_CONTEXT_MENU
-);
+const currentFeatureMode: Ref<FeatureModeEnum> = ref(FeatureModeEnum.READONLY);
 
 const llm = new LLM();
 
@@ -250,10 +258,10 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   );
   consoleLog(LogLevelEnum.DEBUG, variables);
   for (const key in variables) {
-    const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`;
-    consoleLog(LogLevelEnum.DEBUG, storageKey);
-    await ChromeStorage.getInstance().set(storageKey, variables[key]);
+    props.featureSchema[currentFeatureMode.value]!.variableSchema[key].value =
+      variables[key];
   }
+  setJsonFeature(props.featureSchema);
   await chainBuilder.buildChains(variables);
   const result = await chainBuilder.executeChains(true, {
     aiProvider: aiProvider.value,
@@ -316,7 +324,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
 async function handleFeature(
   id: string,
   feature: FeatureType,
-  type: featureModeEnum
+  type: FeatureModeEnum
 ) {
   const variables: { [key: string]: string } = {};
   let checkShowDrawer: boolean = false;
@@ -332,9 +340,7 @@ async function handleFeature(
       checkShowDrawer = true;
       continue;
     }
-    const storageKey = `FEATURE:${id}:${type}:variable:${key}`;
-    consoleLog(LogLevelEnum.DEBUG, storageKey);
-    const value = await ChromeStorage.getInstance().get(storageKey);
+    const value = feature.variableSchema[key].value;
     consoleLog(LogLevelEnum.DEBUG, value);
     if (!value) {
       checkShowDrawer = true;
@@ -361,6 +367,10 @@ const handleCloseDrawer = () => {
   isStreaming.value = false;
   emits("close");
 };
+
+onMounted(() => {
+  consoleLog(LogLevelEnum.DEBUG, "QuickFeartureCard Mounted");
+});
 </script>
 
 <style scoped></style>

@@ -1,0 +1,31 @@
+.prompt-dialog-main {
+  border-radius: 15px;
+  position: relative;
+}
+
+.prompt-dialog-main .prompt-dialog-header {
+  position: absolute;
+  height: 80px;
+  width: 100%;
+}
+
+.prompt-dialog-main .prompt-dialog-minimize-icon {
+  position: absolute;
+  top: 8px;
+  right: 36px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.prompt-dialog-main .prompt-dialog-close-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.prompt-dialog-main .prompt-dialog-app-container {
+  display: flex;
+  flex-direction: column;
+}

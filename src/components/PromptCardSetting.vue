@@ -62,7 +62,7 @@ import { ElSwitch } from "element-plus";
 import { ElButton } from "element-plus";
 import { ElPopover } from "element-plus";
 import { ElTooltip } from "element-plus";
-import { featureModeEnum } from "@/types";
+import { FeatureModeEnum } from "@/types";
 import { LOGO_COLOR, LOGO_COLOR_DARK } from "@/constants";
 import { useUserSettingsStore } from "@/store/user_settings";
 
@@ -85,7 +85,7 @@ const props = defineProps({
     required: true,
   },
   supportModes: {
-    type: Array as PropType<featureModeEnum[]>,
+    type: Array as PropType<FeatureModeEnum[]>,
     required: true,
     default: [],
   },
@@ -118,33 +118,29 @@ const iconColors: Record<string, string> = {
   READONLY_DARK: LOGO_COLOR_DARK,
   EDITABLE: LOGO_COLOR,
   EDITABLE_DARK: LOGO_COLOR_DARK,
-  READONLY_CONTEXT_MENU: LOGO_COLOR,
-  READONLY_CONTEXT_MENU_DARK: LOGO_COLOR_DARK,
-  EDITABLE_CONTEXT_MENU: LOGO_COLOR,
-  EDITABLE_CONTEXT_MENU_DARK: LOGO_COLOR_DARK,
-  APP: LOGO_COLOR,
-  APP_DARK: LOGO_COLOR_DARK,
+  PROMPT: LOGO_COLOR,
+  PROMPT_DARK: LOGO_COLOR_DARK,
+  UPLOAD: LOGO_COLOR,
+  UPLOAD_DARK: LOGO_COLOR_DARK,
 };
 
 const iconsForModes = {
   READONLY: "ic:outline-no-sim",
   EDITABLE: "basil:edit-outline",
-  READONLY_CONTEXT_MENU: "ic:round-no-sim",
-  EDITABLE_CONTEXT_MENU: "basil:edit-solid",
-  APP: "icon-park-twotone:more-app",
+  PROMPT: "ic:outline-auto-awesome",
+  UPLOAD: "ic:twotone-cloud-upload",
 };
 
 const iconsInfos = {
   READONLY: "Text selected mode and no text editing allowed.",
   EDITABLE:
     "Selected text mode and allowed to write results into the input field, e.g. like writing into an email composition box.",
-  READONLY_CONTEXT_MENU:
-    "Right-click to select this mode in the context menu and prevent text editing.",
-  EDITABLE_CONTEXT_MENU:
-    "Right-click to select this mode in the context menu and allow writing results into the input field, e.g. like writing into a post composition box on a social media page.",
-  APP: "This mode is located within the feature menu on the application page.",
+  PROMPT:
+    "This mode helps you select a type of prompt and implement it into an application.",
+  UPLOAD:
+    "This mode assists you in handling large texts or specific, unique text types and deploying them into an application.",
 };
-const getIconForMode = (mode: featureModeEnum) => {
+const getIconForMode = (mode: FeatureModeEnum) => {
   const iconName = iconsForModes[mode] || "";
   const iconColor = isDark.value
     ? iconColors[mode + "_DARK"] || "white"

@@ -12,13 +12,15 @@
       </ElScrollbar>
     </div>
 
-    <component
-      :is="chatActionComponent"
-      style="padding: 5px"
-      @new-chat="newChat"
-      v-model:blockSend="blockSend"
-      @mounted="chatActionMounted"
-    />
+    <div ref="chatActionRef">
+      <component
+        :is="chatActionComponent"
+        style="padding: 5px"
+        @new-chat="newChat"
+        v-model:blockSend="blockSend"
+        @mounted="chatActionMounted"
+      />
+    </div>
   </div>
 </template>
 
@@ -53,6 +55,7 @@ const emits = defineEmits(["new-chat", "height"]);
 
 const innerRef = ref<HTMLDivElement>();
 const outerRef = ref<HTMLDivElement>();
+const chatActionRef = ref<HTMLDivElement>();
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>();
 const blockSend = ref(props.blockSend);
 const scrollbarHeight = ref(0);
@@ -91,7 +94,9 @@ const chatActionComponent = defineAsyncComponent(async () => {
   return module.default;
 });
 
-const chatActionMounted = () => {};
+const chatActionMounted = () => {
+  scrollbarHeight.value -= chatActionRef.value!.clientHeight + 10;
+};
 
 onMounted(async () => {
   blockSend.value = props.blockSend;

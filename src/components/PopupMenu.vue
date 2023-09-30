@@ -43,7 +43,6 @@
           v-model:option-bar-mode="tidyDisplayOptionBarMode"
           :feature-list="featureList"
           :filtered-feature-list="filteredFeatureList"
-          :enabled-feature-states="enabledFeatureStates"
           :more-options="moreOptions"
           @feature-click="handleFeatureClick"
           @command-click="handleCommand"
@@ -56,6 +55,7 @@
         v-model:drawer="drawer"
         :feature-mode="featureMode"
         :feature-schema="featureSchema"
+        :header-alignment-left="false"
         @close="close"
         @data="quickFeatureDataEvent"
         @complete="quickFeatureCompleteEvent"
@@ -102,7 +102,6 @@
               v-model:option-bar-mode="tidyDisplayOptionBarMode"
               :feature-list="featureList"
               :filtered-feature-list="filteredFeatureList"
-              :enabled-feature-states="enabledFeatureStates"
               :more-options="moreOptions"
               @feature-click="handleFeatureClick"
               @command-click="handleCommand"
@@ -137,6 +136,7 @@
           v-model:drawer="drawer"
           :feature-mode="featureMode"
           :feature-schema="featureSchema"
+          :header-alignment-left="true"
           @close="close"
           @new-chat="newChatEvent"
           @data="quickFeatureDataEvent"
@@ -176,16 +176,15 @@ import {
   CommunicationMessageTypeEnum,
   IPCTopicEnum,
   IPCMessageType,
-  featureModeEnum,
+  FeatureModeEnum,
 } from "@/types";
-import { ChromeStorage } from "@/hooks/chrome_storage";
-import { FeatureSchema, Icon as IconType } from "@/lib/features";
+import { FeatureSchema } from "@/lib/features";
 import { moreOptions, OptionCommandType } from "@/constants/ui";
 import { QuickFeatureCard } from "@/components";
 import { MenuBar } from "@/components";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
-import { AIMode } from "@/constants";
+import { AIMode, MAXIMUM_FEATURES_SIZE_DEFAULT } from "@/constants";
 import { getJsonFeatures } from "@/lib/common";
 import { SidebarMode } from "@/types/ui";
 
@@ -215,16 +214,21 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  drawerShow: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   sidebar: {
     type: String as PropType<SidebarMode>,
     required: true,
     default: SidebarMode.NONE,
   },
   featureMode: {
-    type: String as PropType<featureModeEnum>,
+    type: String as PropType<FeatureModeEnum>,
     required: true,
     validator: (value: string) =>
-      Object.values(featureModeEnum).includes(value as featureModeEnum),
+      Object.values(FeatureModeEnum).includes(value as FeatureModeEnum),
   },
   activeElement: {
     type: Object as PropType<HTMLElement | HTMLInputElement>,
@@ -246,6 +250,8 @@ marked.use({ silent: true, breaks: true });
 
 const emits = defineEmits([
   "update:isStreaming",
+  "update:drawerShow",
+  "unmounted",
   "close",
   "newChat",
   "data",
@@ -278,8 +284,8 @@ const logoRef: Ref<HTMLDivElement> = ref(null as any);
 const popoverRef: Ref<HTMLDivElement> = ref(null as any);
 const quickFeatureCardRef: Ref<HTMLDivElement> = ref(null as any);
 const width = ref(0);
-const featureMode: Ref<featureModeEnum> = ref(
-  props.featureMode as featureModeEnum
+const featureMode: Ref<FeatureModeEnum> = ref(
+  props.featureMode as FeatureModeEnum
 );
 const originalActiveElement: Ref<any> = ref(null as any);
 const outputContent = ref("");
@@ -289,32 +295,20 @@ const isStarted = ref(false);
 const iconMaximizeShow = ref(false);
 const logoShow = ref(false);
 const drawer = ref(false);
-const enabledFeatureStates: Ref<boolean[]> = ref([]);
 
 const featureSchema: Ref<FeatureSchema> = ref({} as FeatureSchema);
 const featureList: Ref<FeatureSchema[]> = ref([]);
 const filteredFeatureList = computed(() => {
   const _filteredFeatureList = featureList.value.filter((feature) => {
-    const { READONLY, EDITABLE, READONLY_CONTEXT_MENU, EDITABLE_CONTEXT_MENU } =
-      feature;
+    const { READONLY, EDITABLE } = feature;
     switch (featureMode.value) {
-      case featureModeEnum.READONLY:
+      case FeatureModeEnum.READONLY:
         return (
           READONLY !== undefined && READONLY![aiProviderKey.value] !== null
         );
-      case featureModeEnum.EDITABLE:
+      case FeatureModeEnum.EDITABLE:
         return (
           EDITABLE !== undefined && EDITABLE![aiProviderKey.value] !== null
-        );
-      case featureModeEnum.READONLY_CONTEXT_MENU:
-        return (
-          READONLY_CONTEXT_MENU !== undefined &&
-          READONLY_CONTEXT_MENU![aiProviderKey.value] !== null
-        );
-      case featureModeEnum.EDITABLE_CONTEXT_MENU:
-        return (
-          EDITABLE_CONTEXT_MENU !== undefined &&
-          EDITABLE_CONTEXT_MENU![aiProviderKey.value] !== null
         );
       default:
         return false;
@@ -345,17 +339,31 @@ watch(
 watch(
   () => isStreaming.value,
   (value) => {
-    if (!isStreaming.value) {
+    emits("update:isStreaming", value);
+  }
+);
+
+watch(
+  () => props.drawerShow,
+  (value) => {
+    if (!value) {
       isStarted.value = false;
     }
-    emits("update:isStreaming", value);
+    drawer.value = value;
+  }
+);
+
+watch(
+  () => drawer.value,
+  (value) => {
+    emits("update:drawerShow", value);
   }
 );
 
 watch(
   () => props.featureMode,
   (newValue) => {
-    featureMode.value = newValue as featureModeEnum;
+    featureMode.value = newValue as FeatureModeEnum;
   }
 );
 
@@ -419,7 +427,7 @@ function newChatEvent(value: string) {
 function quickFeatureDataEvent(data: string) {
   outputContent.value += data;
   if (
-    featureMode.value === featureModeEnum.EDITABLE &&
+    featureMode.value === FeatureModeEnum.EDITABLE &&
     featureSchema.value[featureMode.value]![aiProviderKey.value]!
       .WriteResponse &&
     featureSchema.value[featureMode.value]![aiProviderKey.value]!
@@ -439,7 +447,7 @@ function quickFeatureDataEvent(data: string) {
 
 function quickFeatureCompleteEvent(data: string) {
   if (
-    featureMode.value === featureModeEnum.EDITABLE &&
+    featureMode.value === FeatureModeEnum.EDITABLE &&
     featureSchema.value[featureMode.value]![aiProviderKey.value]!
       .WriteResponse &&
     featureSchema.value[featureMode.value]![aiProviderKey.value]!
@@ -571,7 +579,7 @@ const handleMousedown = (event: MouseEvent) => {
 const handleKeyup = (event: KeyboardEvent) => {
   const pressedKey = event.key;
   if (pressedKey !== "Shift" && pressedKey !== "Meta" && !drawer.value) {
-    if (logoShow.value || optionBarShow.value) {
+    if ((logoShow.value || optionBarShow.value) && !popoverVisible.value) {
       close();
     }
   }
@@ -609,22 +617,6 @@ const handleCommand = (command: OptionCommandType) => {
   }
 };
 
-const getFeatureEnabledState = async (
-  feature: FeatureSchema
-): Promise<boolean> => {
-  const value = await ChromeStorage.getInstance().get(
-    `FEATURE:${feature.id}:enable`
-  );
-  if (value === undefined) {
-    await ChromeStorage.getInstance().set(`FEATURE:${feature.id}:enable`, true);
-    return true;
-  } else if (value === false) {
-    return false;
-  } else {
-    return true;
-  }
-};
-
 onMounted(async () => {
   consoleLog(LogLevelEnum.DEBUG, "Mounted PopupMenu");
   document.addEventListener("mousedown", handleMousedown);
@@ -644,10 +636,14 @@ onMounted(async () => {
       ) as HTMLDivElement;
 
       shadowRoot.addEventListener("mousedown", handleMousedownShadow);
-      featureList.value = await getJsonFeatures(true);
-      enabledFeatureStates.value = await Promise.all(
-        featureList.value.map((feature: any) => getFeatureEnabledState(feature))
+      const resFeatures = await getJsonFeatures(
+        true,
+        1,
+        MAXIMUM_FEATURES_SIZE_DEFAULT,
+        null,
+        null
       );
+      featureList.value = resFeatures.list;
     }
   }
 
@@ -671,19 +667,14 @@ onMounted(async () => {
   }
 
   const activeElement = props.activeElement;
-  if (
-    props.featureMode === featureModeEnum.EDITABLE_CONTEXT_MENU ||
-    props.featureMode === featureModeEnum.EDITABLE
-  ) {
+  if (props.featureMode === FeatureModeEnum.EDITABLE) {
     originalActiveElement.value = props.activeElement;
   }
 
   if (
     originalActiveElement.value &&
     originalActiveElement.value!.value !== undefined &&
-    originalActiveElement.value!.value !== null &&
-    props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
-    props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
+    originalActiveElement.value!.value !== null
   ) {
     const startSelectionIndex = originalActiveElement.value!.selectionStart;
     const endSelectionIndex = originalActiveElement.value!.selectionEnd;
@@ -696,9 +687,7 @@ onMounted(async () => {
           ((originalActiveElement.value!.innerText !== undefined &&
             originalActiveElement.value!.innerText !== null) ||
             (originalActiveElement.value!.textContent !== undefined &&
-              originalActiveElement.value!.textContent !== null)) &&
-              props.featureMode !== featureModeEnum.READONLY_CONTEXT_MENU &&
-              props.featureMode !== featureModeEnum.EDITABLE_CONTEXT_MENU
+              originalActiveElement.value!.textContent !== null))
   ) {
     var selection = window.getSelection();
     let selectedText = selection!.toString().trim();
@@ -727,6 +716,7 @@ onUnmounted(() => {
       shadowRoot.removeEventListener("mousedown", handleMousedownShadow);
     }
   }
+  emits("unmounted");
 });
 </script>
 

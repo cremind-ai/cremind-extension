@@ -3,6 +3,15 @@ import { ChainConfig } from "../chain/chain_builder";
 
 type IconType = "icon" | "svg";
 
+export enum CategoryFeatureEnum {
+  ALL = "all",
+  LANGUAGE = "language",
+  CONTENT = "content",
+  MARKETING = "marketing",
+  DEVELOPER = "developer",
+  PRODUCTIVITY = "productivity",
+}
+
 export type Icon = {
   content: string;
   fontSize?: string;
@@ -29,13 +38,16 @@ export type FeatureType = {
 
 export type FeatureSchema = {
   id: string;
-  description: string;
   title: string;
+  description: string;
+  category: CategoryFeatureEnum;
+  enabled: boolean;
+  timestamp: number;
   READONLY?: FeatureType;
   EDITABLE?: FeatureType;
-  READONLY_CONTEXT_MENU?: FeatureType;
-  EDITABLE_CONTEXT_MENU?: FeatureType;
-  APP?: FeatureType;
+  PROMPT?: FeatureType;
+  UPLOAD?: FeatureType;
+  [key: string]: any;
 };
 
 export class Feature {}

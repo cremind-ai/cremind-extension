@@ -20,7 +20,7 @@ import {
   CommunicationMessageTypeEnum,
   IPCTopicEnum,
   IPCMessageType,
-  featureModeEnum,
+  FeatureModeEnum,
 } from "@/types";
 import { LoadImg } from "@/components";
 

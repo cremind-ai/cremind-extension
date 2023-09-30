@@ -9,17 +9,10 @@
   z-index: 2147483647;
 }
 
-.app-settings-sidebar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2000;
-}
-
 .app-settings {
   position: absolute;
-  right: 52px;
-  bottom: 6px;
+  right: 0px;
+  bottom: 50px;
   opacity: 0.7;
   color: rgb(140, 140, 140);
 }
@@ -28,10 +21,22 @@
   opacity: 1;
 }
 
+.manual-insert-text {
+  position: absolute;
+  right: 34px;
+  bottom: 42px;
+  opacity: 0.7;
+  color: rgb(140, 140, 140);
+}
+.manual-insert-text:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
 .app-button-chatting {
   position: absolute;
-  right: 40px;
-  bottom: 40px;
+  right: 50px;
+  bottom: 10px;
   opacity: 0.7;
   color: rgb(140, 140, 140);
 }
@@ -40,10 +45,22 @@
   opacity: 1;
 }
 
+.app-prompts {
+  position: absolute;
+  right: 40px;
+  bottom: -22px;
+  opacity: 0.7;
+  color: rgb(140, 140, 140);
+}
+.app-prompts:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
 .app-apps {
   position: absolute;
-  right: 10px;
-  bottom: 55px;
+  right: 0px;
+  bottom: -30px;
   opacity: 0.7;
   color: rgb(140, 140, 140);
 }
@@ -62,6 +79,16 @@
   display: flex;
   flex-direction: column;
   background-color: var(--el-bg-color);
+}
+
+.app-sidebar .app-sidebar-menu {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.app-sidebar .app-icon-color {
+  opacity: 0.7;
+  color: rgb(140, 140, 140);
 }
 
 .app-sidebar-card {
@@ -94,10 +121,40 @@
   padding: var(--el-card-padding);
 }
 
-.apps-maximize-icon {
+.app-sidebar .apps-maximize-icon {
   position: absolute;
   top: 8px;
   right: 8px;
   cursor: pointer;
   z-index: 1;
+}
+
+.app-sidebar .app-sidebar-text-manual-insert {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.custom-popover-outer {
+  position: relative;
+  display: block;
+  height: 0;
+  width: 0;
+}
+
+.custom-popover {
+  position: absolute;
+  top: 40px;
+  left: 10px;
+  width: 400px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  z-index: 1000;
+}
+
+.custom-popover-outer .custom-popover {
+  display: block;
 }
