@@ -14,6 +14,7 @@
         :width="300"
         :content="description"
         trigger="click"
+        :visible="false"
       >
         <template #reference>
           <div class="prompt-feature-description">{{ description }}</div>

@@ -1,6 +1,24 @@
 <template>
   <div ref="outerRef" class="prompt-app-outer">
     <ElScrollbar ref="scrollbarRef" :maxHeight="scrollbarHeight">
+      <div class="prompt-app-category-container">
+        <div class="prompt-app-category-text">Category</div>
+        <ElSelect
+          class="prompt-app-category-block"
+          v-model="currentCategory"
+          placeholder="Categories"
+          filterable
+          @change="handleChangeCategory"
+        >
+          <ElOption
+            v-for="option in CategoryOptions"
+            :key="option"
+            :label="option"
+            :value="option"
+          ></ElOption>
+        </ElSelect>
+      </div>
+
       <div v-if="!initScrollbarHeight" class="prompt-app-grid">
         <div
           class="prompt-app-card"
@@ -17,23 +35,6 @@
         </div>
       </div>
     </ElScrollbar>
-
-    <div class="prompt-app-category-block">
-      <ElSelect
-        v-model="currentCategory"
-        placeholder="Categories"
-        filterable
-        @change="handleChangeCategory"
-        size="small"
-      >
-        <ElOption
-          v-for="option in CategoryOptions"
-          :key="option"
-          :label="option"
-          :value="option"
-        ></ElOption>
-      </ElSelect>
-    </div>
 
     <div class="prompt-app-pagination-block">
       <ElPagination

@@ -37,15 +37,18 @@ function processFeature(
   total: number;
   list: FeatureSchema[];
 } {
+  let total = features.length;
   if (featureType) {
     features = filter(features, (item: FeatureSchema) =>
       has(item, featureType)
     );
+    total = features.length;
   }
   if (category && category !== CategoryFeatureEnum.ALL) {
     features = features.filter(
       (item: FeatureSchema) => item.category === category
     );
+    total = features.length;
   }
 
   if (size > 0) {
@@ -54,6 +57,7 @@ function processFeature(
 
     if (startIndex >= features.length) {
       features = [];
+      total = 0;
     } else {
       features = features.slice(
         startIndex,
@@ -61,7 +65,7 @@ function processFeature(
       );
     }
   }
-  return { total: features.length, list: features };
+  return { total: total, list: features };
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

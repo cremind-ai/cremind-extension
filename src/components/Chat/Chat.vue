@@ -62,10 +62,18 @@ const scrollbarHeight = ref(0);
 const initScrollbarHeight = ref(true);
 let chats: ConversationMessageType[] = reactive(props.chats);
 
+let chatActionHeight = 0;
+
 watch(
   () => props.blockSend,
   (value) => {
     blockSend.value = value;
+    if (!value) {
+      if (chatActionHeight === 0) {
+        chatActionHeight = chatActionRef.value!.clientHeight;
+        scrollbarHeight.value -= chatActionHeight;
+      }
+    }
   }
 );
 
@@ -73,9 +81,10 @@ watch(props.chats, (value, _) => {
   chats = value;
   if (initScrollbarHeight.value && outerRef.value!.clientHeight !== 0) {
     nextTick(() => {
-      scrollbarHeight.value = outerRef.value!.clientHeight;
-      initScrollbarHeight.value = false;
+      scrollbarHeight.value =
+        outerRef.value!.clientHeight + chatActionRef.value!.clientHeight;
     });
+    initScrollbarHeight.value = false;
   }
 });
 

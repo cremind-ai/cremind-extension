@@ -9,6 +9,7 @@ export enum CategoryFeatureEnum {
   CONTENT = "content",
   MARKETING = "marketing",
   DEVELOPER = "developer",
+  CREATIVE = "creative",
   PRODUCTIVITY = "productivity",
 }
 
