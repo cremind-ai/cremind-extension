@@ -9,6 +9,9 @@
           placeholder="Categories"
           filterable
           @change="handleChangeCategory"
+          @keydown="handleKey"
+          @keyup="handleKey"
+          @keypress="handleKey"
         >
           <ElOption
             v-for="option in CategoryOptions"
@@ -354,6 +357,10 @@ const close = () => {
   response = "";
   currentPage.value = 1;
   chats.value.splice(0, chats.value.length);
+};
+
+const handleKey = (event: Event | KeyboardEvent) => {
+  event.stopPropagation();
 };
 
 onMounted(async () => {

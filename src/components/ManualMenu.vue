@@ -13,6 +13,9 @@
     placeholder="Please insert text here"
     :autosize="{ minRows: 3, maxRows: 9 }"
     type="textarea"
+    @keydown="handleKey"
+    @keyup="handleKey"
+    @keypress="handleKey"
   />
   <MenuBar
     style="margin-top: 10px"
@@ -189,6 +192,10 @@ const handleNewChat = (value: string) => {
   text += "\\`\\`\\`\n";
   text += value + "\n";
   emits("newChat", text);
+};
+
+const handleKey = (event: Event | KeyboardEvent) => {
+  event.stopPropagation();
 };
 
 onMounted(async () => {

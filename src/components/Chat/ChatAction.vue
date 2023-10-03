@@ -18,6 +18,9 @@
       style="padding: 0"
       :disabled="blockSend"
       @keydown.enter="handleEnterKey"
+      @keydown="handleKey"
+      @keyup="handleKey"
+      @keypress="handleKey"
     />
     <span v-if="!blockSend" class="chat-action-send-icon">
       <ElTooltip
@@ -75,6 +78,10 @@ const newChat = () => {
       textField.value = "";
     });
   }
+};
+
+const handleKey = (event: Event | KeyboardEvent) => {
+  event.stopPropagation();
 };
 
 const handleEnterKey = () => {

@@ -47,12 +47,18 @@
                 placeholder="Please insert text here"
                 :autosize="{ minRows: 9, maxRows: 20 }"
                 type="textarea"
+                @keydown="handleKey"
+                @keyup="handleKey"
+                @keypress="handleKey"
               />
               <ElInput
                 v-if="activeIndexInput === InputMode.URL"
                 class="apps-item-menu"
                 v-model="url"
                 placeholder="https://example.com"
+                @keydown="handleKey"
+                @keyup="handleKey"
+                @keypress="handleKey"
               />
             </ElCard>
           </ElTimelineItem>
@@ -909,6 +915,10 @@ async function handleFeatureClick(
   featureSchema.value = _featureSchema;
   handleFeature(id, _featureSchema[type]!, type);
 }
+
+const handleKey = (event: Event | KeyboardEvent) => {
+  event.stopPropagation();
+};
 
 onMounted(async () => {
   const resFeatures = await getJsonFeatures(

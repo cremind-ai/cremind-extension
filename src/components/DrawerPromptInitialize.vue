@@ -14,6 +14,9 @@
             v-model="formDataVariableSchema[key]"
             placeholder="Select"
             filterable
+            @keydown="handleKey"
+            @keyup="handleKey"
+            @keypress="handleKey"
           >
             <ElOption
               v-for="option in SystemOptions[`${schema.systemOptions}`]"
@@ -28,6 +31,9 @@
             v-model="formDataVariableSchema[key]"
             placeholder="Select"
             filterable
+            @keydown="handleKey"
+            @keyup="handleKey"
+            @keypress="handleKey"
           >
             <ElOption
               v-for="option in schema.options"
@@ -55,6 +61,9 @@
             <ElInput
               v-model="addCustomOptionVariableSchema[key].input"
               placeholder=""
+              @keydown="handleKey"
+              @keyup="handleKey"
+              @keypress="handleKey"
             />
             <div style="text-align: right; margin-top: 8px">
               <ElButton
@@ -92,6 +101,9 @@
             autosize
             type="textarea"
             placeholder="Enter text"
+            @keydown="handleKey"
+            @keyup="handleKey"
+            @keypress="handleKey"
           ></ElInput>
         </template>
       </ElFormItem>
@@ -314,6 +326,10 @@ const handleCloseDrawer = () => {
   }
   visible.value = false;
   emits("close");
+};
+
+const handleKey = (event: Event | KeyboardEvent) => {
+  event.stopPropagation();
 };
 
 onMounted(() => {
