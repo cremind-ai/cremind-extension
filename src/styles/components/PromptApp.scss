@@ -36,6 +36,15 @@
   bottom: 10px;
 }
 
+.prompt-app-category-icon-github {
+  opacity: 0.7;
+}
+
+.prompt-app-category-icon-github:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
 .prompt-app-button-history {
   position: absolute;
   right: 10px;

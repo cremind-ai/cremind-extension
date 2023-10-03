@@ -943,9 +943,9 @@ const newSelectionChat = (value: string) => {
   isStreaming.value = true;
   let text = "";
   text += SystemVariableParser.getInstance().getSelectedText() + "\n";
-  text += "\\`\\`\\`\n";
+  text += "\\=\\=\\=\n";
   text += dataResponse + "\n";
-  text += "\\`\\`\\`\n";
+  text += "\\=\\=\\=\n";
   text += value + "\n";
   chatPrompt.value = text;
   if (isSidebar.value === SidebarMode.SIDEBAR) {

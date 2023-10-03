@@ -64,6 +64,10 @@ export class ChainBuilder {
           args
         );
 
+        result.on("prompt", (data: any) => {
+          emitter.emit("prompt", data);
+        });
+
         result.on("data", (data: any) => {
           emitter.emit("data", data);
         });

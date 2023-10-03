@@ -134,6 +134,7 @@ const emits = defineEmits([
   "update:drawer",
   "close",
   "newChat",
+  "prompt",
   "data",
   "complete",
   "error",
@@ -273,6 +274,9 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
 
   outputContent.value = "";
   let completeContent = "";
+  result.on("prompt", (data: any) => {
+    emits("prompt", data);
+  });
   result.on("data", (data: string) => {
     outputContent.value = completeContent + data;
     scrollToBottom();

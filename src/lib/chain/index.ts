@@ -73,13 +73,16 @@ export class Chain {
       resolve(emitter);
 
       try {
-        let prompt;
+        let prompt: string = "";
         if (this.previousChain) {
           const resultPreviousChain = await this.previousChain.execute(
             isStream,
             args
           );
           const ChainPromise = new Promise<any>((resolve, reject) => {
+            resultPreviousChain.on("prompt", (data: any) => {
+              emitter.emit("prompt", data);
+            });
             resultPreviousChain.on("data", (data: any) => {
               emitter.emit("data", data);
             });
@@ -113,6 +116,9 @@ export class Chain {
         }
         consoleLog(LogLevelEnum.DEBUG, prompt);
         consoleLog(LogLevelEnum.DEBUG, "=====================");
+        setTimeout(() => {
+          emitter.emit("prompt", prompt);
+        }, 0);
 
         const data = await this.llm.request(prompt, isStream, args);
         data.on("data", (data) => {

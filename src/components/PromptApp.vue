@@ -20,6 +20,19 @@
             :value="option"
           ></ElOption>
         </ElSelect>
+        <ElTooltip :hide-after="0" content="Refer here" placement="bottom">
+          <a
+            href="https://github.com/f/awesome-chatgpt-prompts#prompts"
+            target="_blank"
+            style="margin-left: auto"
+          >
+            <Icon
+              icon="fa-brands:github"
+              :style="{ fontSize: '25px' }"
+              class="prompt-app-category-icon-github"
+            />
+          </a>
+        </ElTooltip>
       </div>
 
       <div v-if="!initScrollbarHeight" class="prompt-app-grid">
@@ -90,6 +103,7 @@
     :feature-mode="FeatureModeEnum.PROMPT"
     :feature-schema="featureSchema"
     @close="handleClose"
+    @prompt="quickFeaturePromptEvent"
     @data="quickFeatureDataEvent"
     @complete="quickFeatureCompleteEvent"
     @error="quickFeatureErrorEvent"
@@ -194,6 +208,7 @@ const currentCategory: Ref<CategoryFeatureEnum> = ref(CategoryFeatureEnum.ALL);
 const CategoryOptions = Object.values(CategoryFeatureEnum);
 
 let response = "";
+let currentPrompt = "";
 
 watch(
   () => props.isStreaming,
@@ -254,6 +269,10 @@ async function currentPageProcess(
       initScrollbarHeight.value = false;
     });
   }
+}
+
+function quickFeaturePromptEvent(data: string) {
+  currentPrompt = data;
 }
 
 function quickFeatureDataEvent(data: string) {
@@ -344,9 +363,10 @@ const handleCurrentPageChange = (val: number) => {
 
 const newChat = (value: string) => {
   let text = "";
-  text += "\\`\\`\\`\n";
+  text += currentPrompt + "\n";
+  text += "\\=\\=\\=\n";
   text += response + "\n";
-  text += "\\`\\`\\`\n";
+  text += "\\=\\=\\=\n";
   text += value + "\n";
   emits("newChat", text);
   emits("close");

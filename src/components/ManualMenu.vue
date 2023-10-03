@@ -187,9 +187,9 @@ const handleClose = () => {
 const handleNewChat = (value: string) => {
   let text = "";
   text += SystemVariableParser.getInstance().getSelectedText() + "\n";
-  text += "\\`\\`\\`\n";
+  text += "\\=\\=\\=\n";
   text += dataResponse + "\n";
-  text += "\\`\\`\\`\n";
+  text += "\\=\\=\\=\n";
   text += value + "\n";
   emits("newChat", text);
 };
