@@ -62,7 +62,6 @@ import { FeatureModeEnum } from "@/types";
 import { FeatureType } from "@/lib/features";
 import { ChainBuilder } from "@/lib/chain/chain_builder";
 import { CWException } from "@/types/exception";
-import { ChromeStorage } from "@/hooks/chrome_storage";
 import { FeatureSchema } from "@/lib/features";
 import { Status } from "@/constants/status";
 import { ChatAction } from "@/components/Chat";

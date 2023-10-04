@@ -40,7 +40,6 @@ import { ElScrollbar } from "element-plus";
 import { ElFormItem } from "element-plus";
 import { ElSwitch } from "element-plus";
 import { Icon } from "@iconify/vue";
-import { ChromeStorage } from "@/hooks/chrome_storage";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import router from "./router";

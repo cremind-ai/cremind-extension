@@ -1,6 +1,6 @@
 <template>
   <slot name="main">
-    <div class="apps-main">
+    <div class="upload-main">
       <ElScrollbar ref="scrollContentRef" :maxHeight="contentMaxHeight">
         <ElTimeline>
           <ElTimelineItem timestamp="Input" placement="top">
@@ -17,7 +17,7 @@
               </ElMenu>
               <ElUpload
                 v-if="activeIndexInput === InputMode.UPLOAD"
-                class="apps-item-menu"
+                class="upload-item-menu"
                 drag
                 :file-list="fileList"
                 :on-success="onSuccess"
@@ -42,7 +42,7 @@
 
               <ElInput
                 v-if="activeIndexInput === InputMode.INSERT_TEXT"
-                class="apps-item-menu"
+                class="upload-item-menu"
                 v-model="insertText"
                 placeholder="Please insert text here"
                 :autosize="{ minRows: 9, maxRows: 20 }"
@@ -53,7 +53,7 @@
               />
               <ElInput
                 v-if="activeIndexInput === InputMode.URL"
-                class="apps-item-menu"
+                class="upload-item-menu"
                 v-model="url"
                 placeholder="https://example.com"
                 @keydown="handleKey"
@@ -65,7 +65,7 @@
           <ElTimelineItem timestamp="Menu" placement="top">
             <ElCard>
               <Icon
-                class="apps-menu-card-loading"
+                class="upload-menu-card-loading"
                 icon="line-md:loading-twotone-loop"
                 :style="{
                   visibility: isUploading ? 'visible' : 'hidden',
@@ -211,13 +211,13 @@
               </div>
               <div
                 ref="contentRef"
-                class="apps-scroll-content"
+                class="upload-scroll-content"
                 :style="{
                   padding: '20px',
                 }"
               >
                 <Icon
-                  class="apps-scroll-content-loading"
+                  class="upload-scroll-content-loading"
                   icon="line-md:loading-twotone-loop"
                   :style="{
                     visibility: isStreaming ? 'visible' : 'hidden',
@@ -314,13 +314,12 @@ import {
   FeatureModeEnum,
 } from "@/types";
 import { FeatureSchema, FeatureType } from "@/lib/features";
-import { ChromeStorage } from "@/hooks/chrome_storage";
 import { SystemVariableParser } from "@/lib";
 import { ChainBuilder } from "@/lib/chain/chain_builder";
 import { ConversationModeEnum } from "@/types/conversation";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { ResponseParser } from "@/lib/response_parser";
-import { getJsonFeatures } from "@/lib/common";
+import { getJsonFeatures, setJsonFeature } from "@/lib/common";
 
 enum InputMode {
   UPLOAD = "0",
@@ -487,19 +486,6 @@ watch(
   }
 );
 
-function convertIndexToOriginal(indexInFiltered: number): number {
-  const filteredFeature = filteredFeatureList.value[indexInFiltered];
-  const idToFind = filteredFeature.id;
-
-  for (let i = 0; i < featureList.value.length; i++) {
-    if (featureList.value[i].id === idToFind) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
 function resetVariables() {
   outputContent.value = "";
   isStreaming.value = false;
@@ -590,7 +576,7 @@ const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
 const deleteConversation = () => {
   consoleLog(
     LogLevelEnum.DEBUG,
-    "onDeleteConversation Apps",
+    "onDeleteConversation Upload",
     conversationId.value
   );
   if (conversationId.value !== "") {
@@ -711,10 +697,10 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     }
 
     for (const key in variables) {
-      const storageKey = `FEATURE:${currentFeatureId.value}:${currentFeatureMode.value}:variable:${key}`;
-      consoleLog(LogLevelEnum.DEBUG, storageKey);
-      await ChromeStorage.getInstance().set(storageKey, variables[key]);
+      featureSchema.value[currentFeatureMode.value]!.variableSchema[key].value =
+        variables[key];
     }
+    setJsonFeature(featureSchema.value);
 
     outputContent.value = "";
     let completeContent = "";
@@ -723,14 +709,14 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     messageId = null;
 
     isStreaming.value = true;
-    for (let item of items) {
+    for (let i = 0; i < items.length; i++) {
       let retryCount = 0;
       try {
         do {
           if (stopGeneratingCheck) {
             return;
           }
-          SystemVariableParser.getInstance().setUploadedText(item);
+          SystemVariableParser.getInstance().setUploadedText(items[i]);
           const chainBuilder = new ChainBuilder(
             llm,
             currentFeature.value[aiProviderKey.value]!.Chains
@@ -826,10 +812,12 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
               scrollToBottom();
             });
             retryCount = 0;
-            if (aiProvider.value === AIMode.CHAT_GPT) {
-              await sleep(5000);
-            } else if (aiProvider.value === AIMode.BARD) {
-              await sleep(1000);
+            if (i < items.length - 1 || continueGenerating) {
+              if (aiProvider.value === AIMode.CHAT_GPT) {
+                await sleep(5000);
+              } else if (aiProvider.value === AIMode.BARD) {
+                await sleep(1000);
+              }
             }
           }
           consoleLog(
@@ -873,9 +861,7 @@ async function handleFeature(
       checkShowDrawer = true;
       continue;
     }
-    const storageKey = `FEATURE:${id}:${type}:variable:${key}`;
-    consoleLog(LogLevelEnum.DEBUG, storageKey);
-    const value = await ChromeStorage.getInstance().get(storageKey);
+    const value = feature.variableSchema[key].value;
     consoleLog(LogLevelEnum.DEBUG, value);
     if (!value) {
       checkShowDrawer = true;

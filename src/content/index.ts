@@ -14,8 +14,8 @@ import ChatStyle from "@/styles/components/Chat/Chat.scss";
 import ChatActionStyle from "@/styles/components/Chat/ChatAction.scss";
 import RoomChatStyle from "@/styles/components/Chat/RoomChat.scss";
 
-import AppsDialogStyle from "@/styles/components/AppsDialog.scss";
-import AppsStyle from "@/styles/components/Apps.scss";
+import UploadDialogStyle from "@/styles/components/UploadDialog.scss";
+import UploadStyle from "@/styles/components/Upload.scss";
 import ChatDialogStyle from "@/styles/components/ChatDialog.scss";
 import ChatBoxStyle from "@/styles/components/ChatBox.scss";
 import LoadImgStyle from "@/styles/components/LoadImg.scss";
@@ -50,8 +50,8 @@ function initExtension() {
   style.appendChild(document.createTextNode(ChatStyle));
   style.appendChild(document.createTextNode(ChatActionStyle));
   style.appendChild(document.createTextNode(RoomChatStyle));
-  style.appendChild(document.createTextNode(AppsDialogStyle));
-  style.appendChild(document.createTextNode(AppsStyle));
+  style.appendChild(document.createTextNode(UploadDialogStyle));
+  style.appendChild(document.createTextNode(UploadStyle));
   style.appendChild(document.createTextNode(ChatDialogStyle));
   style.appendChild(document.createTextNode(ChatBoxStyle));
   style.appendChild(document.createTextNode(LoadImgStyle));

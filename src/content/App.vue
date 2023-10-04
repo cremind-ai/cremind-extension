@@ -165,7 +165,7 @@
               placement="bottom"
             >
               <ElButton
-                class="apps-maximize-icon"
+                class="app-maximize-icon"
                 type="success"
                 plain
                 @click="handleAppsMaximize"
@@ -179,7 +179,7 @@
               </ElButton>
             </ElTooltip>
 
-            <AppsDialog
+            <UploadDialog
               ref="appsDialogRef"
               :dialog="appsMode"
               v-model="appsVisible"
@@ -324,7 +324,7 @@
         @close="handlePromptDialogClose"
         @new-chat="newPromptChat"
       />
-      <AppsDialog
+      <UploadDialog
         ref="appsDialogRef"
         v-model="appsVisible"
         v-model:conversation-id="appsConversationId"
@@ -358,7 +358,7 @@ import { ElPopover } from "element-plus";
 import { FullScreen } from "@element-plus/icons-vue";
 import { PopupMenu } from "@/components";
 import { ChatDialog } from "@/components";
-import { AppsDialog } from "@/components";
+import { UploadDialog } from "@/components";
 import { LoadImg } from "@/components";
 import { PromptAppDialog } from "@/components";
 import { PromptApp } from "@/components";
@@ -441,7 +441,7 @@ const activeElement = ref<HTMLInputElement | HTMLElement>();
 const selectionChats: Ref<ConversationMessageType[]> = ref([]);
 let chats: ConversationMessageType[] = reactive([]);
 const selectionChatRef = ref<ComponentRef<typeof Chat>>();
-const appsDialogRef = ref<ComponentRef<typeof AppsDialog>>();
+const appsDialogRef = ref<ComponentRef<typeof UploadDialog>>();
 const chatDialogRef = ref<ComponentRef<typeof ChatDialog>>();
 
 const isSendChatBox = ref(false);

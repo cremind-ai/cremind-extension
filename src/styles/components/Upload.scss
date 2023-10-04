@@ -1,4 +1,4 @@
-.apps-scroll-content {
+.upload-scroll-content {
   position: relative;
   font-family: "Roboto", sans-serif;
   font-size: 14px;
@@ -6,12 +6,12 @@
   color: var(--el-text-color-regular);
 }
 
-.apps-scroll-content code {
+.upload-scroll-content code {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
-.apps-scroll-content-loading {
+.upload-scroll-content-loading {
   font-size: 25px;
   position: absolute;
   top: 100%;
@@ -19,18 +19,18 @@
   transform: translate(-50%, -50%);
 }
 
-.apps-main {
+.upload-main {
   padding: 10px;
 }
-.apps-main ul {
+.upload-main ul {
   padding-inline-start: 0px;
 }
 
-.apps-main .apps-item-menu {
+.upload-main .upload-item-menu {
   padding: 10px;
 }
 
-.apps-menu-card-loading {
+.upload-menu-card-loading {
   font-size: 25px;
   position: absolute;
   top: 50%;

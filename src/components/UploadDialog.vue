@@ -27,14 +27,14 @@
           <div>
             CreMind AI
             <LoadImg
-              class="apps-dialog-cremind-icon-bar"
+              class="upload-dialog-cremind-icon-bar"
               :filename="'CreMind-logo-64.png'"
               :width="25"
             />
           </div>
         </div>
         <ElButton
-          class="apps-dialog-minimize-icon"
+          class="upload-dialog-minimize-icon"
           type="warning"
           plain
           :icon="SemiSelect"
@@ -43,7 +43,7 @@
           circle
         ></ElButton>
         <ElButton
-          class="apps-dialog-close-icon"
+          class="upload-dialog-close-icon"
           type="danger"
           plain
           :icon="Close"
@@ -52,7 +52,7 @@
           circle
         ></ElButton>
         <!-- <ElButton
-          class="apps-dialog-maximize-icon"
+          class="upload-dialog-maximize-icon"
           type="success"
           plain
           :icon="FullScreen"
@@ -62,7 +62,7 @@
         ></ElButton> -->
       </div>
       <div :class="{ 'custom-dialog-body': dialog }">
-        <Apps
+        <Upload
           ref="appsRef"
           :start="startApp"
           :max-height="appMaxHeight"
@@ -73,7 +73,7 @@
         >
           <template #main />
           <template #drawer />
-        </Apps>
+        </Upload>
       </div>
     </div>
   </div>
@@ -92,7 +92,7 @@ import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import { LoadImg } from ".";
-import { Apps } from "@/components";
+import { Upload } from "@/components";
 
 const props = defineProps({
   modelValue: {
@@ -148,7 +148,7 @@ const appMaxHeight = computed(() => {
     return (80 / 100) * window.innerHeight;
   }
 });
-const appsRef = ref<ComponentRef<typeof Apps>>();
+const appsRef = ref<ComponentRef<typeof Upload>>();
 const appDialogVisible = ref(props.modelValue);
 const isStreaming = ref(false);
 const isMaximized = ref(true);

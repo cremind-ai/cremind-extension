@@ -2,8 +2,8 @@ import PopupMenu from "./PopupMenu.vue";
 import LoadImg from "./LoadImg.vue";
 import ChatDialog from "./ChatDialog.vue";
 import ChatBox from "./ChatBox.vue";
-import AppsDialog from "./AppsDialog.vue";
-import Apps from "./Apps.vue";
+import UploadDialog from "./UploadDialog.vue";
+import Upload from "./Upload.vue";
 import PromptCardSetting from "./PromptCardSetting.vue";
 import ImageDetailCard from "./ImageDetailCard.vue";
 import ContentWrap from "./ContentWrap.vue";
@@ -20,14 +20,14 @@ export {
   LoadImg,
   ChatDialog,
   ChatBox,
-  AppsDialog,
+  UploadDialog,
   PromptCardSetting,
   ImageDetailCard,
   ContentWrap,
   DrawerPromptInitialize,
   MenuBar,
   QuickFeatureCard,
-  Apps,
+  Upload,
   ManualMenu,
   PromptApp,
   PromptAppDialog,
