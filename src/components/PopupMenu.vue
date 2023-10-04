@@ -462,10 +462,12 @@ function quickFeatureCompleteEvent(data: string) {
   ) {
     width.value = 700;
   }
+  isStarted.value = false;
   emits("complete", data, props.index);
 }
 
 function quickFeatureErrorEvent() {
+  isStarted.value = false;
   emits("error", props.index);
 }
 

@@ -24,7 +24,7 @@
           <a
             href="https://github.com/f/awesome-chatgpt-prompts#prompts"
             target="_blank"
-            style="margin-left: auto"
+            style="margin-left: auto; margin-right: 50px"
           >
             <Icon
               icon="fa-brands:github"
@@ -297,10 +297,12 @@ function quickFeatureCompleteEvent(data: string) {
     chatRef.value?.scrollToBottom();
   });
   isStreaming.value = false;
+  isStarted.value = false;
   emits("complete");
 }
 
 function quickFeatureErrorEvent() {
+  isStarted.value = false;
   emits("error");
 }
 
