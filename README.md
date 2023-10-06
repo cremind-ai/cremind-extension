@@ -1,6 +1,6 @@
 # cremind-extension
 
-<a href="https://cremind.io"><img src="./public/img/CreMind-logo.png" width="200" alt="CreMind"></a>
+<a href="https://cremind.io"><img src="./public/img/CreMind-logo.png" width="30" alt="CreMind"></a>
 
 ![star][star-image]
 [![author][author-image]][author-url]
@@ -18,9 +18,11 @@
 [last-commit-image]: https://img.shields.io/github/last-commit/cremind-ai/cremind-extension?label=last%20commit
 [last-commit-url]: https://github.com/cremind-ai/cremind-extension/commits
 
-<a href="https://chrome.google.com/webstore/detail/cremind-gpt-free/nehpbihbjpnnbacikaminepcfkdioanc?utm_source=github"><img src="./public/img/chrome.svg" width="200" alt="Get CreMind for Chrome"></a>
+<a href="https://chrome.google.com/webstore/detail/cremind-gpt-free/nehpbihbjpnnbacikaminepcfkdioanc?utm_source=github"><img src="./public/img/chrome.svg" width="30" alt="Get CreMind for Chrome"></a>
 
-[<img src="https://img.youtube.com/vi/CRt6_K7ZUrs/hqdefault.jpg" height="300"/>](https://www.youtube.com/embed/CRt6_K7ZUrs)
+<a href="https://www.youtube.com/embed/CRt6_K7ZUrs" target="_blank">
+ <img src="https://img.youtube.com/vi/CRt6_K7ZUrs/hqdefault.jpg" alt="Watch the video" border="10" />
+</a>
 
 ##
 
