@@ -56,8 +56,10 @@ $ npm run dev
 ### Chrome Extension Developer Mode
 
 <img src="./public/img/manual-installation.png"/>
+```
 1. set your Chrome browser 'Developer mode' up
 2. click 'Load unpacked', and select `cremind-extension/build` folder
+```
 
 ## Packing
 
