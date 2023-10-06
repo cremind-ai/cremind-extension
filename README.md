@@ -25,7 +25,7 @@
 <a href="https://chrome.google.com/webstore/detail/cremind-gpt-free/nehpbihbjpnnbacikaminepcfkdioanc?utm_source=github"><img src="./public/img/chrome.svg" width="30" alt="Get CreMind for Chrome"></a>
 
 <a href="https://www.youtube.com/embed/CRt6_K7ZUrs" target="_blank">
- <img src="https://img.youtube.com/vi/CRt6_K7ZUrs/hqdefault.jpg" alt="Watch the video" border="10" />
+ <img src="./public/img/cremind-extension.png" alt="Watch the video" border="10" />
 </a>
 
 ##
