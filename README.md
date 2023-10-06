@@ -1,6 +1,8 @@
 # cremind-extension
 
-<a href="https://cremind.io"><img src="./public/img/CreMind-logo.png" width="30" alt="CreMind"></a>
+<p align="center">
+    <a href="https://cremind.io"><img src="./public/img/CreMind-logo.png" width="30" alt="CreMind"></a>
+</p>
 
 ![star][star-image]
 [![author][author-image]][author-url]
