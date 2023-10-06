@@ -20,6 +20,8 @@
 [last-commit-image]: https://img.shields.io/github/last-commit/cremind-ai/cremind-extension?label=last%20commit
 [last-commit-url]: https://github.com/cremind-ai/cremind-extension/commits
 
+### Extension Store
+
 <a href="https://chrome.google.com/webstore/detail/cremind-gpt-free/nehpbihbjpnnbacikaminepcfkdioanc?utm_source=github"><img src="./public/img/chrome.svg" width="30" alt="Get CreMind for Chrome"></a>
 
 <a href="https://www.youtube.com/embed/CRt6_K7ZUrs" target="_blank">
