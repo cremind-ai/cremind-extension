@@ -1,9 +1,5 @@
 # cremind-extension
 
-<p align="center">
-    <a href="https://cremind.io"><img src="./public/img/CreMind-logo.png" width="30" alt="CreMind"></a>
-</p>
-
 ![star][star-image]
 [![author][author-image]][author-url]
 [![license][license-image]][license-url]
@@ -19,6 +15,10 @@
 [license-url]: https://github.com/cremind-ai/cremind-extension/blob/master/LICENSE
 [last-commit-image]: https://img.shields.io/github/last-commit/cremind-ai/cremind-extension?label=last%20commit
 [last-commit-url]: https://github.com/cremind-ai/cremind-extension/commits
+
+<p align="center">
+    CreMind <a href="https://cremind.io"><img src="./public/img/CreMind-logo.png" width="30" alt="CreMind"></a>
+</p>
 
 ### Extension Store
 
