@@ -32,6 +32,11 @@
 
 > A chrome extension tools built with Vite + Vue, and Manifest v3
 
+## Supported providers
+
+- ChatGPT
+- Google Bard
+
 ## Installing
 
 1. Check if your `Node.js` version is >= **18**.
@@ -55,11 +60,10 @@ $ npm run dev
 
 ### Chrome Extension Developer Mode
 
-<img src="./public/img/manual-installation.png"/>
-```
 1. set your Chrome browser 'Developer mode' up
 2. click 'Load unpacked', and select `cremind-extension/build` folder
-```
+
+<img src="./public/img/manual-installation.png"/>
 
 ## Packing
 
