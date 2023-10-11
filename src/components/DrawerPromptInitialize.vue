@@ -1,5 +1,10 @@
 <template>
-  <ElDrawer v-model="visible" direction="ltr" :before-close="handleCloseDrawer">
+  <ElDrawer
+    v-model="visible"
+    direction="ltr"
+    :before-close="handleCloseDrawer"
+    size="400px"
+  >
     <template #header>
       <h2>Initialize your prompt</h2>
     </template>

@@ -11,6 +11,7 @@ export enum CategoryFeatureEnum {
   DEVELOPER = "developer",
   CREATIVE = "creative",
   PRODUCTIVITY = "productivity",
+  TRAINING = "training",
 }
 
 export type Icon = {

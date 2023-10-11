@@ -80,10 +80,8 @@ watch(
 watch(props.chats, (value, _) => {
   chats = value;
   if (initScrollbarHeight.value && outerRef.value!.clientHeight !== 0) {
-    nextTick(() => {
-      scrollbarHeight.value =
-        outerRef.value!.clientHeight + chatActionRef.value!.clientHeight;
-    });
+    scrollbarHeight.value =
+      outerRef.value!.clientHeight + chatActionRef.value!.clientHeight;
     initScrollbarHeight.value = false;
   }
 });
