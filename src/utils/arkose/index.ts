@@ -10,6 +10,6 @@ export function getArkoseToken(): Promise<any> {
       } else {
         reject(new Error("Invalid token returned"));
       }
-    }, 5000);
+    }, 1000);
   });
 }
