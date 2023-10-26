@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ArkoseTokenGenerator } from "./generator";
 
 export function getArkoseToken(): Promise<any> {
