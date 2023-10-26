@@ -8,6 +8,7 @@ import { Status } from "@/constants/status";
 import { uuid } from "@/utils";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { ConversationModeEnum } from "@/types/conversation";
+import { ChromeStorage } from "@/hooks/chrome_storage";
 
 export class ChatGPT extends AIProvider {
   private static instance: ChatGPT;
@@ -212,11 +213,18 @@ export class ChatGPT extends AIProvider {
           const modelName = await this.getModelName(this.token!);
           const childId = uuid();
 
+          const arkoseToken = await ChromeStorage.getInstance().get(
+            "arkoseToken"
+          );
+
           let payload = {};
           switch (args.conversationMode) {
             case ConversationModeEnum.NORMAL:
               payload = {
                 action: "next",
+                arkose_token: arkoseToken,
+                conversation_mode: { kind: "primary_assistant" },
+                force_paragen: false,
                 messages: [
                   {
                     id: childId,
@@ -230,13 +238,12 @@ export class ChatGPT extends AIProvider {
                     metadata: {},
                   },
                 ],
-                conversation_id: conversationId ? conversationId : null,
+                ...(conversationId && { conversation_id: conversationId }),
                 parent_message_id: messageId ? messageId : uuid(),
                 model: "text-davinci-002-render-sha",
-                timezone_offset_min: -420,
+                timezone_offset_min: new Date().getTimezoneOffset(),
                 suggestions: [],
                 history_and_training_disabled: false,
-                arkose_token: null,
               };
               break;
             case ConversationModeEnum.REGENERATE:
@@ -264,7 +271,7 @@ export class ChatGPT extends AIProvider {
                 conversation_id: conversationId,
                 parent_message_id: messageId,
                 model: "text-davinci-002-render-sha",
-                timezone_offset_min: -420,
+                timezone_offset_min: new Date().getTimezoneOffset(),
                 variant_purpose: "comparison_implicit",
                 history_and_training_disabled: false,
                 arkose_token: null,
@@ -276,7 +283,7 @@ export class ChatGPT extends AIProvider {
                 conversation_id: conversationId,
                 parent_message_id: messageId,
                 model: "text-davinci-002-render-sha",
-                timezone_offset_min: -420,
+                timezone_offset_min: new Date().getTimezoneOffset(),
                 history_and_training_disabled: false,
                 arkose_token: null,
               };

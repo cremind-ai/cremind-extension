@@ -175,6 +175,7 @@ import {
 import { LLM } from "@/lib/llm";
 import { Status } from "@/constants/status";
 import { SidebarMode } from "@/types/ui";
+import { getArkoseToken } from "@/utils/arkose";
 
 enum GeneralSettings {
   AI_PROVIDER_OPTION = "AI_PROVIDER_OPTION",
@@ -279,6 +280,8 @@ onMounted(async () => {
     aiProvider: userSettings.getAiProvider,
   });
   if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
+    const arkoseToken = await getArkoseToken();
+    ChromeStorage.getInstance().set("arkoseToken", arkoseToken);
     if (res.status === Status.SUCCESS) {
       isAuthenChatGPT.value = true;
     } else {
