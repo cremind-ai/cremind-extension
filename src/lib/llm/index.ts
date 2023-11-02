@@ -3,6 +3,8 @@ import { IPCClient } from "@/lib/ipc_client";
 import { EventEmitter } from "@/utils/event_emitter";
 import { IPCTopicEnum, LLMMODE } from "@/types";
 import { AIPayloadType } from "@/types/provider";
+import { getArkoseToken } from "@/utils/arkose";
+import { ChromeStorage } from "@/hooks/chrome_storage";
 
 export class LLMException extends CWException {}
 
@@ -59,6 +61,27 @@ export class LLM {
       resolve(emitter);
 
       try {
+        const expirationTimeInMinutes = 60;
+        const currentTime = new Date().getTime();
+        const arkoseTokenJSON = await ChromeStorage.getInstance().get(
+          "ARKOSE_TOKEN"
+        );
+
+        let arkoseTokenObject = { data: "", expireTime: 0 };
+        if (arkoseTokenJSON) {
+          arkoseTokenObject = JSON.parse(arkoseTokenJSON);
+        }
+        if (currentTime > arkoseTokenObject.expireTime) {
+          const arkoseToken = await getArkoseToken();
+          arkoseTokenObject.data = arkoseToken!;
+          arkoseTokenObject.expireTime =
+            currentTime + expirationTimeInMinutes * 60 * 1000;
+          ChromeStorage.getInstance().set(
+            "ARKOSE_TOKEN",
+            JSON.stringify(arkoseTokenObject)
+          );
+        }
+
         const data = await this.ipcClient.request(
           IPCTopicEnum.CONVERSATION,
           isStream,

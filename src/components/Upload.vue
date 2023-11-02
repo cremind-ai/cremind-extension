@@ -284,6 +284,7 @@ import hljs from "highlight.js";
 import {
   AIMode,
   APP_CHAT_GPT_MAX_CHUNKSIZE,
+  APP_CLAUDE_MAX_CHUNKSIZE,
   APP_BARD_MAX_CHUNKSIZE,
   APP_MAX_RETRIES,
   APP_RETRY_TIME,
@@ -381,6 +382,8 @@ const aiProviderKey = computed(() => {
     return "ChatGPT";
   } else if (userSettings.getAiProvider === AIMode.BARD) {
     return "Bard";
+  } else if (userSettings.getAiProvider === AIMode.CLAUDE) {
+    return "Claude";
   }
   return "ChatGPT";
 });
@@ -679,6 +682,12 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
         ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
         : APP_CHAT_GPT_MAX_CHUNKSIZE;
       items = await textConcat(true, uploadItems, chunkSize);
+    } else if (aiProvider.value === AIMode.CLAUDE) {
+      const chunkSize: number = currentFeature.value[aiProviderKey.value]!
+        .Segmentation
+        ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
+        : APP_CLAUDE_MAX_CHUNKSIZE;
+      items = await textConcat(true, uploadItems, chunkSize);
     } else if (aiProvider.value === AIMode.BARD) {
       const chunkSize: number = currentFeature.value[aiProviderKey.value]!
         .Segmentation
@@ -815,6 +824,8 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
             if (i < items.length - 1 || continueGenerating) {
               if (aiProvider.value === AIMode.CHAT_GPT) {
                 await sleep(5000);
+              } else if (aiProvider.value === AIMode.CLAUDE) {
+                await sleep(1000);
               } else if (aiProvider.value === AIMode.BARD) {
                 await sleep(1000);
               }

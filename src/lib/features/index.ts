@@ -38,6 +38,7 @@ export type FeatureType = {
   Icon: Icon;
   variableSchema: ChainVariableSchema;
   ChatGPT: AIProviderFeatureConfig | null;
+  Claude: AIProviderFeatureConfig | null;
   Bard: AIProviderFeatureConfig | null;
 };
 

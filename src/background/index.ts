@@ -201,6 +201,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 let aiProvider: AIProvider;
 const aiProviderChatGPT = AIProviderFactory.createChatGPT();
+const aiProviderClaude = AIProviderFactory.createClaude();
 const aiProviderBard = AIProviderFactory.createBard();
 const aiProviderOpenAI = AIProviderFactory.createOpenAI("");
 
@@ -240,6 +241,8 @@ ipcHost.register(
       aiProvider = aiProviderBard;
     } else if (aiMode === AIMode.OPENAI_API) {
       aiProvider = aiProviderOpenAI;
+    } else if (aiMode === AIMode.CLAUDE) {
+      aiProvider = aiProviderClaude;
     }
 
     consoleLog(LogLevelEnum.DEBUG, aiMode);

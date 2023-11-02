@@ -1,6 +1,7 @@
 import { AIProvider } from "./base";
 import { OpenAIAPI } from "./openai";
 import { ChatGPT } from "./chatgpt";
+import { Claude } from "./claude";
 import { Bard } from "./bard";
 import { CWException } from "@/types/exception";
 
@@ -9,6 +10,10 @@ export class AIProviderException extends CWException {}
 export class AIProviderFactory {
   static createChatGPT(): AIProvider {
     return ChatGPT.getInstance().initCache();
+  }
+
+  static createClaude(): AIProvider {
+    return new Claude();
   }
 
   static createOpenAI(apiKey: string): AIProvider {

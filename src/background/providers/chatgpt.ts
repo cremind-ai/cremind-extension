@@ -213,9 +213,13 @@ export class ChatGPT extends AIProvider {
           const modelName = await this.getModelName(this.token!);
           const childId = uuid();
 
-          const arkoseToken = await ChromeStorage.getInstance().get(
-            "arkoseToken"
+          let arkoseToken: string | null = null;
+          const arkoseTokenJSON = await ChromeStorage.getInstance().get(
+            "ARKOSE_TOKEN"
           );
+          if (arkoseTokenJSON) {
+            arkoseToken = JSON.parse(arkoseTokenJSON).data;
+          }
 
           let payload = {};
           switch (args.conversationMode) {

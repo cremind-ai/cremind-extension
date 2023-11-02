@@ -51,6 +51,33 @@
         }"
       >
         <ImageDetailCard
+          :filename="CLAUDE_LOGO"
+          position="left"
+          title="Claude"
+          image-height="100px"
+          image-width="100px"
+          width="300px"
+        >
+          <template #extra>
+            <div v-if="isAuthenBard">Claude Authorized</div>
+            <div v-else>
+              Claude Unauthorized. Please
+              <a href="https://claude.ai/login/" target="_blank">click here</a>
+              to log in.
+            </div>
+          </template>
+        </ImageDetailCard>
+      </ElCard>
+      <ElCard
+        shadow="hover"
+        @click="
+          handleGeneralSettingsClick(GeneralSettings.AI_PROVIDER_OPTION, 2)
+        "
+        :class="{
+          'card-selected': generalState[GeneralSettings.AI_PROVIDER_OPTION][2],
+        }"
+      >
+        <ImageDetailCard
           :filename="BARD_LOGO"
           position="left"
           title="Google Bard"
@@ -170,12 +197,12 @@ import {
   WINDOWS_DIALOG_IMG,
   BARD_LOGO,
   CHAT_GPT_LOGO,
+  CLAUDE_LOGO,
   AIMode,
 } from "@/constants";
 import { LLM } from "@/lib/llm";
 import { Status } from "@/constants/status";
 import { SidebarMode } from "@/types/ui";
-import { getArkoseToken } from "@/utils/arkose";
 
 enum GeneralSettings {
   AI_PROVIDER_OPTION = "AI_PROVIDER_OPTION",
@@ -190,6 +217,7 @@ const isDark = ref(userSettings.getIsDark);
 const generalState = reactive({
   [GeneralSettings.AI_PROVIDER_OPTION]: [
     userSettings.getAiProvider === AIMode.CHAT_GPT,
+    userSettings.getAiProvider === AIMode.CLAUDE,
     userSettings.getAiProvider === AIMode.BARD,
   ],
   [GeneralSettings.SIDEBAR_OPTION]: [
@@ -203,6 +231,7 @@ const generalState = reactive({
 });
 
 const isAuthenChatGPT = ref(false);
+const isAuthenClaude = ref(false);
 const isAuthenBard = ref(false);
 
 const llm = new LLM();
@@ -223,6 +252,12 @@ watch(
         isAuthenChatGPT.value = true;
       } else {
         isAuthenChatGPT.value = false;
+      }
+    } else if (value === AIMode.CLAUDE) {
+      if (res.status === Status.SUCCESS) {
+        isAuthenClaude.value = true;
+      } else {
+        isAuthenClaude.value = false;
       }
     } else if (value === AIMode.BARD) {
       if (res.status === Status.SUCCESS) {
@@ -254,7 +289,9 @@ const handleGeneralSettingsClick = async (
     case GeneralSettings.AI_PROVIDER_OPTION:
       if (option === 0) {
         userSettings.setAIProvider(AIMode.CHAT_GPT);
-      } else {
+      } else if (option === 1) {
+        userSettings.setAIProvider(AIMode.CLAUDE);
+      } else if (option === 2) {
         userSettings.setAIProvider(AIMode.BARD);
       }
       break;
@@ -280,14 +317,18 @@ onMounted(async () => {
     aiProvider: userSettings.getAiProvider,
   });
   if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
-    const arkoseToken = await getArkoseToken();
-    ChromeStorage.getInstance().set("arkoseToken", arkoseToken);
     if (res.status === Status.SUCCESS) {
       isAuthenChatGPT.value = true;
     } else {
       isAuthenChatGPT.value = false;
     }
   } else if (userSettings.getAiProvider === AIMode.BARD) {
+    if (res.status === Status.SUCCESS) {
+      isAuthenBard.value = true;
+    } else {
+      isAuthenBard.value = false;
+    }
+  } else if (userSettings.getAiProvider === AIMode.CLAUDE) {
     if (res.status === Status.SUCCESS) {
       isAuthenBard.value = true;
     } else {

@@ -38,8 +38,8 @@ onMounted(async () => {});
 
 <style scoped>
 .popupview {
-  width: 100%;
-  height: 100%;
+  width: 100px;
+  height: 150px;
   padding: 5px;
   background-color: white;
   font-size: 16px;
