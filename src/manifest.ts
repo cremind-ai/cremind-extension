@@ -4,7 +4,7 @@ export default defineManifest({
   name: "CreMind GPT Free",
   description:
     "Unlocking the Potential of AI GPT Technology: Empowering Productivity with this Feature-Packed Extension",
-  version: "2.3.6",
+  version: "2.3.7",
   manifest_version: 3,
   icons: {
     "16": "img/CreMind-logo-16.png",
@@ -32,6 +32,7 @@ export default defineManifest({
   content_scripts: [
     {
       matches: ["http://*/*", "https://*/*"],
+      exclude_matches: ["https://chat.openai.com/*"],
       js: ["src/content/index.ts"],
       run_at: "document_start",
     },
