@@ -1,15 +1,17 @@
-const script = document.createElement("script");
-script.src = chrome.runtime.getURL(
-  "/js/v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/run_api.js"
-);
-script.setAttribute(
-  "cremind-arkose-token",
-  chrome.runtime.getURL("/js/v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js")
-);
-script.async = true;
-script.defer = true;
-script.type = "module";
-document.body.appendChild(script);
+document.addEventListener("DOMContentLoaded", (event) => {
+  const script = document.createElement("script");
+  script.src = chrome.runtime.getURL(
+    "/js/v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/run_api.js"
+  );
+  script.setAttribute(
+    "cremind-arkose-token",
+    chrome.runtime.getURL("/js/v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js")
+  );
+  script.async = true;
+  script.defer = true;
+  script.type = "module";
+  document.body.appendChild(script);
+});
 
 let getTokenResolve: (value: string | null) => void;
 const getTokenPromise: Promise<string | null> = new Promise((resolve) => {
