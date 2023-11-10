@@ -1,292 +1,6 @@
 <template>
-  <div v-if="isSidebar === SidebarMode.SIDEBAR">
-    <PopupMenu
-      v-for="(popupMenuVariable, index) in popupMenuVariables"
-      :key="index"
-      :index="index"
-      :selectedText="popupMenuVariable.selectedText"
-      :top="popupMenuVariable.top"
-      :left="popupMenuVariable.left"
-      :show="popupMenuVariable.show"
-      :featureMode="popupMenuVariable.featureMode"
-      :active-element="popupMenuVariable.activeElement"
-      :sidebar="isSidebar"
-      v-model:is-streaming="isStreaming"
-      v-model:drawer-show="drawerShow"
-      @feature-click="handlePopupMenuFeatureClick"
-      @unmounted="handlePopupMenuUnmounted"
-      @close="handlePopupMenuClose"
-      @new-chat="newSelectionChat"
-      @data="handlePopupMenuDataEvent"
-      @complete="handlePopupMenuCompleteEvent"
-      @error="handlePopupMenuErrorEvent"
-    />
-    <div v-if="!appSidebarEnable" class="app-cremind-features">
-      <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
-        <LoadImg :filename="'CreMind-logo-white-128.png'" :width="20" />
-      </ElTooltip>
-    </div>
-    <div v-show="appSidebarEnable">
-      <div class="app-sidebar">
-        <ElCard class="app-sidebar-card">
-          <ElMenu
-            class="app-sidebar-menu app-icon-color"
-            mode="horizontal"
-            :default-active="activeIndexMenu"
-            :ellipsis="false"
-            :collapse="false"
-            @select="handleSelectMenu"
-          >
-            <ElTooltip :hide-after="0" content="Chatting" placement="bottom">
-              <ElMenuItem index="0">
-                <Icon
-                  icon="fluent:chat-12-filled"
-                  :style="{ fontSize: '25px' }"
-                />
-              </ElMenuItem>
-            </ElTooltip>
-            <ElTooltip
-              :hide-after="0"
-              content="Selected text"
-              placement="bottom"
-            >
-              <ElMenuItem index="1">
-                <Icon
-                  icon="fluent:textbox-16-filled"
-                  :style="{ fontSize: '25px' }"
-                />
-              </ElMenuItem>
-            </ElTooltip>
-            <ElTooltip :hide-after="0" content="Prompts" placement="bottom">
-              <ElMenuItem index="2">
-                <Icon
-                  icon="ic:outline-auto-awesome"
-                  :style="{ fontSize: '25px' }"
-                />
-              </ElMenuItem>
-            </ElTooltip>
-            <ElTooltip :hide-after="0" content="Upload" placement="bottom">
-              <ElMenuItem index="3">
-                <Icon
-                  icon="ic:twotone-cloud-upload"
-                  :style="{ fontSize: '25px' }"
-                />
-              </ElMenuItem>
-            </ElTooltip>
-            <ElTooltip :hide-after="0" content="Settings" placement="bottom">
-              <ElMenuItem index="4">
-                <Icon
-                  icon="solar:settings-line-duotone"
-                  :style="{ fontSize: '25px' }"
-                />
-              </ElMenuItem>
-            </ElTooltip>
-          </ElMenu>
-          <div
-            v-show="activeIndexMenu === SidebarMenuEnum.CHAT"
-            class="app-sidebar-child-full"
-          >
-            <ChatBox
-              ref="chatBoxRef"
-              v-model:is-streaming="isStreaming"
-              v-model:conversation-context="conversationContext"
-              :is-send="isSendChatBox"
-              :prompt="chatPrompt"
-              v-model:chats="chats"
-              @complete="handleChatBoxCompleteEvent"
-              @error="handleChatBoxErrorEvent"
-            ></ChatBox>
-          </div>
-
-          <div
-            v-show="activeIndexMenu === SidebarMenuEnum.TEXT"
-            class="app-sidebar-child-full"
-          >
-            <div class="custom-popover-outer">
-              <ElButton
-                class="app-sidebar-text-manual-insert"
-                type="success"
-                plain
-                @click="handleManualInsert"
-                size="small"
-                circle
-              >
-                <ElTooltip
-                  :hide-after="0"
-                  content="Manual insert text"
-                  placement="bottom"
-                >
-                  <Icon
-                    icon="ic:round-post-add"
-                    :style="{ fontSize: '16px' }"
-                  />
-                </ElTooltip>
-              </ElButton>
-              <div v-show="manualInsertVisible" class="custom-popover">
-                <ManualMenu
-                  v-model:is-streaming="isStreaming"
-                  v-model:drawer-show="drawerShow"
-                  :show-ouput="false"
-                  @feature-click="handleManualInsertFeatureClick"
-                  @close="handleManualInsertClose"
-                  @data="handleManualInsertDataEvent"
-                  @complete="handleManualInsertCompleteEvent"
-                  @error="handleManualInsertErrorEvent"
-                >
-                </ManualMenu>
-              </div>
-            </div>
-            <Chat
-              ref="selectionChatRef"
-              :chats="selectionChats"
-              @new-chat="newSelectionChat"
-              v-model:blockSend="isStreaming"
-            />
-          </div>
-          <div
-            v-show="activeIndexMenu === SidebarMenuEnum.PROMPT"
-            class="app-sidebar-child-full"
-          >
-            <PromptApp
-              :activation="menuActivationState[SidebarMenuEnum.PROMPT]"
-              v-model:is-streaming="isStreaming"
-              v-model:drawer-show="drawerShow"
-              @new-chat="newPromptChat"
-              @close="handlePromptAppClose"
-            ></PromptApp>
-          </div>
-          <div
-            v-show="activeIndexMenu === SidebarMenuEnum.UPLOAD"
-            class="app-sidebar-child-full"
-          >
-            <ElTooltip
-              :hide-after="0"
-              content="Larger display as popup"
-              placement="bottom"
-            >
-              <ElButton
-                class="app-maximize-icon"
-                type="success"
-                plain
-                @click="handleAppsMaximize"
-                size="small"
-                circle
-              >
-                <Icon
-                  icon="fluent:window-new-20-regular"
-                  :style="{ fontSize: '20px' }"
-                />
-              </ElButton>
-            </ElTooltip>
-
-            <UploadDialog
-              ref="appsDialogRef"
-              :dialog="appsMode"
-              v-model="appsVisible"
-              v-model:is-streaming="isStreaming"
-              v-model:drawer-show="drawerShow"
-              v-model:conversation-id="appsConversationId"
-              @close="handleAppClose"
-            />
-          </div>
-        </ElCard>
-      </div>
-    </div>
-  </div>
-  <div v-else-if="isSidebar === SidebarMode.WINDOWS">
-    <div v-show="appEnable">
-      <div v-show="appMenuVisible" class="app-cremind-features">
-        <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
-          <LoadImg
-            :filename="'CreMind-logo-white-128.png'"
-            :width="45"
-            @mouseover="showFeatures"
-            @mouseout="hideFeatures"
-          />
-        </ElTooltip>
-
-        <div
-          v-show="featureVisible"
-          @mouseover="showFeatures"
-          @mouseout="hideFeatures"
-        >
-          <ElTooltip :hide-after="0" content="Settings" placement="top">
-            <div class="app-settings">
-              <Icon
-                icon="solar:settings-line-duotone"
-                :style="{ fontSize: '30px' }"
-                @click="handleSettings"
-              />
-            </div>
-          </ElTooltip>
-
-          <ElTooltip :hide-after="0" content="Start chat" placement="left">
-            <div class="app-button-chatting">
-              <Icon
-                icon="fluent:chat-12-filled"
-                :style="{ fontSize: '30px' }"
-                @click="handleStartChat"
-              />
-            </div>
-          </ElTooltip>
-          <ElTooltip :hide-after="0" content="Prompts" placement="bottom">
-            <div class="app-prompts">
-              <Icon
-                icon="ic:outline-auto-awesome"
-                :style="{ fontSize: '25px' }"
-                @click="handlePrompt"
-              />
-            </div>
-          </ElTooltip>
-          <ElTooltip :hide-after="0" content="Upload" placement="bottom">
-            <div class="app-apps">
-              <Icon
-                icon="ic:twotone-cloud-upload"
-                :style="{ fontSize: '25px' }"
-                @click="handleApps"
-              />
-            </div>
-          </ElTooltip>
-        </div>
-        <ElPopover
-          :hide-after="0"
-          placement="top"
-          :visible="manualInsertVisible"
-          :width="manualInsertWidth"
-        >
-          <template #reference>
-            <div
-              v-show="featureVisible || manualInsertVisible"
-              class="manual-insert-text"
-            >
-              <ElTooltip
-                :hide-after="0"
-                content="Manual insert text"
-                placement="top"
-              >
-                <Icon
-                  icon="ic:round-post-add"
-                  :style="{ fontSize: '30px' }"
-                  @click="handleManualInsertText"
-              /></ElTooltip>
-            </div>
-          </template>
-          <div @mouseover="manualInsertVisible = true">
-            <ManualMenu
-              v-model:is-streaming="isStreaming"
-              v-model:drawer-show="drawerShow"
-              :show-ouput="true"
-              @feature-click="handleManualInsertFeatureClick"
-              @close="handleManualInsertClose"
-              @data="handleManualInsertDataEvent"
-              @complete="handleManualInsertCompleteEvent"
-              @error="handleManualInsertErrorEvent"
-              @new-chat="handleManualInsertNewChatEvent"
-            >
-            </ManualMenu>
-          </div>
-        </ElPopover>
-      </div>
+  <div v-if="currentWebsite === WebsiteRenderEnum.REST">
+    <div v-if="isSidebar === SidebarMode.SIDEBAR">
       <PopupMenu
         v-for="(popupMenuVariable, index) in popupMenuVariables"
         :key="index"
@@ -294,47 +8,336 @@
         :selectedText="popupMenuVariable.selectedText"
         :top="popupMenuVariable.top"
         :left="popupMenuVariable.left"
-        :show="true"
+        :show="popupMenuVariable.show"
         :featureMode="popupMenuVariable.featureMode"
         :active-element="popupMenuVariable.activeElement"
         :sidebar="isSidebar"
         v-model:is-streaming="isStreaming"
         v-model:drawer-show="drawerShow"
-        @close="handlePopupMenuClose"
+        @feature-click="handlePopupMenuFeatureClick"
         @unmounted="handlePopupMenuUnmounted"
+        @close="handlePopupMenuClose"
         @new-chat="newSelectionChat"
         @data="handlePopupMenuDataEvent"
         @complete="handlePopupMenuCompleteEvent"
         @error="handlePopupMenuErrorEvent"
       />
+      <div v-if="!appSidebarEnable" class="app-cremind-features">
+        <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
+          <LoadImg :filename="'CreMind-logo-white-128.png'" :width="20" />
+        </ElTooltip>
+      </div>
+      <div v-show="appSidebarEnable">
+        <div class="app-sidebar">
+          <ElCard class="app-sidebar-card">
+            <ElMenu
+              class="app-sidebar-menu app-icon-color"
+              mode="horizontal"
+              :default-active="activeIndexMenu"
+              :ellipsis="false"
+              :collapse="false"
+              @select="handleSelectMenu"
+            >
+              <ElTooltip :hide-after="0" content="Chatting" placement="bottom">
+                <ElMenuItem index="0">
+                  <Icon
+                    icon="fluent:chat-12-filled"
+                    :style="{ fontSize: '25px' }"
+                  />
+                </ElMenuItem>
+              </ElTooltip>
+              <ElTooltip
+                :hide-after="0"
+                content="Selected text"
+                placement="bottom"
+              >
+                <ElMenuItem index="1">
+                  <Icon
+                    icon="fluent:textbox-16-filled"
+                    :style="{ fontSize: '25px' }"
+                  />
+                </ElMenuItem>
+              </ElTooltip>
+              <ElTooltip :hide-after="0" content="Prompts" placement="bottom">
+                <ElMenuItem index="2">
+                  <Icon
+                    icon="ic:outline-auto-awesome"
+                    :style="{ fontSize: '25px' }"
+                  />
+                </ElMenuItem>
+              </ElTooltip>
+              <ElTooltip :hide-after="0" content="Upload" placement="bottom">
+                <ElMenuItem index="3">
+                  <Icon
+                    icon="ic:twotone-cloud-upload"
+                    :style="{ fontSize: '25px' }"
+                  />
+                </ElMenuItem>
+              </ElTooltip>
+              <ElTooltip :hide-after="0" content="Settings" placement="bottom">
+                <ElMenuItem index="4">
+                  <Icon
+                    icon="solar:settings-line-duotone"
+                    :style="{ fontSize: '25px' }"
+                  />
+                </ElMenuItem>
+              </ElTooltip>
+            </ElMenu>
+            <div
+              v-show="activeIndexMenu === SidebarMenuEnum.CHAT"
+              class="app-sidebar-child-full"
+            >
+              <ChatBox
+                ref="chatBoxRef"
+                v-model:is-streaming="isStreaming"
+                v-model:conversation-context="conversationContext"
+                :is-send="isSendChatBox"
+                :prompt="chatPrompt"
+                v-model:chats="chats"
+                @complete="handleChatBoxCompleteEvent"
+                @error="handleChatBoxErrorEvent"
+              ></ChatBox>
+            </div>
 
-      <ChatDialog
-        ref="chatDialogRef"
-        :show="chatVisible"
-        v-model:is-streaming="isStreaming"
-        v-model:conversation-context="conversationContext"
-        :prompt="chatPrompt"
-        :chats="chats"
-        @close="handleChatDialogClose"
-      />
-      <PromptAppDialog
-        :show="promptVisible"
-        v-model:is-streaming="isStreaming"
-        v-model:drawer-show="drawerShow"
-        @close="handlePromptDialogClose"
-        @new-chat="newPromptChat"
-      />
-      <UploadDialog
-        ref="appsDialogRef"
-        v-model="appsVisible"
-        v-model:conversation-id="appsConversationId"
-        v-model:drawer-show="drawerShow"
-        :dialog="true"
-        v-model:is-streaming="isStreaming"
-        @close="handleAppClose"
-      />
+            <div
+              v-show="activeIndexMenu === SidebarMenuEnum.TEXT"
+              class="app-sidebar-child-full"
+            >
+              <div class="custom-popover-outer">
+                <ElButton
+                  class="app-sidebar-text-manual-insert"
+                  type="success"
+                  plain
+                  @click="handleManualInsert"
+                  size="small"
+                  circle
+                >
+                  <ElTooltip
+                    :hide-after="0"
+                    content="Manual insert text"
+                    placement="bottom"
+                  >
+                    <Icon
+                      icon="ic:round-post-add"
+                      :style="{ fontSize: '16px' }"
+                    />
+                  </ElTooltip>
+                </ElButton>
+                <div v-show="manualInsertVisible" class="custom-popover">
+                  <ManualMenu
+                    v-model:is-streaming="isStreaming"
+                    v-model:drawer-show="drawerShow"
+                    :show-ouput="false"
+                    @feature-click="handleManualInsertFeatureClick"
+                    @close="handleManualInsertClose"
+                    @data="handleManualInsertDataEvent"
+                    @complete="handleManualInsertCompleteEvent"
+                    @error="handleManualInsertErrorEvent"
+                  >
+                  </ManualMenu>
+                </div>
+              </div>
+              <Chat
+                ref="selectionChatRef"
+                :chats="selectionChats"
+                @new-chat="newSelectionChat"
+                v-model:blockSend="isStreaming"
+              />
+            </div>
+            <div
+              v-show="activeIndexMenu === SidebarMenuEnum.PROMPT"
+              class="app-sidebar-child-full"
+            >
+              <PromptApp
+                :activation="menuActivationState[SidebarMenuEnum.PROMPT]"
+                v-model:is-streaming="isStreaming"
+                v-model:drawer-show="drawerShow"
+                @new-chat="newPromptChat"
+                @close="handlePromptAppClose"
+              ></PromptApp>
+            </div>
+            <div
+              v-show="activeIndexMenu === SidebarMenuEnum.UPLOAD"
+              class="app-sidebar-child-full"
+            >
+              <ElTooltip
+                :hide-after="0"
+                content="Larger display as popup"
+                placement="bottom"
+              >
+                <ElButton
+                  class="app-maximize-icon"
+                  type="success"
+                  plain
+                  @click="handleAppsMaximize"
+                  size="small"
+                  circle
+                >
+                  <Icon
+                    icon="fluent:window-new-20-regular"
+                    :style="{ fontSize: '20px' }"
+                  />
+                </ElButton>
+              </ElTooltip>
+
+              <UploadDialog
+                ref="appsDialogRef"
+                :dialog="appsMode"
+                v-model="appsVisible"
+                v-model:is-streaming="isStreaming"
+                v-model:drawer-show="drawerShow"
+                v-model:conversation-id="appsConversationId"
+                @close="handleAppClose"
+              />
+            </div>
+          </ElCard>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="isSidebar === SidebarMode.WINDOWS">
+      <div v-show="appEnable">
+        <div v-show="appMenuVisible" class="app-cremind-features">
+          <ElTooltip :hide-after="0" :content="hideMeLabel" placement="bottom">
+            <LoadImg
+              :filename="'CreMind-logo-white-128.png'"
+              :width="45"
+              @mouseover="showFeatures"
+              @mouseout="hideFeatures"
+            />
+          </ElTooltip>
+
+          <div
+            v-show="featureVisible"
+            @mouseover="showFeatures"
+            @mouseout="hideFeatures"
+          >
+            <ElTooltip :hide-after="0" content="Settings" placement="top">
+              <div class="app-settings">
+                <Icon
+                  icon="solar:settings-line-duotone"
+                  :style="{ fontSize: '30px' }"
+                  @click="handleSettings"
+                />
+              </div>
+            </ElTooltip>
+
+            <ElTooltip :hide-after="0" content="Start chat" placement="left">
+              <div class="app-button-chatting">
+                <Icon
+                  icon="fluent:chat-12-filled"
+                  :style="{ fontSize: '30px' }"
+                  @click="handleStartChat"
+                />
+              </div>
+            </ElTooltip>
+            <ElTooltip :hide-after="0" content="Prompts" placement="bottom">
+              <div class="app-prompts">
+                <Icon
+                  icon="ic:outline-auto-awesome"
+                  :style="{ fontSize: '25px' }"
+                  @click="handlePrompt"
+                />
+              </div>
+            </ElTooltip>
+            <ElTooltip :hide-after="0" content="Upload" placement="bottom">
+              <div class="app-apps">
+                <Icon
+                  icon="ic:twotone-cloud-upload"
+                  :style="{ fontSize: '25px' }"
+                  @click="handleApps"
+                />
+              </div>
+            </ElTooltip>
+          </div>
+          <ElPopover
+            :hide-after="0"
+            placement="top"
+            :visible="manualInsertVisible"
+            :width="manualInsertWidth"
+          >
+            <template #reference>
+              <div
+                v-show="featureVisible || manualInsertVisible"
+                class="manual-insert-text"
+              >
+                <ElTooltip
+                  :hide-after="0"
+                  content="Manual insert text"
+                  placement="top"
+                >
+                  <Icon
+                    icon="ic:round-post-add"
+                    :style="{ fontSize: '30px' }"
+                    @click="handleManualInsertText"
+                /></ElTooltip>
+              </div>
+            </template>
+            <div @mouseover="manualInsertVisible = true">
+              <ManualMenu
+                v-model:is-streaming="isStreaming"
+                v-model:drawer-show="drawerShow"
+                :show-ouput="true"
+                @feature-click="handleManualInsertFeatureClick"
+                @close="handleManualInsertClose"
+                @data="handleManualInsertDataEvent"
+                @complete="handleManualInsertCompleteEvent"
+                @error="handleManualInsertErrorEvent"
+                @new-chat="handleManualInsertNewChatEvent"
+              >
+              </ManualMenu>
+            </div>
+          </ElPopover>
+        </div>
+        <PopupMenu
+          v-for="(popupMenuVariable, index) in popupMenuVariables"
+          :key="index"
+          :index="index"
+          :selectedText="popupMenuVariable.selectedText"
+          :top="popupMenuVariable.top"
+          :left="popupMenuVariable.left"
+          :show="true"
+          :featureMode="popupMenuVariable.featureMode"
+          :active-element="popupMenuVariable.activeElement"
+          :sidebar="isSidebar"
+          v-model:is-streaming="isStreaming"
+          v-model:drawer-show="drawerShow"
+          @close="handlePopupMenuClose"
+          @unmounted="handlePopupMenuUnmounted"
+          @new-chat="newSelectionChat"
+          @data="handlePopupMenuDataEvent"
+          @complete="handlePopupMenuCompleteEvent"
+          @error="handlePopupMenuErrorEvent"
+        />
+
+        <ChatDialog
+          ref="chatDialogRef"
+          :show="chatVisible"
+          v-model:is-streaming="isStreaming"
+          v-model:conversation-context="conversationContext"
+          :prompt="chatPrompt"
+          :chats="chats"
+          @close="handleChatDialogClose"
+        />
+        <PromptAppDialog
+          :show="promptVisible"
+          v-model:is-streaming="isStreaming"
+          v-model:drawer-show="drawerShow"
+          @close="handlePromptDialogClose"
+          @new-chat="newPromptChat"
+        />
+        <UploadDialog
+          ref="appsDialogRef"
+          v-model="appsVisible"
+          v-model:conversation-id="appsConversationId"
+          v-model:drawer-show="drawerShow"
+          :dialog="true"
+          v-model:is-streaming="isStreaming"
+          @close="handleAppClose"
+        />
+      </div>
     </div>
   </div>
+  <div v-else-if="currentWebsite === WebsiteRenderEnum.YOUTUBE"></div>
 </template>
 
 <script setup lang="ts">
@@ -348,6 +351,8 @@ import {
   Ref,
   ref,
   watch,
+  h,
+  render,
 } from "vue";
 import { Icon } from "@iconify/vue";
 import { ElTooltip } from "element-plus";
@@ -375,6 +380,7 @@ import {
   ConversationRoleEnum,
   MAXIMUM_FEATURES_SIZE_DEFAULT,
   OperatingSystemEnum,
+  YOUTUBE_URL,
 } from "@/constants";
 import { ChatBox } from "@/components";
 import { ManualMenu } from "@/components";
@@ -384,10 +390,11 @@ import {
   ConversationMessageType,
 } from "@/types/conversation";
 import { Chat } from "@/components/Chat";
+import { Youtube } from "@/components";
 import { getJsonFeatures } from "@/lib/common";
 import { LLM } from "@/lib/llm";
 import { FeatureSchema } from "@/lib/features";
-import { SidebarMenuEnum } from "@/constants/ui";
+import { SidebarMenuEnum, WebsiteRenderEnum } from "@/constants/ui";
 
 type PopupMenuVariableType = {
   show: boolean;
@@ -400,6 +407,7 @@ type PopupMenuVariableType = {
 
 const userSettings = useUserSettingsStore();
 
+const currentWebsite = ref(WebsiteRenderEnum.REST);
 const appMenuVisible = ref(true);
 const appSidebarEnable = ref(false);
 const appEnable = ref(true);
@@ -467,6 +475,8 @@ let conversationContext: ConversationContextType = reactive({
 const chatBoxRef = ref<ComponentRef<typeof ChatBox>>();
 const aiProvider = computed(() => userSettings.getAiProvider);
 const appsConversationId: Ref<string> = ref("");
+
+const ytpRightControls: Ref<HTMLDivElement> = ref(null as any);
 
 let showFeaturesTimeout: any;
 let dataResponse: string = "";
@@ -1000,34 +1010,66 @@ async function handleBeforeUnload(event: Event) {
 }
 
 onMounted(async () => {
-  window.addEventListener("beforeunload", handleBeforeUnload);
-  getJsonFeatures(false, 1, MAXIMUM_FEATURES_SIZE_DEFAULT, null, null);
-  await userSettings.initialize(false);
-  isSidebar.value = userSettings.getSidebar;
-  if (isSidebar.value === SidebarMode.SIDEBAR) {
-    manualInsertWidth.value = 400;
-    appsVisible.value = true;
-    if (appSidebarEnable.value) {
-      userSettings.setSidebar(SidebarMode.SIDEBAR);
-      userSettings.applySidebarClass(false, null);
-    } else {
-      userSettings.applySidebarClass(true, SidebarMode.NONE);
-    }
+  let currentUrl = window.location.href;
+  let urlObj = new URL(currentUrl);
+  let baseUrl = `${urlObj.protocol}//${urlObj.hostname}`;
+  let videoId = urlObj.searchParams.get("v");
+  console.log(urlObj.hostname);
+  console.log(baseUrl);
+  console.log(videoId);
+  if (urlObj.hostname === YOUTUBE_URL) {
+    currentWebsite.value = WebsiteRenderEnum.YOUTUBE;
+    ytpRightControls.value = document.querySelector(".ytp-right-controls")!;
+    console.log(ytpRightControls.value);
+    if (ytpRightControls.value) {
+      const youtubeVNode = h(Youtube);
+      const mountPoint = document.createElement("div");
 
-    nextTick(() => {
-      const shadowHost = document.querySelector("cremind-app-extension");
-      if (shadowHost) {
-        const shadowRoot = shadowHost.shadowRoot;
-        if (shadowRoot) {
-          appSidebarRef.value = shadowRoot.querySelector(
-            ".app-sidebar"
-          ) as HTMLDivElement;
-          shadowRoot.addEventListener("mouseup", handleMouseupShadow);
-        }
+      // Render the VNode to the new element
+      render(youtubeVNode, mountPoint);
+
+      // Append the new element containing the Youtube component to the ytp-right-controls
+      if (ytpRightControls.value.firstChild) {
+        ytpRightControls.value.insertBefore(
+          mountPoint.firstChild!,
+          ytpRightControls.value.firstChild
+        );
+      } else {
+        // If ytp-right-controls is empty, just append the new element
+        ytpRightControls.value.appendChild(mountPoint.firstChild!);
       }
-    });
-  } else if (isSidebar.value === SidebarMode.WINDOWS) {
-    manualInsertWidth.value = 700;
+    }
+  } else {
+    currentWebsite.value = WebsiteRenderEnum.REST;
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    getJsonFeatures(false, 1, MAXIMUM_FEATURES_SIZE_DEFAULT, null, null);
+    await userSettings.initialize(false);
+    isSidebar.value = userSettings.getSidebar;
+    if (isSidebar.value === SidebarMode.SIDEBAR) {
+      manualInsertWidth.value = 400;
+      appsVisible.value = true;
+      if (appSidebarEnable.value) {
+        userSettings.setSidebar(SidebarMode.SIDEBAR);
+        userSettings.applySidebarClass(false, null);
+      } else {
+        userSettings.applySidebarClass(true, SidebarMode.NONE);
+      }
+
+      nextTick(() => {
+        const shadowHost = document.querySelector("cremind-app-extension");
+        if (shadowHost) {
+          const shadowRoot = shadowHost.shadowRoot;
+          if (shadowRoot) {
+            appSidebarRef.value = shadowRoot.querySelector(
+              ".app-sidebar"
+            ) as HTMLDivElement;
+            shadowRoot.addEventListener("mouseup", handleMouseupShadow);
+          }
+        }
+      });
+    } else if (isSidebar.value === SidebarMode.WINDOWS) {
+      manualInsertWidth.value = 700;
+    }
   }
 });
 

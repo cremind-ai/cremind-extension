@@ -14,6 +14,7 @@ import ManualMenu from "./ManualMenu.vue";
 import PromptApp from "./PromptApp.vue";
 import PromptAppDialog from "./PromptAppDialog.vue";
 import PromptCardFeature from "./PromptCardFeature.vue";
+import Youtube from "./Youtube.vue";
 
 export {
   PopupMenu,
@@ -32,4 +33,5 @@ export {
   PromptApp,
   PromptAppDialog,
   PromptCardFeature,
+  Youtube,
 };

@@ -12,6 +12,11 @@ export enum SidebarMenuEnum {
   SETTINGS = "4",
 }
 
+export enum WebsiteRenderEnum {
+  YOUTUBE = "youtube",
+  REST = "rest",
+}
+
 export const moreOptions: {
   label: string;
   icon: Icon;

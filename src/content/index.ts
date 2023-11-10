@@ -27,6 +27,7 @@ import ManualMenuStyle from "@/styles/components/ManualMenu.scss";
 import PromptAppStyle from "@/styles/components/PromptApp.scss";
 import PromptAppDialogStyle from "@/styles/components/PromptAppDialog.scss";
 import PromptCardFeatureStyle from "@/styles/components/PromptCardFeature.scss";
+import YoutubeStyle from "@/styles/components/Youtube.scss";
 
 export let shadowRoot: ShadowRoot;
 
@@ -63,6 +64,7 @@ function initExtension() {
   style.appendChild(document.createTextNode(PromptAppStyle));
   style.appendChild(document.createTextNode(PromptAppDialogStyle));
   style.appendChild(document.createTextNode(PromptCardFeatureStyle));
+  style.appendChild(document.createTextNode(YoutubeStyle));
   shadowRoot.appendChild(style);
 
   const app = createApp(App).use(createPinia());
