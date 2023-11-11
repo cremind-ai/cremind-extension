@@ -8,6 +8,7 @@ interface UserSettingsState {
   sidebar: SidebarMode;
   aiProvider: AIMode;
   tidyDisplayOptionBarMode: boolean;
+  chatgptModel: string;
 }
 
 export const useUserSettingsStore = defineStore({
@@ -18,6 +19,7 @@ export const useUserSettingsStore = defineStore({
       sidebar: SidebarMode.SIDEBAR,
       aiProvider: AIMode.CHAT_GPT,
       tidyDisplayOptionBarMode: false,
+      chatgptModel: "text-davinci-002-render-sha",
     };
   },
   getters: {
@@ -32,6 +34,9 @@ export const useUserSettingsStore = defineStore({
     },
     getTidyDisplayOptionBarMode(): boolean {
       return this.tidyDisplayOptionBarMode;
+    },
+    getChatgptModel(): string {
+      return this.chatgptModel;
     },
   },
   actions: {
@@ -100,12 +105,17 @@ export const useUserSettingsStore = defineStore({
       this.tidyDisplayOptionBarMode = tidyDisplayOptionBarMode;
       await this.updateSettingsInStorage();
     },
+    async setChatgptModel(chatgptModel: string) {
+      this.chatgptModel = chatgptModel;
+      await this.updateSettingsInStorage();
+    },
     async updateSettingsInStorage() {
       const settingsToStore: UserSettingsState = {
         isDark: this.isDark,
         sidebar: this.sidebar,
         aiProvider: this.aiProvider,
         tidyDisplayOptionBarMode: this.tidyDisplayOptionBarMode,
+        chatgptModel: this.chatgptModel,
       };
       await ChromeStorage.getInstance().set(
         "USER_SETTINGS",

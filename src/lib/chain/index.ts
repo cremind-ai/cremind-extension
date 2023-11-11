@@ -1,4 +1,4 @@
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { IPCClient } from "@/lib/ipc_client";
 import { EventEmitter } from "@/utils/event_emitter";
 import { PromptTemplate } from "../prompt_template";
@@ -8,7 +8,7 @@ import { consoleLog, LogLevelEnum } from "@/utils";
 import { ConversationModeEnum } from "@/types/conversation";
 import { AIPayloadType } from "@/types/provider";
 
-export class ChainException extends CWException {}
+export class ChainException extends CMException {}
 
 /*
   Example:
@@ -92,7 +92,7 @@ export class Chain {
             resultPreviousChain.on("complete", (data: any) => {
               emitter.emit("complete", data);
             });
-            resultPreviousChain.on("error", (error: CWException) => {
+            resultPreviousChain.on("error", (error: CMException) => {
               reject(error);
             });
           });

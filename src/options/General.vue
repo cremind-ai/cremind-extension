@@ -38,6 +38,15 @@
               >
               to log in.
             </div>
+            <ElRadioGroup v-model="selectedModel">
+              <ElRadio
+                v-for="model in chatgptModels"
+                :key="model.model"
+                :label="model.model"
+              >
+                {{ model.name }}
+              </ElRadio>
+            </ElRadioGroup>
           </template>
         </ImageDetailCard>
       </ElCard>
@@ -186,10 +195,13 @@
 import { watch, computed, onMounted, ref, Ref, reactive } from "vue";
 import { ElCard } from "element-plus";
 import { ElSwitch } from "element-plus";
+import { ElRadioGroup } from "element-plus";
+import { ElRadioButton } from "element-plus";
 import { Icon } from "@iconify/vue";
 import { ImageDetailCard, ContentWrap } from "@/components";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 import { useUserSettingsStore } from "@/store/user_settings";
+import { useAPIStore, ChatGPTModel } from "@/store/api";
 import {
   TIDY_DISPLAY_OPTION_IMG_1,
   TIDY_DISPLAY_OPTION_IMG_2,
@@ -211,6 +223,7 @@ enum GeneralSettings {
 }
 
 const userSettings = useUserSettingsStore();
+const api = useAPIStore();
 
 const isDark = ref(userSettings.getIsDark);
 
@@ -233,6 +246,9 @@ const generalState = reactive({
 const isAuthenChatGPT = ref(false);
 const isAuthenClaude = ref(false);
 const isAuthenBard = ref(false);
+
+const chatgptModels = ref<ChatGPTModel[]>([]);
+const selectedModel = ref(userSettings.getChatgptModel);
 
 const llm = new LLM();
 
@@ -266,6 +282,20 @@ watch(
         isAuthenBard.value = false;
       }
     }
+  }
+);
+
+watch(
+  () => userSettings.getChatgptModel,
+  (value) => {
+    selectedModel.value = value;
+  }
+);
+
+watch(
+  () => selectedModel.value,
+  (value) => {
+    userSettings.setChatgptModel(value);
   }
 );
 
@@ -335,6 +365,17 @@ onMounted(async () => {
       isAuthenBard.value = false;
     }
   }
+  try {
+    chatgptModels.value = await api.getChatgptModels();
+    const foundModel = chatgptModels.value.find(
+      (item) => item.model === userSettings.getChatgptModel
+    );
+    if (foundModel) {
+      userSettings.setChatgptModel(foundModel.model);
+    } else {
+      userSettings.setChatgptModel(chatgptModels.value[0].model);
+    }
+  } catch (e) {}
 });
 </script>
 

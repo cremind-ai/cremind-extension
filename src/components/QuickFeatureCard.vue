@@ -61,7 +61,7 @@ import hljs from "highlight.js";
 import { FeatureModeEnum } from "@/types";
 import { FeatureType } from "@/lib/features";
 import { ChainBuilder } from "@/lib/chain/chain_builder";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { FeatureSchema } from "@/lib/features";
 import { Status } from "@/constants/status";
 import { ChatAction } from "@/components/Chat";
@@ -265,8 +265,11 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   }
   setJsonFeature(props.featureSchema);
   await chainBuilder.buildChains(variables);
+  const modelName =
+    aiProvider.value === AIMode.CHAT_GPT ? userSettings.getChatgptModel : "";
   const result = await chainBuilder.executeChains(true, {
     aiProvider: aiProvider.value,
+    modelName: modelName,
     conversationId: conversationId!,
     messageId: messageId!,
     conversationMode: ConversationModeEnum.NORMAL,
@@ -306,7 +309,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     scrollToBottom();
     width.value = 700;
   });
-  result.on("error", (error: CWException) => {
+  result.on("error", (error: CMException) => {
     isStreaming.value = false;
     consoleLog(LogLevelEnum.DEBUG, error);
     if (error.code === Status.CHATGPT_UNAUTHORIZED) {

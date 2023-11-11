@@ -92,12 +92,12 @@ import { ElButton, ElMessageBox } from "element-plus";
 import { ElTooltip } from "element-plus";
 import { ElButtonGroup } from "element-plus";
 import { ElMessage } from "element-plus";
-import { ConversationRoleEnum } from "@/constants";
+import { AIMode, ConversationRoleEnum } from "@/constants";
 import { Chat } from "./Chat";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { Status } from "@/constants/status";
@@ -271,8 +271,11 @@ const sendMessage = async (
     null,
     true
   );
+  const modelName =
+    aiProvider.value === AIMode.CHAT_GPT ? userSettings.getChatgptModel : "";
   const result = await chain.execute(true, {
     aiProvider: aiProvider.value,
+    modelName: modelName,
     conversationId: conversationContext.conversationId!,
     messageId: conversationContext.messageId!,
     contextIds: conversationContext.contextIds,
@@ -339,7 +342,7 @@ const sendMessage = async (
     emits("complete", data.message);
   });
 
-  result.on("error", (error: CWException) => {
+  result.on("error", (error: CMException) => {
     consoleLog(LogLevelEnum.DEBUG, "error");
     clearInterval(intervalId);
     isStreaming.value = false;

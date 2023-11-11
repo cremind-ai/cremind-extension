@@ -9,6 +9,7 @@ export enum AIResponseTypeEnum {
 
 export type AIPayloadType = {
   aiProvider: AIMode;
+  modelName?: string;
   conversationMode?: ConversationModeEnum;
   conversationId?: string;
   messageId?: string;

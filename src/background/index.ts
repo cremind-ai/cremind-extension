@@ -22,7 +22,7 @@ import { AIProvider } from "./providers/base";
 import { AIProviderException, AIProviderFactory } from "./providers";
 import { AIMode } from "@/constants";
 import { consoleLog, LogLevelEnum } from "@/utils";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { Status } from "@/constants/status";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 import { CategoryFeatureEnum, FeatureSchema } from "@/lib/features";
@@ -100,7 +100,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })
           .then((response) => {
             if (!response.ok) {
-              throw new CWException(
+              throw new CMException(
                 Status.BACKEND_REQUEST_UNKNOWN_ERROR,
                 "Request unknown error"
               );

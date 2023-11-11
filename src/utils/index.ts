@@ -1,7 +1,7 @@
 import { ResPayloadType } from "@/types";
 import { consoleLog, LogLevelEnum } from "./log";
 import { Status } from "@/constants/status";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { OperatingSystemEnum } from "@/constants";
 
 function uuid() {
@@ -46,7 +46,7 @@ function textConcat(
     })
       .then((response) => {
         if (!response.ok) {
-          throw new CWException(
+          throw new CMException(
             Status.BACKEND_REQUEST_UNKNOWN_ERROR,
             "Request unknown error"
           );
@@ -60,7 +60,7 @@ function textConcat(
       })
       .catch((error) => {
         reject(
-          new CWException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
+          new CMException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
         );
       });
   });
@@ -81,7 +81,7 @@ function textSplit(content: string): Promise<string[]> {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new CWException(
+          throw new CMException(
             Status.BACKEND_REQUEST_UNKNOWN_ERROR,
             "Request unknown error"
           );
@@ -95,7 +95,7 @@ function textSplit(content: string): Promise<string[]> {
       })
       .catch((error) => {
         reject(
-          new CWException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
+          new CMException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
         );
       });
   });
@@ -120,7 +120,7 @@ function crawlWebsite(url: string): Promise<string[]> {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new CWException(
+          throw new CMException(
             Status.BACKEND_REQUEST_UNKNOWN_ERROR,
             "Request unknown error"
           );
@@ -134,7 +134,7 @@ function crawlWebsite(url: string): Promise<string[]> {
       })
       .catch((error) => {
         reject(
-          new CWException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
+          new CMException(Status.BACKEND_REQUEST_UNKNOWN_ERROR, error.message)
         );
       });
   });

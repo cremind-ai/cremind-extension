@@ -296,7 +296,7 @@ import { DrawerPromptInitialize } from "@/components";
 import { LoadImg } from ".";
 import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
 import {
   consoleLog,
@@ -731,8 +731,13 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
             currentFeature.value[aiProviderKey.value]!.Chains
           );
           await chainBuilder.buildChains(variables);
+          const modelName =
+            aiProvider.value === AIMode.CHAT_GPT
+              ? userSettings.getChatgptModel
+              : "";
           const result = await chainBuilder.executeChains(true, {
             aiProvider: aiProvider.value,
+            modelName: modelName,
             conversationId: conversationId.value!,
             messageId: messageId!,
             contextIds: contextIds,

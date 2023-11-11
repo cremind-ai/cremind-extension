@@ -1,4 +1,4 @@
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import {
   IPCTopicEnum,
   IPCMessageType,
@@ -6,7 +6,7 @@ import {
 } from "@/types";
 import { CONTENT_SCRIPT_PORT_NAME } from "@/constants";
 
-export class IPCHostException extends CWException {}
+export class IPCHostException extends CMException {}
 
 export class IPCHost {
   private static instance: IPCHost;

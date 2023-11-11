@@ -45,4 +45,5 @@ export const Status = {
 
   // BACKEND
   BACKEND_REQUEST_UNKNOWN_ERROR: 7001,
+  FAILED_TO_LOAD_MODELS: 7002,
 };

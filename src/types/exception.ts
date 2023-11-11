@@ -1,4 +1,4 @@
-export class CWException extends Error {
+export class CMException extends Error {
   code: number;
   msg: string;
 

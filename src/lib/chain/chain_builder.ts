@@ -1,6 +1,6 @@
 import { Chain } from ".";
 import { PromptTemplate } from "../prompt_template";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 import { SystemVariableParser } from "../system_variable_parser";
 import { EventEmitter } from "@/utils/event_emitter";
 import { LLM } from "../llm";
@@ -80,7 +80,7 @@ export class ChainBuilder {
           emitter.emit("endOfChain", data);
         });
 
-        result.on("error", (err: CWException) => {
+        result.on("error", (err: CMException) => {
           emitter.emit("error", err);
         });
       }

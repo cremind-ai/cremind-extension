@@ -3,9 +3,9 @@ import { OpenAIAPI } from "./openai";
 import { ChatGPT } from "./chatgpt";
 import { Claude } from "./claude";
 import { Bard } from "./bard";
-import { CWException } from "@/types/exception";
+import { CMException } from "@/types/exception";
 
-export class AIProviderException extends CWException {}
+export class AIProviderException extends CMException {}
 
 export class AIProviderFactory {
   static createChatGPT(): AIProvider {
