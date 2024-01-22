@@ -8,6 +8,7 @@ export enum ConversationMessageTypeEnum {
 export enum CommunicationMessageTypeEnum {
   GET_FEATURES = "get_features",
   SET_FEATURES = "set_features",
+  GET_ARKOSE_TOKEN = "get_arkose_token",
   OPEN_OPTIONS_PAGE = "open_options_page",
   MESSAGE = "message",
   ERROR = "error",

@@ -8,7 +8,11 @@ import { Status } from "@/constants/status";
 import { uuid } from "@/utils";
 import { consoleLog, LogLevelEnum } from "@/utils";
 import { ConversationModeEnum } from "@/types/conversation";
-import { ChromeStorage } from "@/hooks/chrome_storage";
+import {
+  CommunicationMessageTypeEnum,
+  IPCMessageType,
+  IPCTopicEnum,
+} from "@/types";
 
 export class ChatGPT extends AIProvider {
   private static instance: ChatGPT;
@@ -181,6 +185,42 @@ export class ChatGPT extends AIProvider {
     }, 10000);
   }
 
+  private async hasOffscreenDocument(url: string): Promise<boolean> {
+    let chromeRuntime = chrome.runtime;
+    let s = await chromeRuntime.getContexts({
+      contextTypes: [chrome.runtime.ContextType.OFFSCREEN_DOCUMENT],
+      documentUrls: [url],
+    });
+    return Boolean(s.length);
+  }
+
+  private async getArkoseToken(modelName: string) {
+    // TODO: fix hardcode 'gpt-4'
+    if (modelName === "gpt-4") {
+      let arkoseFrame = "src/background/arkose/arkose-frame.html";
+      if (
+        !(await this.hasOffscreenDocument(chrome.runtime.getURL(arkoseFrame)))
+      ) {
+        await chrome.offscreen.createDocument({
+          url: arkoseFrame,
+          reasons: [chrome.offscreen.Reason.IFRAME_SCRIPTING],
+          justification: "generating arkose token using offscreen script",
+        });
+      }
+      let resData: IPCMessageType = await chrome.runtime.sendMessage({
+        topic: IPCTopicEnum.COMMUNICATION,
+        type: CommunicationMessageTypeEnum.GET_ARKOSE_TOKEN,
+      });
+      if (resData.payload.token) {
+        return resData.payload.token;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
   async conversation(
     conversationId: string | null,
     messageId: string | null,
@@ -213,13 +253,9 @@ export class ChatGPT extends AIProvider {
           const modelName = await this.getModelName(this.token!);
           const childId = uuid();
 
-          let arkoseToken: string | null = null;
-          const arkoseTokenJSON = await ChromeStorage.getInstance().get(
-            "ARKOSE_TOKEN"
+          let arkoseToken: string | null = await this.getArkoseToken(
+            args.modelName
           );
-          if (arkoseTokenJSON) {
-            arkoseToken = JSON.parse(arkoseTokenJSON).data;
-          }
 
           let payload = {};
           switch (args.conversationMode) {
@@ -295,6 +331,7 @@ export class ChatGPT extends AIProvider {
               break;
           }
           consoleLog(LogLevelEnum.DEBUG, "payload", payload);
+
           const resp = await fetch(
             this.CHATGPT_URL + "/backend-api/conversation",
             {
@@ -306,6 +343,7 @@ export class ChatGPT extends AIProvider {
               body: JSON.stringify(payload),
             }
           );
+
           if (!resp.ok) {
             const error = await resp.json().catch(() => ({}));
             callback({

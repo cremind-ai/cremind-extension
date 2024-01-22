@@ -384,6 +384,8 @@ watch(
 );
 
 const writeOriginalActiveElementValue = (text: string) => {
+  // TODO
+  return;
   if (
     originalActiveElement.value!.value !== undefined &&
     originalActiveElement.value!.value !== null

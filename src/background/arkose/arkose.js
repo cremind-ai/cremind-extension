@@ -36,9 +36,9 @@ class ArkoseTokenGenerator {
 
   injectScript() {
     const script = document.createElement("script");
-    script.src = document
-      .querySelector("script[cremind-arkose-token]")
-      .getAttribute("cremind-arkose-token");
+    script.src = chrome.runtime.getURL(
+      "/js/v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js"
+    );
     script.async = true;
     script.defer = true;
     script.setAttribute("data-callback", "useArkoseSetupEnforcement");
@@ -59,15 +59,25 @@ class ArkoseTokenGenerator {
 
 const arkoseGenerator = new ArkoseTokenGenerator();
 
-window.addEventListener("cremind-arkose-generator", async (event) => {
-  if (event.detail.data === "GET_TOKEN") {
-    if (!arkoseGenerator.isReady) {
-      await arkoseGenerator.scriptLoaded;
-    }
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  (async () => {
+    if (
+      message.topic === "communication" &&
+      message.type === "get_arkose_token"
+    )
+      if (!arkoseGenerator.isReady) {
+        await arkoseGenerator.scriptLoaded;
+      }
     const token = await arkoseGenerator.generate();
-    const sendEvent = new CustomEvent("cremind-arkose-client", {
-      detail: { token: token },
+    sendResponse({
+      topic: "communication",
+      type: "get_arkose_token",
+      payload: {
+        token: token,
+      },
     });
-    window.dispatchEvent(sendEvent);
-  }
+  })();
+
+  // Important! Return true to indicate you want to send a response asynchronously
+  return true;
 });
