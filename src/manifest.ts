@@ -44,5 +44,5 @@ export default defineManifest({
     },
   ],
   host_permissions: ["<all_urls>"],
-  permissions: ["storage", "contextMenus", "scripting", "offscreen"],
+  permissions: ["storage", "contextMenus", "offscreen"],
 });
