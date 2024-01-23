@@ -197,7 +197,7 @@ export class ChatGPT extends AIProvider {
   private async getArkoseToken(modelName: string) {
     // TODO: fix hardcode 'gpt-4'
     if (modelName === "gpt-4") {
-      let arkoseFrame = "src/background/arkose/arkose-frame.html";
+      let arkoseFrame = "background/arkose/arkose-frame.html";
       if (
         !(await this.hasOffscreenDocument(chrome.runtime.getURL(arkoseFrame)))
       ) {

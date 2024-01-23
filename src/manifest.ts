@@ -4,7 +4,7 @@ export default defineManifest({
   name: "CreMind GPT Free",
   description:
     "Unlocking the Potential of AI GPT Technology: Empowering Productivity with this Feature-Packed Extension",
-  version: "2.3.9",
+  version: "2.4.1",
   manifest_version: 3,
   icons: {
     "16": "img/CreMind-logo-16.png",
@@ -39,7 +39,7 @@ export default defineManifest({
   ],
   web_accessible_resources: [
     {
-      resources: ["img/*.png", "js/*.js", "src/*.js"],
+      resources: ["img/*.png", "js/*", "background/*"],
       matches: ["http://*/*", "https://*/*"],
     },
   ],
