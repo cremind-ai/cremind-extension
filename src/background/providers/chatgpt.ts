@@ -221,6 +221,15 @@ export class ChatGPT extends AIProvider {
     }
   }
 
+  private async registerWss(token: string): Promise<{ [key: string]: string }> {
+    const resp = await this.request(
+      token,
+      "POST",
+      "backend-api/register-websocket"
+    ).then((r) => r.json());
+    return resp;
+  }
+
   async conversation(
     conversationId: string | null,
     messageId: string | null,
@@ -331,6 +340,103 @@ export class ChatGPT extends AIProvider {
               break;
           }
           consoleLog(LogLevelEnum.DEBUG, "payload", payload);
+          let wssInfo: {
+            [key: string]: string;
+          };
+          let finalText: string = "";
+          wssInfo = await this.registerWss(this.token!);
+          // this.expireTs = new Date(wssInfo.expires_at).getTime() / 1000;
+          // const currentTs = Date.now() / 1000;
+          const wss = new WebSocket(wssInfo.wss_url);
+          const wssTimeout = setTimeout(() => {
+            wss.close();
+          }, 60 * 1000);
+          wss.onmessage = async (event) => {
+            try {
+              const wssData = JSON.parse(event.data);
+              if (wssData.type === "http.response.body") {
+                const message = atob(wssData.body).substring(6).slice(0, -2);
+                if (message === "[DONE]") {
+                  clearTimeout(wssTimeout);
+                  if (wss.readyState === WebSocket.OPEN) {
+                    wss.close();
+                  }
+                  callback({
+                    type: AIResponseTypeEnum.COMPLETE,
+                    message: finalText,
+                    payload: {
+                      ...(!args.deleteConversation && {
+                        conversationId: this.conversationId!,
+                        ...(args.conversationMode ===
+                          ConversationModeEnum.REGENERATE &&
+                          args.childMessageId && {
+                            childMessageId: args.childMessageId,
+                          }),
+                        ...(args.conversationMode ===
+                          ConversationModeEnum.NORMAL && {
+                          childMessageId: childId,
+                        }),
+                      }),
+                      ...(this.messageId && { messageId: this.messageId }),
+                      endTurn: this.endTurn,
+                    },
+                  });
+                  if (this.conversationId) {
+                    if (args.deleteConversation) {
+                      this.setConversationProperty(
+                        this.token!,
+                        this.conversationId!,
+                        {
+                          is_visible: false,
+                        }
+                      );
+                    } else {
+                      // const items = await this.getConversations(this.token!);
+                      if (!conversationId) {
+                        const title = await this.genTitle(
+                          this.conversationId,
+                          this.messageId!
+                        );
+                        consoleLog(LogLevelEnum.DEBUG, title);
+                      }
+                    }
+                  }
+
+                  this.isProcessing = false;
+                  return null;
+                }
+
+                let data;
+                try {
+                  data = JSON.parse(message);
+                } catch (err) {
+                  return null;
+                }
+                const currentText: string = data.message?.content?.parts?.[0];
+                const role = data.message?.author.role;
+                if (currentText && role === "assistant") {
+                  this.conversationId = data.conversation_id;
+                  callback({
+                    type: AIResponseTypeEnum.MESSAGE,
+                    message: currentText,
+                  });
+                  finalText = currentText;
+                }
+                if (data.message.id) {
+                  this.messageId = data.message.id;
+                }
+                if (
+                  data.message &&
+                  data.message.metadata &&
+                  data.message.metadata.is_complete
+                ) {
+                  this.endTurn = data.message.end_turn;
+                }
+              }
+            } catch (err) {
+              return null;
+            }
+          };
 
           const resp = await fetch(
             this.CHATGPT_URL + "/backend-api/conversation",
@@ -362,135 +468,6 @@ export class ChatGPT extends AIProvider {
             this.isProcessing = false;
             return null;
           }
-          let finalText: string = "";
-          const parser = createParser(async (event) => {
-            if (event.type === "event") {
-              const message = event.data;
-              if (message === "[DONE]") {
-                callback({
-                  type: AIResponseTypeEnum.COMPLETE,
-                  message: finalText,
-                  payload: {
-                    ...(!args.deleteConversation && {
-                      conversationId: this.conversationId!,
-                      ...(args.conversationMode ===
-                        ConversationModeEnum.REGENERATE &&
-                        args.childMessageId && {
-                          childMessageId: args.childMessageId,
-                        }),
-                      ...(args.conversationMode ===
-                        ConversationModeEnum.NORMAL && {
-                        childMessageId: childId,
-                      }),
-                    }),
-                    ...(this.messageId && { messageId: this.messageId }),
-                    endTurn: this.endTurn,
-                  },
-                });
-                if (this.conversationId) {
-                  if (args.deleteConversation) {
-                    this.setConversationProperty(
-                      this.token!,
-                      this.conversationId!,
-                      {
-                        is_visible: false,
-                      }
-                    );
-                  } else {
-                    // const items = await this.getConversations(this.token!);
-                    if (!conversationId) {
-                      const title = await this.genTitle(
-                        this.conversationId,
-                        this.messageId!
-                      );
-                      consoleLog(LogLevelEnum.DEBUG, title);
-                    }
-                  }
-                }
-
-                this.isProcessing = false;
-                return null;
-              }
-
-              let data;
-              try {
-                data = JSON.parse(message);
-              } catch (err) {
-                return null;
-              }
-              const currentText: string = data.message?.content?.parts?.[0];
-              const role = data.message?.author.role;
-              if (currentText && role === "assistant") {
-                this.conversationId = data.conversation_id;
-                callback({
-                  type: AIResponseTypeEnum.MESSAGE,
-                  message: currentText,
-                });
-                finalText = currentText;
-              }
-              if (data.message_id) {
-                this.messageId = data.message_id;
-              }
-              if (
-                data.message &&
-                data.message.metadata &&
-                data.message.metadata.is_complete
-              ) {
-                this.endTurn = data.message.end_turn;
-              }
-            }
-          });
-
-          // Create ReadableStreamDefaultReader and store it in the reader variable
-          const stream = resp.body;
-          if (stream) {
-            this.reader = stream.getReader();
-          } else {
-            callback({
-              type: AIResponseTypeEnum.ERROR,
-              message: "Stream is null",
-              code: Status.CHATGPT_STREAM_ERROR,
-            });
-            if (this.conversationId) {
-              // this.setConversationProperty(this.token!, this.conversationId, {
-              //   is_visible: false,
-              // });
-            }
-            this.isProcessing = false;
-            return null;
-          }
-
-          // Read the stream until it's canceled or finished
-          const readStream = async () => {
-            try {
-              while (true) {
-                const { done, value } = await this.reader!.read();
-                if (done) {
-                  break;
-                }
-                const str = new TextDecoder().decode(value);
-                parser.feed(str);
-              }
-            } catch (err) {
-              // Handle stream reading errors
-              callback({
-                type: AIResponseTypeEnum.ERROR,
-                message: "Stream error",
-                code: Status.CHATGPT_STREAM_ERROR,
-              });
-              if (this.conversationId) {
-                // this.setConversationProperty(this.token!, this.conversationId, {
-                //   is_visible: false,
-                // });
-              }
-            }
-          };
-
-          // Call the readStream() method to start reading the stream
-          readStream();
-
-          // Return the closeStream() method to allow closing the stream from the outside
-          return;
         });
       }
     );
