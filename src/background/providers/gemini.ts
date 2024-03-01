@@ -77,7 +77,7 @@ export class Gemini extends AIProvider {
     }
   }
 
-  private async parseBardResponse(resp: string) {
+  private async parseGeminiResponse(resp: string) {
     const data = JSON.parse(resp.split("\n")[3]);
     const payload = JSON.parse(data[0][2]);
     if (!payload) {
@@ -190,7 +190,7 @@ export class Gemini extends AIProvider {
                 parseResponse: (txt) => txt,
               }
             );
-            const { text, ids } = await this.parseBardResponse(resp);
+            const { text, ids } = await this.parseGeminiResponse(resp);
             responseText = text;
             this.conversationId = ids[0];
             contextIds = ids;

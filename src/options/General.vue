@@ -68,7 +68,7 @@
           width="300px"
         >
           <template #extra>
-            <div v-if="isAuthenBard">Claude Authorized</div>
+            <div v-if="isAuthenGemini">Claude Authorized</div>
             <div v-else>
               Claude Unauthorized. Please
               <a href="https://claude.ai/login/" target="_blank">click here</a>
@@ -95,10 +95,12 @@
           width="300px"
         >
           <template #extra>
-            <div v-if="isAuthenBard">Google Gemini Authorized</div>
+            <div v-if="isAuthenGemini">Google Gemini Authorized</div>
             <div v-else>
               Google Gemini Unauthorized. Please
-              <a href="https://bard.google.com/" target="_blank">click here</a>
+              <a href="https://gemini.google.com/" target="_blank"
+                >click here</a
+              >
               to log in.
             </div>
           </template>
@@ -231,7 +233,7 @@ const generalState = reactive({
   [GeneralSettings.AI_PROVIDER_OPTION]: [
     userSettings.getAiProvider === AIMode.CHAT_GPT,
     userSettings.getAiProvider === AIMode.CLAUDE,
-    userSettings.getAiProvider === AIMode.BARD,
+    userSettings.getAiProvider === AIMode.GEMINI,
   ],
   [GeneralSettings.SIDEBAR_OPTION]: [
     userSettings.getSidebar === SidebarMode.SIDEBAR,
@@ -245,7 +247,7 @@ const generalState = reactive({
 
 const isAuthenChatGPT = ref(false);
 const isAuthenClaude = ref(false);
-const isAuthenBard = ref(false);
+const isAuthenGemini = ref(false);
 
 const chatgptModels = ref<ChatGPTModel[]>([]);
 const selectedModel = ref(userSettings.getChatgptModel);
@@ -275,11 +277,11 @@ watch(
       } else {
         isAuthenClaude.value = false;
       }
-    } else if (value === AIMode.BARD) {
+    } else if (value === AIMode.GEMINI) {
       if (res.status === Status.SUCCESS) {
-        isAuthenBard.value = true;
+        isAuthenGemini.value = true;
       } else {
-        isAuthenBard.value = false;
+        isAuthenGemini.value = false;
       }
     }
   }
@@ -322,7 +324,7 @@ const handleGeneralSettingsClick = async (
       } else if (option === 1) {
         userSettings.setAIProvider(AIMode.CLAUDE);
       } else if (option === 2) {
-        userSettings.setAIProvider(AIMode.BARD);
+        userSettings.setAIProvider(AIMode.GEMINI);
       }
       break;
     case GeneralSettings.SIDEBAR_OPTION:
@@ -352,17 +354,17 @@ onMounted(async () => {
     } else {
       isAuthenChatGPT.value = false;
     }
-  } else if (userSettings.getAiProvider === AIMode.BARD) {
+  } else if (userSettings.getAiProvider === AIMode.GEMINI) {
     if (res.status === Status.SUCCESS) {
-      isAuthenBard.value = true;
+      isAuthenGemini.value = true;
     } else {
-      isAuthenBard.value = false;
+      isAuthenGemini.value = false;
     }
   } else if (userSettings.getAiProvider === AIMode.CLAUDE) {
     if (res.status === Status.SUCCESS) {
-      isAuthenBard.value = true;
+      isAuthenGemini.value = true;
     } else {
-      isAuthenBard.value = false;
+      isAuthenGemini.value = false;
     }
   }
   try {

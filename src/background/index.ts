@@ -202,7 +202,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 let aiProvider: AIProvider;
 const aiProviderChatGPT = AIProviderFactory.createChatGPT();
 const aiProviderClaude = AIProviderFactory.createClaude();
-const aiProviderBard = AIProviderFactory.createBard();
+const aiProviderGemini = AIProviderFactory.createGemini();
 const aiProviderOpenAI = AIProviderFactory.createOpenAI("");
 
 chrome.runtime.onInstalled.addListener(function (details) {
@@ -237,8 +237,8 @@ ipcHost.register(
     const aiMode: AIMode = data.payload.aiProvider;
     if (aiMode === AIMode.CHAT_GPT) {
       aiProvider = aiProviderChatGPT;
-    } else if (aiMode === AIMode.BARD) {
-      aiProvider = aiProviderBard;
+    } else if (aiMode === AIMode.GEMINI) {
+      aiProvider = aiProviderGemini;
     } else if (aiMode === AIMode.OPENAI_API) {
       aiProvider = aiProviderOpenAI;
     } else if (aiMode === AIMode.CLAUDE) {

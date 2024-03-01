@@ -380,7 +380,7 @@ const aiProvider = computed(() => userSettings.getAiProvider);
 const aiProviderKey = computed(() => {
   if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
     return "ChatGPT";
-  } else if (userSettings.getAiProvider === AIMode.BARD) {
+  } else if (userSettings.getAiProvider === AIMode.GEMINI) {
     return "Gemini";
   } else if (userSettings.getAiProvider === AIMode.CLAUDE) {
     return "Claude";
@@ -688,7 +688,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
         ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
         : APP_CLAUDE_MAX_CHUNKSIZE;
       items = await textConcat(true, uploadItems, chunkSize);
-    } else if (aiProvider.value === AIMode.BARD) {
+    } else if (aiProvider.value === AIMode.GEMINI) {
       const chunkSize: number = currentFeature.value[aiProviderKey.value]!
         .Segmentation
         ? currentFeature.value[aiProviderKey.value]!.ChunkSize!
@@ -831,7 +831,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
                 await sleep(5000);
               } else if (aiProvider.value === AIMode.CLAUDE) {
                 await sleep(1000);
-              } else if (aiProvider.value === AIMode.BARD) {
+              } else if (aiProvider.value === AIMode.GEMINI) {
                 await sleep(1000);
               }
             }

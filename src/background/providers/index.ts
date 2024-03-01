@@ -20,7 +20,7 @@ export class AIProviderFactory {
     return new OpenAIAPI(apiKey);
   }
 
-  static createBard(): AIProvider {
+  static createGemini(): AIProvider {
     return new Gemini();
   }
 }
