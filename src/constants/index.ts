@@ -30,7 +30,7 @@ export const LOGO_COLOR_DARK = "#6e4486";
 export const TIDY_DISPLAY_OPTION_IMG_1 = "settings/display_mode1.gif";
 export const TIDY_DISPLAY_OPTION_IMG_2 = "settings/display_mode2.gif";
 
-export const BARD_LOGO = "3rd_logo/Bard-logo-200.png";
+export const BARD_LOGO = "3rd_logo/Gemini-logo-200.png";
 export const CLAUDE_LOGO = "3rd_logo/Claude-icon-256.png";
 export const CHAT_GPT_LOGO = "3rd_logo/ChatGPT-logo-64.png";
 

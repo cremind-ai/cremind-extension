@@ -2,7 +2,7 @@ import { AIProvider } from "./base";
 import { OpenAIAPI } from "./openai";
 import { ChatGPT } from "./chatgpt";
 import { Claude } from "./claude";
-import { Bard } from "./bard";
+import { Gemini } from "./gemini";
 import { CMException } from "@/types/exception";
 
 export class AIProviderException extends CMException {}
@@ -21,6 +21,6 @@ export class AIProviderFactory {
   }
 
   static createBard(): AIProvider {
-    return new Bard();
+    return new Gemini();
   }
 }

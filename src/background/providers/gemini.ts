@@ -6,7 +6,7 @@ import { Status } from "@/constants/status";
 import { ofetch } from "ofetch";
 import { ConversationModeEnum } from "@/types/conversation";
 
-export class Bard extends AIProvider {
+export class Gemini extends AIProvider {
   public isProcessing: boolean = false;
   private atValue: string | null;
   private blValue: string | null;
@@ -19,7 +19,7 @@ export class Bard extends AIProvider {
 
   public closeStream = () => {};
   public deleteConversation(conversationId: string): void {
-    ofetch("https://bard.google.com/_/BardChatUi/data/batchexecute", {
+    ofetch("https://gemini.google.com/_/BardChatUi/data/batchexecute", {
       method: "POST",
       query: {
         bl: this.blValue,
@@ -42,7 +42,7 @@ export class Bard extends AIProvider {
     this.atValue = requestParams.atValue!;
     this.blValue = requestParams.blValue!;
     const resp = await ofetch(
-      "https://bard.google.com/_/BardChatUi/data/batchexecute",
+      "https://gemini.google.com/_/BardChatUi/data/batchexecute",
       {
         method: "POST",
         query: {
@@ -72,7 +72,7 @@ export class Bard extends AIProvider {
     if (!payload) {
       throw new AIProviderException(
         Status.BARD_UNAUTHORIZED,
-        "Google Bard Unauthorized error. Please try again later."
+        "Google Gemini Unauthorized error. Please try again later."
       );
     }
   }
@@ -83,7 +83,7 @@ export class Bard extends AIProvider {
     if (!payload) {
       throw new AIProviderException(
         Status.BARD_BAD_REQUEST,
-        "Google Bard unknow error. Please try again later."
+        "Google Gemini unknow error. Please try again later."
       );
     }
 
@@ -105,7 +105,7 @@ export class Bard extends AIProvider {
   }
 
   private async fetchRequestParams() {
-    const html = await ofetch("https://bard.google.com/faq", {
+    const html = await ofetch("https://gemini.google.com/faq", {
       cache: "reload",
     });
     const atValue = this.extractFromHTML("SNlM0e", html);
@@ -120,7 +120,7 @@ export class Bard extends AIProvider {
       if (err instanceof AIProviderException) {
         throw new AIProviderException(
           Status.BARD_UNAUTHORIZED,
-          "Google Bard Unauthorized error. Please try again later."
+          "Google Gemini Unauthorized error. Please try again later."
         );
       }
     }
@@ -136,7 +136,7 @@ export class Bard extends AIProvider {
     return new Promise<(callback: (data: AIResponseType) => void) => void>(
       (resolve, reject) => {
         if (this.isProcessing) {
-          reject(new AIProviderException(Status.BARD_BUSY, "Bard Busy"));
+          reject(new AIProviderException(Status.BARD_BUSY, "Gemini Busy"));
           return;
         }
         this.isProcessing = true;
@@ -170,7 +170,7 @@ export class Bard extends AIProvider {
             this.atValue = requestParams.atValue!;
             this.blValue = requestParams.blValue!;
             const resp = await ofetch(
-              "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate",
+              "https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate",
               {
                 method: "POST",
                 query: {

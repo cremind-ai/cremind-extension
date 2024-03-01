@@ -176,7 +176,7 @@ const aiProviderKey = computed(() => {
   if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
     return "ChatGPT";
   } else if (userSettings.getAiProvider === AIMode.BARD) {
-    return "Bard";
+    return "Gemini";
   } else if (userSettings.getAiProvider === AIMode.CLAUDE) {
     return "Claude";
   }

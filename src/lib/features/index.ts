@@ -39,7 +39,7 @@ export type FeatureType = {
   variableSchema: ChainVariableSchema;
   ChatGPT: AIProviderFeatureConfig | null;
   Claude: AIProviderFeatureConfig | null;
-  Bard: AIProviderFeatureConfig | null;
+  Gemini: AIProviderFeatureConfig | null;
 };
 
 export type FeatureSchema = {

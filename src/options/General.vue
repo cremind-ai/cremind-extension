@@ -89,15 +89,15 @@
         <ImageDetailCard
           :filename="BARD_LOGO"
           position="left"
-          title="Google Bard"
+          title="Google Gemini"
           image-height="100px"
           image-width="100px"
           width="300px"
         >
           <template #extra>
-            <div v-if="isAuthenBard">Google Bard Authorized</div>
+            <div v-if="isAuthenBard">Google Gemini Authorized</div>
             <div v-else>
-              Google Bard Unauthorized. Please
+              Google Gemini Unauthorized. Please
               <a href="https://bard.google.com/" target="_blank">click here</a>
               to log in.
             </div>
