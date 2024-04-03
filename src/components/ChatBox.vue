@@ -348,11 +348,12 @@ const sendMessage = async (
     isStreaming.value = false;
     conversationContext.endTurn = true;
     consoleLog(LogLevelEnum.DEBUG, error);
-    if (error.code === Status.CHATGPT_UNAUTHORIZED) {
-      ElMessage.error(
-        "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
-      );
-    } else if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
+    // if (error.code === Status.CHATGPT_UNAUTHORIZED) {
+    //   ElMessage.error(
+    //     "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
+    //   );
+    // } else
+    if (error.code === Status.IPC_RESPONSE_TIMEOUT) {
       // ElMessage.error(
       //   "ChatGPT is not responding. Please try again later or refresh the page. 👉 https://chat.openai.com/"
       // );

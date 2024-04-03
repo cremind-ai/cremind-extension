@@ -53,7 +53,7 @@ export class ChatGPT extends AIProvider {
     }
   };
 
-  private async getChatGPTAccessToken(): Promise<string> {
+  private async getChatGPTAccessToken(): Promise<string | null> {
     if (this.cache.get(this.KEY_ACCESS_TOKEN)) {
       return this.cache.get(this.KEY_ACCESS_TOKEN);
     }
@@ -66,17 +66,18 @@ export class ChatGPT extends AIProvider {
     }
     const data = await resp.json().catch(() => ({}));
     if (!data.accessToken) {
-      throw new AIProviderException(
-        Status.CHATGPT_UNAUTHORIZED,
-        "Unauthorized error. Please try again later."
-      );
+      // throw new AIProviderException(
+      //   Status.CHATGPT_UNAUTHORIZED,
+      //   "Unauthorized error. Please try again later."
+      // );
+      return null;
     }
     this.cache.set(this.KEY_ACCESS_TOKEN, data.accessToken);
     return data.accessToken;
   }
 
   private async request(
-    token: string,
+    token: string | null,
     method: string,
     path: string,
     data?: unknown
@@ -85,24 +86,26 @@ export class ChatGPT extends AIProvider {
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        // Authorization: `Bearer ${token}`,
+        ...(token && {
+          Authorization: `Bearer ${token}`,
+        }),
       },
       body: data === undefined ? undefined : JSON.stringify(data),
     });
   }
 
   private async fetchModels(
-    token: string
+    token: string | null
   ): Promise<
     { slug: string; title: string; description: string; max_tokens: number }[]
   > {
-    const resp = await this.request(token, "GET", "backend-api/models").then(
-      (r) => r.json()
-    );
+    const path = token ? "backend-api/models" : "backend-anon/models";
+    const resp = await this.request(token, "GET", path).then((r) => r.json());
     return resp.models;
   }
 
-  private async getModelName(token: string): Promise<string> {
+  private async getModelName(token: string | null): Promise<string> {
     try {
       const models = await this.fetchModels(token);
       return models[0].slug;
@@ -117,7 +120,7 @@ export class ChatGPT extends AIProvider {
     conversationId: string,
     propertyObject: object
   ) {
-    consoleLog(LogLevelEnum.DEBUG, "setConversationProperty");
+    console.log("setConversationProperty", conversationId);
     await this.request(
       token,
       "PATCH",
@@ -126,20 +129,15 @@ export class ChatGPT extends AIProvider {
     );
   }
 
-  private async genTitle(
-    conversationId: string,
-    messageId: string
-  ): Promise<string> {
-    const resp = await this.request(
+  private async chatRequirements(): Promise<any> {
+    return await this.request(
       this.token!,
       "POST",
-      `backend-api/conversation/gen_title/${conversationId}`,
+      `/backend-api/sentinel/chat-requirements`,
       {
-        message_id: messageId,
+        conversation_mode_kind: "primary_assistant",
       }
     ).then((r) => r.json());
-    consoleLog(LogLevelEnum.DEBUG, resp);
-    return resp.title;
   }
 
   private getConversations(
@@ -179,9 +177,11 @@ export class ChatGPT extends AIProvider {
     // TODO: WORK AROUND
     setTimeout(async () => {
       this.token = await this.getChatGPTAccessToken();
-      this.setConversationProperty(this.token!, conversationId, {
-        is_visible: false,
-      });
+      if (this.token && conversationId) {
+        this.setConversationProperty(this.token, conversationId, {
+          is_visible: false,
+        });
+      }
     }, 10000);
   }
 
@@ -259,19 +259,15 @@ export class ChatGPT extends AIProvider {
               return null;
             }
           }
-          const modelName = await this.getModelName(this.token!);
+          const modelName = await this.getModelName(this.token);
           const childId = uuid();
-
-          let arkoseToken: string | null = await this.getArkoseToken(
-            args.modelName
-          );
 
           let payload = {};
           switch (args.conversationMode) {
             case ConversationModeEnum.NORMAL:
               payload = {
                 action: "next",
-                arkose_token: arkoseToken,
+                // arkose_token: arkoseToken,
                 conversation_mode: { kind: "primary_assistant" },
                 force_paragen: false,
                 messages: [
@@ -324,7 +320,7 @@ export class ChatGPT extends AIProvider {
                 timezone_offset_min: new Date().getTimezoneOffset(),
                 variant_purpose: "comparison_implicit",
                 history_and_training_disabled: false,
-                arkose_token: null,
+                // arkose_token: null,
               };
               break;
             case ConversationModeEnum.CONTINUE:
@@ -335,108 +331,20 @@ export class ChatGPT extends AIProvider {
                 model: "text-davinci-002-render-sha",
                 timezone_offset_min: new Date().getTimezoneOffset(),
                 history_and_training_disabled: false,
-                arkose_token: null,
+                // arkose_token: null,
               };
               break;
           }
           consoleLog(LogLevelEnum.DEBUG, "payload", payload);
-          let wssInfo: {
-            [key: string]: string;
-          };
-          let finalText: string = "";
-          wssInfo = await this.registerWss(this.token!);
-          // this.expireTs = new Date(wssInfo.expires_at).getTime() / 1000;
-          // const currentTs = Date.now() / 1000;
-          const wss = new WebSocket(wssInfo.wss_url);
-          const wssTimeout = setTimeout(() => {
-            wss.close();
-          }, 60 * 1000);
-          wss.onmessage = async (event) => {
-            try {
-              const wssData = JSON.parse(event.data);
-              if (wssData.type === "http.response.body") {
-                const message = atob(wssData.body).substring(6).slice(0, -2);
-                if (message === "[DONE]") {
-                  clearTimeout(wssTimeout);
-                  if (wss.readyState === WebSocket.OPEN) {
-                    wss.close();
-                  }
-                  callback({
-                    type: AIResponseTypeEnum.COMPLETE,
-                    message: finalText,
-                    payload: {
-                      ...(!args.deleteConversation && {
-                        conversationId: this.conversationId!,
-                        ...(args.conversationMode ===
-                          ConversationModeEnum.REGENERATE &&
-                          args.childMessageId && {
-                            childMessageId: args.childMessageId,
-                          }),
-                        ...(args.conversationMode ===
-                          ConversationModeEnum.NORMAL && {
-                          childMessageId: childId,
-                        }),
-                      }),
-                      ...(this.messageId && { messageId: this.messageId }),
-                      endTurn: this.endTurn,
-                    },
-                  });
-                  if (this.conversationId) {
-                    if (args.deleteConversation) {
-                      this.setConversationProperty(
-                        this.token!,
-                        this.conversationId!,
-                        {
-                          is_visible: false,
-                        }
-                      );
-                    } else {
-                      // const items = await this.getConversations(this.token!);
-                      if (!conversationId) {
-                        const title = await this.genTitle(
-                          this.conversationId,
-                          this.messageId!
-                        );
-                        consoleLog(LogLevelEnum.DEBUG, title);
-                      }
-                    }
-                  }
+          let _chatRequirements = await this.chatRequirements();
+          console.log(_chatRequirements);
+          let arkoseToken: string | null = null;
+          if (_chatRequirements.arkose.required) {
+            arkoseToken = await this.getArkoseToken(args.modelName);
+          }
 
-                  this.isProcessing = false;
-                  return null;
-                }
-
-                let data;
-                try {
-                  data = JSON.parse(message);
-                } catch (err) {
-                  return null;
-                }
-                const currentText: string = data.message?.content?.parts?.[0];
-                const role = data.message?.author.role;
-                if (currentText && role === "assistant") {
-                  this.conversationId = data.conversation_id;
-                  callback({
-                    type: AIResponseTypeEnum.MESSAGE,
-                    message: currentText,
-                  });
-                  finalText = currentText;
-                }
-                if (data.message.id) {
-                  this.messageId = data.message.id;
-                }
-                if (
-                  data.message &&
-                  data.message.metadata &&
-                  data.message.metadata.is_complete
-                ) {
-                  this.endTurn = data.message.end_turn;
-                }
-              }
-            } catch (err) {
-              return null;
-            }
-          };
+          const isArkoseToken =
+            _chatRequirements.arkose.required && arkoseToken ? true : false;
 
           const resp = await fetch(
             this.CHATGPT_URL + "/backend-api/conversation",
@@ -444,7 +352,14 @@ export class ChatGPT extends AIProvider {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${this.token}`,
+                ...(this.token && {
+                  Authorization: `Bearer ${this.token}`,
+                }),
+                ...(isArkoseToken && {
+                  "Openai-Sentinel-Arkose-Token": arkoseToken!,
+                }),
+                "Openai-Sentinel-Chat-Requirements-Token":
+                  _chatRequirements.token,
               },
               body: JSON.stringify(payload),
             }
@@ -468,6 +383,129 @@ export class ChatGPT extends AIProvider {
             this.isProcessing = false;
             return null;
           }
+          let finalText: string = "";
+          const parser = createParser(async (event) => {
+            if (event.type === "event") {
+              const message = event.data;
+              if (message === "[DONE]") {
+                callback({
+                  type: AIResponseTypeEnum.COMPLETE,
+                  message: finalText,
+                  payload: {
+                    ...(!args.deleteConversation && {
+                      conversationId: this.conversationId!,
+                      ...(args.conversationMode ===
+                        ConversationModeEnum.REGENERATE &&
+                        args.childMessageId && {
+                          childMessageId: args.childMessageId,
+                        }),
+                      ...(args.conversationMode ===
+                        ConversationModeEnum.NORMAL && {
+                        childMessageId: childId,
+                      }),
+                    }),
+                    ...(this.messageId && { messageId: this.messageId }),
+                    endTurn: this.endTurn,
+                  },
+                });
+
+                if (
+                  this.conversationId &&
+                  args.deleteConversation &&
+                  this.token
+                ) {
+                  this.setConversationProperty(
+                    this.token,
+                    this.conversationId,
+                    {
+                      is_visible: false,
+                    }
+                  );
+                }
+
+                this.isProcessing = false;
+                return null;
+              }
+
+              let data;
+              try {
+                data = JSON.parse(message);
+              } catch (err) {
+                return null;
+              }
+              const currentText: string = data.message?.content?.parts?.[0];
+              const role = data.message?.author.role;
+              if (currentText && role === "assistant") {
+                this.conversationId = data.conversation_id;
+                callback({
+                  type: AIResponseTypeEnum.MESSAGE,
+                  message: currentText,
+                });
+                finalText = currentText;
+              }
+              if (data.message_id) {
+                this.messageId = data.message_id;
+              }
+              if (
+                data.message &&
+                data.message.metadata &&
+                data.message.metadata.is_complete
+              ) {
+                this.endTurn = data.message.end_turn;
+              }
+            }
+          });
+
+          // Create ReadableStreamDefaultReader and store it in the reader variable
+          const stream = resp.body;
+          if (stream) {
+            this.reader = stream.getReader();
+          } else {
+            callback({
+              type: AIResponseTypeEnum.ERROR,
+              message: "Stream is null",
+              code: Status.CHATGPT_STREAM_ERROR,
+            });
+            if (this.conversationId) {
+              // this.setConversationProperty(this.token!, this.conversationId, {
+              //   is_visible: false,
+              // });
+            }
+            this.isProcessing = false;
+            return null;
+          }
+
+          // Read the stream until it's canceled or finished
+          const readStream = async () => {
+            try {
+              while (true) {
+                const { done, value } = await this.reader!.read();
+                if (done) {
+                  break;
+                }
+                const str = new TextDecoder().decode(value);
+                parser.feed(str);
+              }
+            } catch (err) {
+              // Handle stream reading errors
+              callback({
+                type: AIResponseTypeEnum.ERROR,
+                message: "Stream error",
+                code: Status.CHATGPT_STREAM_ERROR,
+              });
+              if (this.conversationId) {
+                // this.setConversationProperty(this.token!, this.conversationId, {
+                //   is_visible: false,
+                // });
+              }
+            }
+          };
+
+          // Call the readStream() method to start reading the stream
+          readStream();
+
+          // Return the closeStream() method to allow closing the stream from the outside
+          return;
         });
       }
     );

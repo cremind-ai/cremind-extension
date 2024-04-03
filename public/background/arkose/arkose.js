@@ -18,6 +18,7 @@ class ArkoseTokenGenerator {
     enforcement.setConfig({
       onCompleted: (r) => {
         this.pendingPromises.forEach((promise) => {
+          console.log("OK2-token", r.token);
           promise.resolve(r.token);
         });
         this.pendingPromises = [];
@@ -47,6 +48,7 @@ class ArkoseTokenGenerator {
   }
 
   async generate() {
+    console.log("OK1-generate");
     if (!this.enforcement) {
       return;
     }

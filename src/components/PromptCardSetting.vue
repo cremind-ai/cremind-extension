@@ -49,8 +49,9 @@
       :color="LOGO_COLOR"
       :plain="isDark"
       @click="handleResetVariable()"
-      >RESET</ElButton
     >
+      RESET
+    </ElButton>
   </ElCard>
 </template>
 
