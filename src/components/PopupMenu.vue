@@ -182,7 +182,6 @@ import { FeatureSchema } from "@/lib/features";
 import { moreOptions, OptionCommandType } from "@/constants/ui";
 import { QuickFeatureCard } from "@/components";
 import { MenuBar } from "@/components";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { AIMode, MAXIMUM_FEATURES_SIZE_DEFAULT } from "@/constants";
 import { getJsonFeatures } from "@/lib/common";
@@ -617,14 +616,14 @@ const handleCommand = (command: OptionCommandType) => {
         type: CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE,
         message: "Open options page",
       };
-      consoleLog(LogLevelEnum.DEBUG, data);
+      console.log(data);
       chrome.runtime.sendMessage(data, () => {});
       break;
   }
 };
 
 onMounted(async () => {
-  consoleLog(LogLevelEnum.DEBUG, "Mounted PopupMenu");
+  console.log("Mounted PopupMenu");
   document.addEventListener("mousedown", handleMousedown);
   document.addEventListener("keyup", handleKeyup);
   const shadowHost = document.querySelector("cremind-app-extension");
@@ -712,7 +711,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "Unmounted PopupMenu");
+  console.log("Unmounted PopupMenu");
   document.removeEventListener("mousedown", handleMousedown);
   document.removeEventListener("keyup", handleKeyup);
   const shadowHost = document.querySelector("cremind-app-extension");

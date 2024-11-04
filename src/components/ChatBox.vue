@@ -99,7 +99,6 @@ import { PromptTemplate } from "@/lib/prompt_template";
 import { Chain } from "@/lib/chain";
 import { CMException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { Status } from "@/constants/status";
 import {
   ConversationContextType,
@@ -213,8 +212,7 @@ const deleteConversation = () => {
     conversationContext.saveConversation = false;
     return;
   }
-  consoleLog(
-    LogLevelEnum.DEBUG,
+  console.log(
     "onDeleteConversation",
     conversationContext.conversationId
   );
@@ -318,12 +316,12 @@ const sendMessage = async (
   });
 
   result.on("complete", (data: any) => {
-    consoleLog(LogLevelEnum.DEBUG, "complete");
+    console.log("complete");
   });
 
   result.on("endOfChain", (data: any) => {
     isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, "endOfChain");
+    console.log("endOfChain");
     clearInterval(intervalId);
     chats[chats.length - 1] = {
       role: ConversationRoleEnum.ASSISTANT,
@@ -343,11 +341,11 @@ const sendMessage = async (
   });
 
   result.on("error", (error: CMException) => {
-    consoleLog(LogLevelEnum.DEBUG, "error");
+    console.log("error");
     clearInterval(intervalId);
     isStreaming.value = false;
     conversationContext.endTurn = true;
-    consoleLog(LogLevelEnum.DEBUG, error);
+    console.log(error);
     // if (error.code === Status.CHATGPT_UNAUTHORIZED) {
     //   ElMessage.error(
     //     "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
@@ -416,7 +414,7 @@ const handleStopGenerating = async () => {
 };
 
 const newChat = (value: string) => {
-  consoleLog(LogLevelEnum.DEBUG, "newChat", value);
+  console.log("newChat", value);
   if (!isStreaming.value) {
     sendMessage(value, ConversationModeEnum.NORMAL);
   }
@@ -426,7 +424,7 @@ const newChat = (value: string) => {
 };
 
 onMounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "Mounted ChatBox");
+  console.log("Mounted ChatBox");
   isStreaming.value = props.isStreaming;
 });
 

@@ -2,7 +2,7 @@
   <div class="cremend-container-getting-started">
     <iframe
       ref="myIframe"
-      src="https://cremind.io/getting-started/"
+      src="https://extensions.cremind.io/getting-started/"
       title="Getting Started"
       @load="resizeIframe"
     ></iframe>

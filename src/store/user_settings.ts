@@ -19,7 +19,7 @@ export const useUserSettingsStore = defineStore({
       sidebar: SidebarMode.SIDEBAR,
       aiProvider: AIMode.CHAT_GPT,
       tidyDisplayOptionBarMode: false,
-      chatgptModel: "text-davinci-002-render-sha",
+      chatgptModel: "auto",
     };
   },
   getters: {

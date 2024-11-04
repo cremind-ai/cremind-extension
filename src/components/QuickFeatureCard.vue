@@ -66,7 +66,6 @@ import { FeatureSchema } from "@/lib/features";
 import { Status } from "@/constants/status";
 import { ChatAction } from "@/components/Chat";
 import { DrawerPromptInitialize } from "@/components";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import { ConversationModeEnum } from "@/types/conversation";
 import { LLM } from "@/lib/llm";
@@ -241,7 +240,7 @@ const handleRegenerate = () => {
 };
 
 const handleCopyToClipboard = () => {
-  consoleLog(LogLevelEnum.DEBUG, "handleCopyToClipboard");
+  console.log("handleCopyToClipboard");
   if (outputContent.value) {
     navigator.clipboard.writeText(outputContent.value);
   }
@@ -258,7 +257,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     llm,
     currentFeature.value[aiProviderKey.value]!.Chains
   );
-  consoleLog(LogLevelEnum.DEBUG, variables);
+  console.log(variables);
   for (const key in variables) {
     props.featureSchema[currentFeatureMode.value]!.variableSchema[key].value =
       variables[key];
@@ -287,12 +286,12 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
     emits("data", data);
   });
   result.on("complete", (data: any) => {
-    consoleLog(LogLevelEnum.DEBUG, "=====>complete");
+    console.log("=====>complete");
     completeContent += "\n";
     outputContent.value = completeContent;
   });
   result.on("endOfChain", (data: any) => {
-    consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
+    console.log("=====>endOfChain");
     isStreaming.value = false;
     let extractText = ResponseParser.getInstance().extractTextFromBlock(
       AI_SYSTEM_RESPONSE_START_BLOCK,
@@ -311,7 +310,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
   });
   result.on("error", (error: CMException) => {
     isStreaming.value = false;
-    consoleLog(LogLevelEnum.DEBUG, error);
+    console.log(error);
     // if (error.code === Status.CHATGPT_UNAUTHORIZED) {
     //   ElMessage.error(
     //     "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
@@ -340,8 +339,8 @@ async function handleFeature(
   currentFeature.value = feature;
   currentFeatureId.value = id;
   currentFeatureMode.value = type;
-  consoleLog(LogLevelEnum.DEBUG, id);
-  consoleLog(LogLevelEnum.DEBUG, feature.variableSchema);
+  console.log(id);
+  console.log(feature.variableSchema);
 
   formDataVariableSchema.value = {};
   for (const key in feature.variableSchema) {
@@ -350,7 +349,7 @@ async function handleFeature(
       continue;
     }
     const value = feature.variableSchema[key].value;
-    consoleLog(LogLevelEnum.DEBUG, value);
+    console.log(value);
     if (!value) {
       checkShowDrawer = true;
       continue;
@@ -358,7 +357,7 @@ async function handleFeature(
     variables[key] = value;
     formDataVariableSchema.value[key] = value;
   }
-  consoleLog(LogLevelEnum.DEBUG, "checkShowDrawer", checkShowDrawer);
+  console.log("checkShowDrawer", checkShowDrawer);
   drawer.value = checkShowDrawer;
 
   if (!checkShowDrawer) {
@@ -378,7 +377,7 @@ const handleCloseDrawer = () => {
 };
 
 onMounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "QuickFeartureCard Mounted");
+  console.log("QuickFeartureCard Mounted");
 });
 </script>
 

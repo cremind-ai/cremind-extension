@@ -4,7 +4,6 @@ import { EventEmitter } from "@/utils/event_emitter";
 import { PromptTemplate } from "../prompt_template";
 import { IPCTopicEnum } from "@/types";
 import { LLM } from "../llm";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { ConversationModeEnum } from "@/types/conversation";
 import { AIPayloadType } from "@/types/provider";
 
@@ -110,12 +109,12 @@ export class Chain {
           prompt = this.promptTemplate.render(this.variables);
         }
 
-        consoleLog(LogLevelEnum.DEBUG, "=====================");
+        console.log("=====================");
         if (args.conversationMode === ConversationModeEnum.CONTINUE) {
           prompt = "Continue";
         }
-        consoleLog(LogLevelEnum.DEBUG, prompt);
-        consoleLog(LogLevelEnum.DEBUG, "=====================");
+        console.log(prompt);
+        console.log("=====================");
         setTimeout(() => {
           emitter.emit("prompt", prompt);
         }, 0);

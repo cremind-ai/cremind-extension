@@ -138,9 +138,7 @@ import { FeatureModeEnum } from "@/types";
 import { QuickFeatureCard } from "@/components";
 import { PromptCardFeature } from "@/components";
 import { Chat } from "@/components/Chat";
-import { SystemVariableParser } from "@/lib";
 import { ConversationMessageType } from "@/types/conversation";
-import { consoleLog, LogLevelEnum } from "@/utils";
 
 const props = defineProps({
   isStreaming: {
@@ -388,7 +386,7 @@ const handleKey = (event: Event | KeyboardEvent) => {
 };
 
 onMounted(async () => {
-  consoleLog(LogLevelEnum.DEBUG, "Mounted PromptApp");
+  console.log("Mounted PromptApp");
   currentPageProcess(currentPage.value, currentCategory.value);
 });
 

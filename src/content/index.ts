@@ -30,6 +30,10 @@ import PromptCardFeatureStyle from "@/styles/components/PromptCardFeature.scss";
 
 export let shadowRoot: ShadowRoot;
 
+if (process.env.NODE_ENV === "production") {
+  console.log = function () {};
+}
+
 function initExtension() {
   const shadowHost = document.createElement("cremind-app-extension");
   document.body.appendChild(shadowHost);

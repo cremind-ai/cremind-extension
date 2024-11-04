@@ -59,7 +59,6 @@ import { ElForm } from "element-plus";
 import { ElFormItem } from "element-plus";
 import { Icon } from "@iconify/vue";
 import { ChromeStorage } from "@/hooks/chrome_storage";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import {
   CommunicationMessageTypeEnum,
   IPCTopicEnum,

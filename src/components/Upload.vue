@@ -299,8 +299,6 @@ import { Chain } from "@/lib/chain";
 import { CMException } from "@/types/exception";
 import { LLM } from "@/lib/llm";
 import {
-  consoleLog,
-  LogLevelEnum,
   sleep,
   textConcat,
   textSplit,
@@ -577,8 +575,7 @@ const beforeUpload: UploadProps["beforeUpload"] = (rawFile) => {
 };
 
 const deleteConversation = () => {
-  consoleLog(
-    LogLevelEnum.DEBUG,
+  console.log(
     "onDeleteConversation Upload",
     conversationId.value
   );
@@ -651,14 +648,14 @@ const handleCleanOutput = () => {
 };
 
 const handleCopyToClipboard = () => {
-  consoleLog(LogLevelEnum.DEBUG, "handleCopyToClipboard");
+  console.log("handleCopyToClipboard");
   if (outputContent.value) {
     navigator.clipboard.writeText(outputContent.value);
   }
 };
 
 const startGenerateResponse = async (variables: { [key: string]: string }) => {
-  consoleLog(LogLevelEnum.DEBUG, variables);
+  console.log(variables);
   try {
     if (activeIndexInput.value === InputMode.INSERT_TEXT) {
       if (insertText.value.trim() === "") {
@@ -755,13 +752,13 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
           let resStt: ResPayloadType = await new Promise<ResPayloadType>(
             (resolve) => {
               result.on("complete", async (data) => {
-                consoleLog(LogLevelEnum.DEBUG, "=====>complete");
-                consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
+                console.log("=====>complete");
+                console.log(`${data.message}`);
                 completeContent += "\n";
                 outputContent.value = completeContent;
               });
               result.on("endOfChain", async (data) => {
-                consoleLog(LogLevelEnum.DEBUG, "=====>endOfChain");
+                console.log("=====>endOfChain");
                 const extractText =
                   ResponseParser.getInstance().extractTextFromBlock(
                     AI_SYSTEM_RESPONSE_START_BLOCK,
@@ -777,7 +774,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
                 messageId = data.messageId;
                 continueGenerating = data.endTurn ? false : true;
                 contextIds = data.contextIds ? data.contextIds : null;
-                consoleLog(LogLevelEnum.DEBUG, `${data.message}`);
+                console.log(`${data.message}`);
                 if (!continueGenerating) {
                   completeContent += "\n\n";
                 }
@@ -791,7 +788,7 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
                 });
               });
               result.on("error", (error) => {
-                consoleLog(LogLevelEnum.DEBUG, error);
+                console.log(error);
                 // if (error.code === Status.CHATGPT_UNAUTHORIZED) {
                 //   ElMessage.error(
                 //     "ChatGPT still not logged in yet. Please login and try again. 👉 https://chat.openai.com/"
@@ -837,15 +834,14 @@ const startGenerateResponse = async (variables: { [key: string]: string }) => {
               }
             }
           }
-          consoleLog(
-            LogLevelEnum.DEBUG,
+          console.log(
             ">> continueGenerating",
             continueGenerating,
             retryCount
           );
         } while (continueGenerating || retryCount > 0);
       } catch (error) {
-        consoleLog(LogLevelEnum.DEBUG, error);
+        console.log(error);
         isStreaming.value = false;
         deleteConversation();
         break;
@@ -869,8 +865,8 @@ async function handleFeature(
   currentFeature.value = feature;
   currentFeatureId.value = id;
   currentFeatureMode.value = type;
-  consoleLog(LogLevelEnum.DEBUG, id);
-  consoleLog(LogLevelEnum.DEBUG, feature.variableSchema);
+  console.log(id);
+  console.log(feature.variableSchema);
 
   formDataVariableSchema.value = {};
   for (const key in feature.variableSchema) {
@@ -879,7 +875,7 @@ async function handleFeature(
       continue;
     }
     const value = feature.variableSchema[key].value;
-    consoleLog(LogLevelEnum.DEBUG, value);
+    console.log(value);
     if (!value) {
       checkShowDrawer = true;
       continue;
@@ -887,7 +883,7 @@ async function handleFeature(
     variables[key] = value;
     formDataVariableSchema.value[key] = value;
   }
-  consoleLog(LogLevelEnum.DEBUG, "checkShowDrawer", checkShowDrawer);
+  console.log("checkShowDrawer", checkShowDrawer);
   drawer.value = checkShowDrawer;
 
   if (!checkShowDrawer) {

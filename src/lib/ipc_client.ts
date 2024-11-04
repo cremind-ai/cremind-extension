@@ -8,7 +8,6 @@ import {
   ConversationMessageTypeEnum,
 } from "@/types";
 import { CONTENT_SCRIPT_PORT_NAME } from "@/constants";
-import { consoleLog, LogLevelEnum } from "@/utils";
 
 export class IPCClientException extends CMException {}
 
@@ -155,9 +154,9 @@ export class IPCClient {
           },
           10000
         );
-        consoleLog(LogLevelEnum.DEBUG, data);
+        console.log(data);
       } catch (error) {
-        consoleLog(LogLevelEnum.DEBUG, error);
+        console.log(error);
       }
 
       const data = await ipcClient.request(
@@ -169,10 +168,10 @@ export class IPCClient {
         10000
       );
       data.on("data", (data) => {
-        consoleLog(LogLevelEnum.DEBUG, data.message);
+        console.log(data.message);
       });
       data.on("error", (error) => {
-        consoleLog(LogLevelEnum.DEBUG, error);
+        console.log(error);
       });
   */
 

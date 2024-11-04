@@ -8,6 +8,7 @@ import {
   find,
   sortBy,
 } from "lodash-es";
+import Browser from "webextension-polyfill";
 import { AIResponseType, AIResponseTypeEnum } from "@/types/provider";
 import {
   IPCMessageType,
@@ -16,16 +17,20 @@ import {
   CommunicationMessageTypeEnum,
   LLMMODE,
   ResPayloadType,
+  OpenAIAuthMode,
 } from "@/types";
 import { IPCHost } from "@/lib/ipc_host";
 import { AIProvider } from "./providers/base";
 import { AIProviderException, AIProviderFactory } from "./providers";
 import { AIMode } from "@/constants";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { CMException } from "@/types/exception";
 import { Status } from "@/constants/status";
 import { ChromeStorage } from "@/hooks/chrome_storage";
 import { CategoryFeatureEnum, FeatureSchema } from "@/lib/features";
+
+if (process.env.NODE_ENV === "production") {
+  console.log = function () {};
+}
 
 function processFeature(
   features: FeatureSchema[],
@@ -245,9 +250,9 @@ ipcHost.register(
       aiProvider = aiProviderClaude;
     }
 
-    consoleLog(LogLevelEnum.DEBUG, aiMode);
-    consoleLog(LogLevelEnum.DEBUG, data);
-    consoleLog(LogLevelEnum.DEBUG, "isProcessing " + aiProvider.isProcessing);
+    console.log(aiMode);
+    console.log(data);
+    console.log("isProcessing " + aiProvider.isProcessing);
 
     if (
       data &&
@@ -349,7 +354,7 @@ ipcHost.register(
       try {
         aiProvider.deleteConversation(data.payload.conversationId);
       } catch (err) {
-        consoleLog(LogLevelEnum.ERROR, err);
+        console.error(err);
       }
 
       sendResponse(ConversationMessageTypeEnum.COMPLETE, {
@@ -372,10 +377,11 @@ ipcHost.register(
       data.payload.mode === LLMMODE.AUTHENTICATION
     ) {
       try {
-        await aiProvider.authentication();
+        const accountType = await aiProvider.authentication();
         const payload = {
           status: Status.SUCCESS,
           message: "Authentication Successful",
+          accountType: accountType,
         };
         sendResponse(ConversationMessageTypeEnum.COMPLETE, payload);
       } catch (err) {

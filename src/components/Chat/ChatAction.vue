@@ -39,7 +39,6 @@
 </template>
 
 <script setup lang="ts">
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { Icon } from "@iconify/vue";
 import { ElInput } from "element-plus";
 import { ElTooltip } from "element-plus";
@@ -94,7 +93,7 @@ const handleEnterKey = () => {
 };
 
 onMounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "Mounted ChatAction");
+  console.log("Mounted ChatAction");
   blockSend.value = props.blockSend;
   emits("mounted");
 });

@@ -369,7 +369,7 @@ import {
   IPCTopicEnum,
   FeatureModeEnum,
 } from "@/types";
-import { consoleLog, detectOperatingSystem, LogLevelEnum } from "@/utils";
+import { detectOperatingSystem } from "@/utils";
 import { useUserSettingsStore } from "@/store/user_settings";
 import {
   ConversationRoleEnum,
@@ -388,6 +388,8 @@ import { getJsonFeatures } from "@/lib/common";
 import { LLM } from "@/lib/llm";
 import { FeatureSchema } from "@/lib/features";
 import { SidebarMenuEnum } from "@/constants/ui";
+
+console.log("Hello World");
 
 type PopupMenuVariableType = {
   show: boolean;
@@ -737,7 +739,7 @@ const handleSettings = () => {
     type: CommunicationMessageTypeEnum.OPEN_OPTIONS_PAGE,
     message: "Open options page",
   };
-  consoleLog(LogLevelEnum.DEBUG, data);
+  console.log(data);
   chrome.runtime.sendMessage(data, () => {});
 };
 

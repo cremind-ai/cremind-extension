@@ -7,6 +7,10 @@ import "element-plus/dist/index.css";
 import "element-plus/theme-chalk/dark/css-vars.css";
 import "@/styles/index.scss";
 
+if (process.env.NODE_ENV === "production") {
+  console.log = function () {};
+}
+
 const app = createApp(App).use(createPinia());
 app.use(router);
 app.use(ElementPlus);

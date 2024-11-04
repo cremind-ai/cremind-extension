@@ -1,14 +1,19 @@
 import { ofetch } from "ofetch";
 import ExpiryMap from "expiry-map";
 import { createParser } from "eventsource-parser";
+import randomInt from "random-int";
+import { sha3_512 } from "js-sha3";
+import { Buffer } from "buffer";
+import Browser from "webextension-polyfill";
+
 import { AIResponseType, AIResponseTypeEnum } from "@/types/provider";
 import { AIProvider } from "./base";
 import { AIProviderException } from "./index";
 import { Status } from "@/constants/status";
 import { uuid } from "@/utils";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { ConversationModeEnum } from "@/types/conversation";
 import {
+  OpenAIAuthMode,
   CommunicationMessageTypeEnum,
   IPCMessageType,
   IPCTopicEnum,
@@ -17,8 +22,8 @@ import {
 export class ChatGPT extends AIProvider {
   private static instance: ChatGPT;
   private KEY_ACCESS_TOKEN: string = "accessToken";
-  private CHATGPT_URL: string = "https://chat.openai.com";
-  private cache: ExpiryMap<string> = new ExpiryMap(10 * 1000);
+  private CHATGPT_URL: string = "https://chatgpt.com";
+  private cache: ExpiryMap<string> = new ExpiryMap(1000 * 60 * 60); // Cache for 1 hour
   public token: string | null = null;
   private reader: ReadableStreamDefaultReader | null = null; // Variable to store ReadableStreamDefaultReader
   private messageId: string | null = null;
@@ -36,13 +41,21 @@ export class ChatGPT extends AIProvider {
   }
 
   public initCache(): ChatGPT {
-    this.cache = new ExpiryMap(10 * 1000);
+    this.cache = new ExpiryMap(1000 * 60 * 60);
     return this;
   }
 
-  public authentication = async () => {
+  async authentication<OpenAIAuthMode>(): Promise<OpenAIAuthMode> {
     try {
-      await this.getChatGPTAccessToken();
+      this.token = await this.getChatGPTAccessToken();
+      let _chatRequirements = await this.chatRequirements();
+      if (_chatRequirements.persona === "chatgpt-noauth") {
+        return OpenAIAuthMode.CHATGPT_NOAUTH as unknown as OpenAIAuthMode;
+      } else if (_chatRequirements.persona === "chatgpt-freeaccount") {
+        return OpenAIAuthMode.CHATGPT_FREE as unknown as OpenAIAuthMode;
+      } else if (_chatRequirements.persona === "chatgpt-paid") {
+        return OpenAIAuthMode.CHATGPT_PLUS as unknown as OpenAIAuthMode;
+      }
     } catch (err) {
       if (err instanceof AIProviderException) {
         throw new AIProviderException(
@@ -51,7 +64,11 @@ export class ChatGPT extends AIProvider {
         );
       }
     }
-  };
+    throw new AIProviderException(
+      Status.CHATGPT_UNAUTHORIZED,
+      "ChatGPT Unauthorized error. Please try again later."
+    );
+  }
 
   private async getChatGPTAccessToken(): Promise<string | null> {
     if (this.cache.get(this.KEY_ACCESS_TOKEN)) {
@@ -110,7 +127,7 @@ export class ChatGPT extends AIProvider {
       const models = await this.fetchModels(token);
       return models[0].slug;
     } catch (err) {
-      consoleLog(LogLevelEnum.DEBUG, err);
+      console.log(err);
       return "text-davinci-002-render";
     }
   }
@@ -120,7 +137,6 @@ export class ChatGPT extends AIProvider {
     conversationId: string,
     propertyObject: object
   ) {
-    console.log("setConversationProperty", conversationId);
     await this.request(
       token,
       "PATCH",
@@ -154,12 +170,12 @@ export class ChatGPT extends AIProvider {
   }
 
   public async closeStream() {
-    consoleLog(LogLevelEnum.DEBUG, "Closing stream");
+    console.log("Closing stream");
     if (this.reader) {
       try {
         await this.reader.cancel();
       } catch (e) {
-        consoleLog(LogLevelEnum.DEBUG, e);
+        console.log(e);
         this.reader = null;
       }
     }
@@ -172,7 +188,7 @@ export class ChatGPT extends AIProvider {
   }
 
   public async deleteConversation(conversationId: string): Promise<void> {
-    consoleLog(LogLevelEnum.DEBUG, "deleteConversation");
+    console.log("deleteConversation");
 
     // TODO: WORK AROUND
     setTimeout(async () => {
@@ -195,30 +211,78 @@ export class ChatGPT extends AIProvider {
   }
 
   private async getArkoseToken(modelName: string) {
-    // TODO: fix hardcode 'gpt-4'
-    if (modelName === "gpt-4") {
-      let arkoseFrame = "background/arkose/arkose-frame.html";
-      if (
-        !(await this.hasOffscreenDocument(chrome.runtime.getURL(arkoseFrame)))
-      ) {
-        await chrome.offscreen.createDocument({
-          url: arkoseFrame,
-          reasons: [chrome.offscreen.Reason.IFRAME_SCRIPTING],
-          justification: "generating arkose token using offscreen script",
-        });
-      }
-      let resData: IPCMessageType = await chrome.runtime.sendMessage({
-        topic: IPCTopicEnum.COMMUNICATION,
-        type: CommunicationMessageTypeEnum.GET_ARKOSE_TOKEN,
+    let arkoseFrame = "background/arkose/arkose-frame.html";
+    if (
+      !(await this.hasOffscreenDocument(chrome.runtime.getURL(arkoseFrame)))
+    ) {
+      await chrome.offscreen.createDocument({
+        url: arkoseFrame,
+        reasons: [chrome.offscreen.Reason.IFRAME_SCRIPTING],
+        justification: "generating arkose token using offscreen script",
       });
-      if (resData.payload.token) {
-        return resData.payload.token;
-      } else {
-        return null;
-      }
+    }
+    let resData: IPCMessageType = await chrome.runtime.sendMessage({
+      topic: IPCTopicEnum.COMMUNICATION,
+      type: CommunicationMessageTypeEnum.GET_ARKOSE_TOKEN,
+    });
+    if (resData.payload.token) {
+      return resData.payload.token;
     } else {
       return null;
     }
+  }
+
+  private generateProofToken(seed: string, diff: string, userAgent: string) {
+    const cores = [1, 2, 4];
+    const screens = [3008, 4010, 6000];
+    const reacts = [
+      "_reactListeningcfilawjnerp",
+      "_reactListening9ne2dfo1i47",
+      "_reactListening410nzwhan2a",
+    ];
+    const acts = ["alert", "ontransitionend", "onprogress"];
+
+    const core = cores[randomInt(0, cores.length)];
+    const screen = screens[randomInt(0, screens.length)] + core;
+    const react = cores[randomInt(0, reacts.length)];
+    const act = screens[randomInt(0, acts.length)];
+
+    const parseTime = new Date().toString();
+
+    const config = [
+      screen,
+      parseTime,
+      4294705152,
+      0,
+      userAgent,
+      "https://tcr9i.chat.openai.com/v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js",
+      "dpl=1440a687921de39ff5ee56b92807faaadce73f13",
+      "en",
+      "en-US",
+      4294705152,
+      "plugins−[object PluginArray]",
+      react,
+      act,
+    ];
+
+    const diffLen = diff.length;
+
+    for (let i = 0; i < 200000; i++) {
+      config[3] = i;
+      const jsonData = JSON.stringify(config);
+      // eslint-disable-next-line no-undef
+      const base = Buffer.from(jsonData).toString("base64");
+      const hashValue = sha3_512.create().update(seed + base);
+
+      if (hashValue.hex().substring(0, diffLen) <= diff) {
+        const result = "gAAAAAB" + base;
+        return result;
+      }
+    }
+
+    // eslint-disable-next-line no-undef
+    const fallbackBase = Buffer.from(`"${seed}"`).toString("base64");
+    return "gAAAAABwQ8Lk5FbGpA2NcR9dShT6gYjU7VxZ4D" + fallbackBase;
   }
 
   private async registerWss(token: string): Promise<{ [key: string]: string }> {
@@ -259,7 +323,7 @@ export class ChatGPT extends AIProvider {
               return null;
             }
           }
-          const modelName = await this.getModelName(this.token);
+          const modelName = args.modelName ? args.modelName : "auto";
           const childId = uuid();
 
           let payload = {};
@@ -267,9 +331,9 @@ export class ChatGPT extends AIProvider {
             case ConversationModeEnum.NORMAL:
               payload = {
                 action: "next",
-                // arkose_token: arkoseToken,
-                conversation_mode: { kind: "primary_assistant" },
-                force_paragen: false,
+                ...(conversationId && {
+                  conversation_id: conversationId,
+                }),
                 messages: [
                   {
                     id: childId,
@@ -280,16 +344,33 @@ export class ChatGPT extends AIProvider {
                       content_type: "text",
                       parts: [prompt],
                     },
-                    metadata: {},
+                    metadata: {
+                      serialization_metadata: {
+                        custom_symbol_offsets: [],
+                      },
+                    },
+                    create_time: new Date().getTime(),
                   },
                 ],
-                ...(conversationId && { conversation_id: conversationId }),
                 parent_message_id: messageId ? messageId : uuid(),
-                ...(args.modelName && { model: args.modelName }),
-                ...(!args.modelName && { model: modelName }),
+                model: modelName,
                 timezone_offset_min: new Date().getTimezoneOffset(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 suggestions: [],
                 history_and_training_disabled: false,
+                conversation_mode: {
+                  kind: "primary_assistant",
+                },
+                force_paragen: false,
+                force_paragen_model_slug: "",
+                force_rate_limit: false,
+                reset_rate_limits: false,
+                websocket_request_id: uuid(),
+                system_hints: [],
+                force_use_sse: true,
+                supported_encodings: [],
+                conversation_origin: null,
+                paragen_stream_type_override: null,
               };
               break;
             case ConversationModeEnum.REGENERATE:
@@ -297,30 +378,43 @@ export class ChatGPT extends AIProvider {
                 action: "variant",
                 messages: [
                   {
-                    id: args.childMessageId,
+                    id: childId,
                     author: {
                       role: "user",
-                      metadata: {},
                     },
                     content: {
                       content_type: "text",
                       parts: [prompt],
                     },
-                    status: "finished_successfully",
-                    weight: 1,
                     metadata: {
-                      timestamp_: "absolute",
+                      serialization_metadata: {
+                        custom_symbol_offsets: [],
+                      },
                     },
-                    recipient: "all",
+                    create_time: new Date().getTime(),
                   },
                 ],
-                conversation_id: conversationId,
-                parent_message_id: messageId,
-                model: "text-davinci-002-render-sha",
+                ...(conversationId && {
+                  conversation_id: conversationId,
+                }),
+                parent_message_id: messageId ? messageId : uuid(),
+                model: modelName,
                 timezone_offset_min: new Date().getTimezoneOffset(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 variant_purpose: "comparison_implicit",
                 history_and_training_disabled: false,
-                // arkose_token: null,
+                conversation_mode: {
+                  kind: "primary_assistant",
+                },
+                force_paragen: false,
+                force_paragen_model_slug: "",
+                force_rate_limit: false,
+                reset_rate_limits: false,
+                websocket_request_id: uuid(),
+                force_use_sse: true,
+                supported_encodings: [],
+                conversation_origin: null,
+                paragen_stream_type_override: null,
               };
               break;
             case ConversationModeEnum.CONTINUE:
@@ -328,16 +422,54 @@ export class ChatGPT extends AIProvider {
                 action: "continue",
                 conversation_id: conversationId,
                 parent_message_id: messageId,
-                model: "text-davinci-002-render-sha",
+                model: modelName,
                 timezone_offset_min: new Date().getTimezoneOffset(),
                 history_and_training_disabled: false,
-                // arkose_token: null,
               };
               break;
           }
-          consoleLog(LogLevelEnum.DEBUG, "payload", payload);
+          console.log("payload", payload);
           let _chatRequirements = await this.chatRequirements();
-          console.log(_chatRequirements);
+
+          let proofToken;
+          if (_chatRequirements?.proofofwork?.required) {
+            proofToken = this.generateProofToken(
+              _chatRequirements.proofofwork.seed,
+              _chatRequirements.proofofwork.difficulty,
+              navigator.userAgent
+            );
+          }
+
+          let cookie;
+          let oaiDeviceId;
+          if (Browser.cookies && Browser.cookies.getAll) {
+            cookie = (
+              await Browser.cookies.getAll({ url: "https://chatgpt.com/" })
+            )
+              .map((cookie) => {
+                return `${cookie.name}=${cookie.value}`;
+              })
+              .join("; ");
+            oaiDeviceId = (await Browser.cookies.get({
+              url: "https://chatgpt.com/",
+              name: "oai-did",
+            }))!.value;
+          }
+
+          let apiUrl: string = this.CHATGPT_URL;
+          let authMode: OpenAIAuthMode = OpenAIAuthMode.CHATGPT_NOAUTH;
+
+          if (_chatRequirements.persona === "chatgpt-noauth") {
+            authMode = OpenAIAuthMode.CHATGPT_NOAUTH;
+            apiUrl += this.token ? "/backend-api" : "/backend-anon";
+          } else if (_chatRequirements.persona === "chatgpt-freeaccount") {
+            authMode = OpenAIAuthMode.CHATGPT_FREE;
+            apiUrl += "/backend-api";
+          } else if (_chatRequirements.persona === "chatgpt-paid") {
+            authMode = OpenAIAuthMode.CHATGPT_PLUS;
+            apiUrl += "/backend-api";
+          }
+
           let arkoseToken: string | null = null;
           if (_chatRequirements.arkose.required) {
             arkoseToken = await this.getArkoseToken(args.modelName);
@@ -346,24 +478,29 @@ export class ChatGPT extends AIProvider {
           const isArkoseToken =
             _chatRequirements.arkose.required && arkoseToken ? true : false;
 
-          const resp = await fetch(
-            this.CHATGPT_URL + "/backend-api/conversation",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(this.token && {
-                  Authorization: `Bearer ${this.token}`,
-                }),
-                ...(isArkoseToken && {
-                  "Openai-Sentinel-Arkose-Token": arkoseToken!,
-                }),
+          const controller = new AbortController();
+          const resp = await fetch(`${apiUrl}/conversation`, {
+            method: "POST",
+            signal: controller.signal,
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(this.token && {
+                Authorization: `Bearer ${this.token}`,
+              }),
+              ...(isArkoseToken && {
+                "Openai-Sentinel-Arkose-Token": arkoseToken,
+              }),
+              ...(_chatRequirements && {
                 "Openai-Sentinel-Chat-Requirements-Token":
                   _chatRequirements.token,
-              },
-              body: JSON.stringify(payload),
-            }
-          );
+              }),
+              ...(proofToken && { "Openai-Sentinel-Proof-Token": proofToken }),
+              "Oai-Device-Id": oaiDeviceId,
+              "Oai-Language": "en-US",
+            },
+            body: JSON.stringify(payload),
+          });
 
           if (!resp.ok) {
             const error = await resp.json().catch(() => ({}));

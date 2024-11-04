@@ -16,6 +16,7 @@ export default defineConfig(({ command, mode }) => {
   let env = {} as any;
   env = loadEnv(mode, root);
   console.log(env);
+  console.log(mode);
 
   return {
     resolve: {
@@ -37,6 +38,7 @@ export default defineConfig(({ command, mode }) => {
       ],
     },
     build: {
+      sourcemap: mode === "production" ? false : true,
       emptyOutDir: true,
       outDir: "build",
       rollupOptions: {

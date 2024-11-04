@@ -142,7 +142,6 @@ import { SystemOptions } from "@/constants/system_variables";
 import { FeatureModeEnum } from "@/types";
 import { getJsonFeatures, setJsonFeature } from "@/lib/common";
 import { MAXIMUM_FEATURES_SIZE_DEFAULT } from "@/constants";
-import { consoleLog, LogLevelEnum } from "@/utils";
 
 const props = defineProps({
   visible: {
@@ -338,11 +337,11 @@ const handleKey = (event: Event | KeyboardEvent) => {
 };
 
 onMounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "DrawerPromptInitialize Mounted");
+  console.log("DrawerPromptInitialize Mounted");
 });
 
 onUnmounted(() => {
-  consoleLog(LogLevelEnum.DEBUG, "DrawerPromptInitialize Unmounted");
+  console.log("DrawerPromptInitialize Unmounted");
 });
 </script>
 

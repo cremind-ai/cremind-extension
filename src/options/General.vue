@@ -217,6 +217,7 @@ import {
 import { LLM } from "@/lib/llm";
 import { Status } from "@/constants/status";
 import { SidebarMode } from "@/types/ui";
+import { OpenAIAuthMode } from "@/types";
 
 enum GeneralSettings {
   AI_PROVIDER_OPTION = "AI_PROVIDER_OPTION",
@@ -264,26 +265,7 @@ watch(
 watch(
   () => userSettings.getAiProvider,
   async (value) => {
-    const res = await llm.authentication({ aiProvider: value });
-    if (value === AIMode.CHAT_GPT) {
-      if (res.status === Status.SUCCESS) {
-        isAuthenChatGPT.value = true;
-      } else {
-        isAuthenChatGPT.value = false;
-      }
-    } else if (value === AIMode.CLAUDE) {
-      if (res.status === Status.SUCCESS) {
-        isAuthenClaude.value = true;
-      } else {
-        isAuthenClaude.value = false;
-      }
-    } else if (value === AIMode.GEMINI) {
-      if (res.status === Status.SUCCESS) {
-        isAuthenGemini.value = true;
-      } else {
-        isAuthenGemini.value = false;
-      }
-    }
+    await checkAuthentications();
   }
 );
 
@@ -344,12 +326,27 @@ const handleGeneralSettingsClick = async (
   }
 };
 
-onMounted(async () => {
+const checkAuthentications = async () => {
   const res = await llm.authentication({
     aiProvider: userSettings.getAiProvider,
   });
   if (userSettings.getAiProvider === AIMode.CHAT_GPT) {
     if (res.status === Status.SUCCESS) {
+      try {
+        
+        const accountType: OpenAIAuthMode = res.accountType;
+        const chatGPTPayload = await api.getChatgptModels();
+        chatgptModels.value = chatGPTPayload[accountType]
+        console.log(chatgptModels.value);
+        const foundModel = chatgptModels.value.find(
+          (item) => item.model === userSettings.getChatgptModel
+        );
+        if (foundModel) {
+          userSettings.setChatgptModel(foundModel.model);
+        } else {
+          userSettings.setChatgptModel(chatgptModels.value[0].model);
+        }
+      } catch (e) { }
       isAuthenChatGPT.value = true;
     } else {
       isAuthenChatGPT.value = false;
@@ -367,17 +364,10 @@ onMounted(async () => {
       isAuthenGemini.value = false;
     }
   }
-  try {
-    chatgptModels.value = await api.getChatgptModels();
-    const foundModel = chatgptModels.value.find(
-      (item) => item.model === userSettings.getChatgptModel
-    );
-    if (foundModel) {
-      userSettings.setChatgptModel(foundModel.model);
-    } else {
-      userSettings.setChatgptModel(chatgptModels.value[0].model);
-    }
-  } catch (e) {}
+}
+
+onMounted(async () => {
+  await checkAuthentications();
 });
 </script>
 

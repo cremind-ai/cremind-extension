@@ -5,7 +5,7 @@ export abstract class AIProvider {
   conversationId: string | null = null;
   abstract closeStream(): void;
   abstract deleteConversation(conversationId: string): void;
-  abstract authentication(): Promise<void>;
+  abstract authentication<T>(): Promise<T>;
   abstract conversation(
     conversationId: string | null,
     messageId: string | null,

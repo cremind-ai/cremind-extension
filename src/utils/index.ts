@@ -1,5 +1,4 @@
 import { ResPayloadType } from "@/types";
-import { consoleLog, LogLevelEnum } from "./log";
 import { Status } from "@/constants/status";
 import { CMException } from "@/types/exception";
 import { OperatingSystemEnum } from "@/constants";
@@ -159,6 +158,4 @@ export {
   textSplit,
   crawlWebsite,
   detectOperatingSystem,
-  consoleLog,
-  LogLevelEnum,
 };

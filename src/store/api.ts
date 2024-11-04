@@ -3,10 +3,13 @@ import { CMException } from "@/types/exception";
 import { Status } from "@/constants/status";
 import { ResPayloadType } from "@/types";
 
-export type ChatGPTModel = {
+export interface ChatGPTModel {
   name: string;
   model: string;
-};
+}
+interface ChatGPTModelPayload {
+  [key: string]: ChatGPTModel[];
+}
 
 interface APIState {}
 
@@ -17,7 +20,7 @@ export const useAPIStore = defineStore({
   },
   getters: {},
   actions: {
-    getChatgptModels(): Promise<ChatGPTModel[]> {
+    getChatgptModels(): Promise<ChatGPTModelPayload> {
       return new Promise((resolve, reject) => {
         fetch(`${import.meta.env.VITE_CREMIND_API!}/system/chatgpt`, {
           method: "GET",
@@ -35,8 +38,8 @@ export const useAPIStore = defineStore({
             return response.json();
           })
           .then((resData: ResPayloadType) => {
-            if (resData.status === Status.SUCCESS && resData.payload.models) {
-              resolve(resData.payload.models);
+            if (resData.status === Status.SUCCESS && resData.payload) {
+              resolve(resData.payload);
             } else {
               reject(
                 new CMException(

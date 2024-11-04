@@ -1,10 +1,10 @@
 import { AIResponseType, AIResponseTypeEnum } from "@/types/provider";
 import { AIProvider } from "./base";
-import { consoleLog, LogLevelEnum } from "@/utils";
 import { AIProviderException } from "./index";
 import { Status } from "@/constants/status";
 import { ofetch } from "ofetch";
 import { ConversationModeEnum } from "@/types/conversation";
+import { GeminiAuthMode } from "@/types";
 
 export class Gemini extends AIProvider {
   public isProcessing: boolean = false;
@@ -113,9 +113,10 @@ export class Gemini extends AIProvider {
     return { atValue, blValue };
   }
 
-  public authentication = async () => {
+  async authentication<GeminiAuthMode>(): Promise<GeminiAuthMode> {
     try {
       await this.getUserInfo();
+      return GeminiAuthMode.GEMINI_FREE as unknown as GeminiAuthMode;
     } catch (err) {
       if (err instanceof AIProviderException) {
         throw new AIProviderException(
@@ -124,7 +125,11 @@ export class Gemini extends AIProvider {
         );
       }
     }
-  };
+    throw new AIProviderException(
+      Status.BARD_UNAUTHORIZED,
+      "Google Gemini Unauthorized error. Please try again later."
+    );
+  }
 
   async conversation(
     conversationId: string | null,

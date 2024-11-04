@@ -49,3 +49,17 @@ export enum LLMMODE {
   AUTHENTICATION = "AUTHENTICATION",
   COMMUNICATION = "COMMUNICATION",
 }
+
+export enum OpenAIAuthMode {
+  CHATGPT_NOAUTH = "chatgpt-noauth",
+  CHATGPT_FREE = "chatgpt-free",
+  CHATGPT_PLUS = "chatgpt-plus",
+}
+
+export enum ClaudeAuthMode {
+  CLAUDE_FREE = "claude-free",
+}
+
+export enum GeminiAuthMode {
+  GEMINI_FREE = "gemini-free",
+}

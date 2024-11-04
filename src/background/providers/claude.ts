@@ -1,10 +1,11 @@
 import { AIResponseType, AIResponseTypeEnum } from "@/types/provider";
 import { AIProvider } from "./base";
-import { consoleLog, LogLevelEnum, uuid } from "@/utils";
+import { uuid } from "@/utils";
 import { AIProviderException } from "./index";
 import { Status } from "@/constants/status";
 import { ofetch } from "ofetch";
 import { ConversationModeEnum } from "@/types/conversation";
+import { ClaudeAuthMode } from "@/types";
 import { createParser } from "eventsource-parser";
 
 export class Claude extends AIProvider {
@@ -17,12 +18,12 @@ export class Claude extends AIProvider {
   }
 
   public async closeStream() {
-    consoleLog(LogLevelEnum.DEBUG, "Closing stream");
+    console.log("Closing stream");
     if (this.reader) {
       try {
         await this.reader.cancel();
       } catch (e) {
-        consoleLog(LogLevelEnum.DEBUG, e);
+        console.log(e);
         this.reader = null;
       }
     }
@@ -93,9 +94,10 @@ export class Claude extends AIProvider {
     return orgs[0].uuid;
   }
 
-  public authentication = async () => {
+  async authentication<ClaudeAuthMode>(): Promise<ClaudeAuthMode> {
     try {
       await this.fetchOrganizationId();
+      return ClaudeAuthMode.CLAUDE_FREE as unknown as ClaudeAuthMode;
     } catch (err) {
       if (err instanceof AIProviderException) {
         throw new AIProviderException(
@@ -104,7 +106,11 @@ export class Claude extends AIProvider {
         );
       }
     }
-  };
+    throw new AIProviderException(
+      Status.CLAUDE_UNAUTHORIZED,
+      "Claude Unauthorized error. Please try again later."
+    );
+  }
 
   async conversation(
     conversationId: string | null,
